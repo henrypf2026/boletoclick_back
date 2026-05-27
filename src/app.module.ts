@@ -9,9 +9,24 @@ import { UploadImagesModule } from './upload-images/upload-images.module';
 import { VenuesModule } from './venues/venues.module';
 import { MapsModule } from './maps/maps.module';
 import { ChatbotModule } from './chatbot/chatbot.module';
+import { ConfigModule } from '@nestjs/config';
+import { SupabaseModule } from './supabase/supabase.module';
 
 @Module({
-  imports: [UsersModule, AuthModule, EventsModule, TicketsModule, UploadImagesModule, VenuesModule, MapsModule, ChatbotModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    UsersModule,
+    AuthModule,
+    EventsModule,
+    TicketsModule,
+    UploadImagesModule,
+    VenuesModule,
+    MapsModule,
+    ChatbotModule,
+    SupabaseModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
