@@ -9,9 +9,10 @@ import { UploadImagesModule } from './upload-images/upload-images.module';
 import { VenuesModule } from './venues/venues.module';
 import { MapsModule } from './maps/maps.module';
 import { ChatbotModule } from './chatbot/chatbot.module';
+import { BankAccountsModule } from './bank-accounts/bank-accounts.module';
 
 @Module({
-  imports: [UsersModule, AuthModule, EventsModule, TicketsModule, UploadImagesModule, VenuesModule, MapsModule, ChatbotModule],
+  imports: [UsersModule, AuthModule, EventsModule, TicketsModule, UploadImagesModule, VenuesModule, MapsModule, ChatbotModule, BankAccountsModule],
   controllers: [AppController],
   providers: [AppService],
 })
