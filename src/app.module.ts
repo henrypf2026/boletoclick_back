@@ -10,9 +10,28 @@ import { VenuesModule } from './venues/venues.module';
 import { MapsModule } from './maps/maps.module';
 import { ChatbotModule } from './chatbot/chatbot.module';
 import { BankAccountsModule } from './bank-accounts/bank-accounts.module';
+import { typeOrmConfig } from './config/typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
-  imports: [UsersModule, AuthModule, EventsModule, TicketsModule, UploadImagesModule, VenuesModule, MapsModule, ChatbotModule, BankAccountsModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true, load: [typeOrmConfig] }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) =>
+        configService.get('typeorm')!,
+    }),
+    UsersModule,
+    AuthModule,
+    EventsModule,
+    TicketsModule,
+    UploadImagesModule,
+    VenuesModule,
+    MapsModule,
+    ChatbotModule,
+    BankAccountsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
