@@ -18,11 +18,11 @@ import { FileUploadModule } from './file-upload/file-upload.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [typeOrmConfig] }),
-    /*    TypeOrmModule.forRootAsync({
+    TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) =>
         configService.get('typeorm')!,
-    }),*/
+    }),
     UsersModule,
     AuthModule,
     EventsModule,
