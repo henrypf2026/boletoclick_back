@@ -5,10 +5,11 @@ import { SupabaseModule } from '../supabase/supabase.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Profile } from './entities/profile.entity';
 import { SupabaseAuthGuard } from './guards/supabase-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
 
 @Module({
   imports: [SupabaseModule, TypeOrmModule.forFeature([Profile])],
   controllers: [AuthController],
-  providers: [AuthService, SupabaseAuthGuard],
+  providers: [AuthService, SupabaseAuthGuard, RolesGuard],
 })
 export class AuthModule {}
