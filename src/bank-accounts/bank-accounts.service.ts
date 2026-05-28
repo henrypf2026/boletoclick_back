@@ -1,26 +1,37 @@
 import { Injectable } from '@nestjs/common';
 import { CreateBankAccountDto } from './dto/create-bank-account.dto';
-import { UpdateBankAccountDto } from './dto/update-bank-account.dto';
+import { BankAccountsRepository } from './bank-accounts.repository';
+import { BankAccount } from './entities/bank-account.entity';
 
 @Injectable()
 export class BankAccountsService {
-  create(createBankAccountDto: CreateBankAccountDto) {
-    return 'This action adds a new bankAccount';
+  constructor(
+    private readonly bankAccountsRepository: BankAccountsRepository,
+  ) {}
+
+  async getAllBankAccounts() {
+    return await this.bankAccountsRepository.getAllBankAccounts();
   }
 
-  findAll() {
-    return `This action returns all bankAccounts`;
+  async getBankAccountById(id: string) {
+    return await this.bankAccountsRepository.getBankAccountById(id);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} bankAccount`;
+  async getBankAccountByUserId(userId: string): Promise<BankAccount> {
+    return await this.bankAccountsRepository.getBankAccountByUserId(userId);
   }
 
-  update(id: number, updateBankAccountDto: UpdateBankAccountDto) {
-    return `This action updates a #${id} bankAccount`;
+  async upsertBankAccount(
+    userId: string,
+    accountData: CreateBankAccountDto,
+  ): Promise<BankAccount> {
+    return await this.bankAccountsRepository.upsertBankAccount(
+      userId,
+      accountData,
+    );
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} bankAccount`;
+  async deactivateBankAccount(id: string) {
+    return await this.bankAccountsRepository.deactivateAccount(id);
   }
 }
