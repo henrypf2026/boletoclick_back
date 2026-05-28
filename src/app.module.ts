@@ -13,15 +13,16 @@ import { BankAccountsModule } from './bank-accounts/bank-accounts.module';
 import { typeOrmConfig } from './config/typeorm';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { FileUploadModule } from './file-upload/file-upload.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [typeOrmConfig] }),
-    TypeOrmModule.forRootAsync({
+    /*    TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) =>
         configService.get('typeorm')!,
-    }),
+    }),*/
     UsersModule,
     AuthModule,
     EventsModule,
@@ -31,6 +32,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     MapsModule,
     ChatbotModule,
     BankAccountsModule,
+    FileUploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],
