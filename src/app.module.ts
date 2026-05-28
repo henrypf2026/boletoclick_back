@@ -9,13 +9,18 @@ import { UploadImagesModule } from './upload-images/upload-images.module';
 import { VenuesModule } from './venues/venues.module';
 import { MapsModule } from './maps/maps.module';
 import { ChatbotModule } from './chatbot/chatbot.module';
-import { ConfigModule } from '@nestjs/config';
-import { SupabaseModule } from './supabase/supabase.module';
+import { BankAccountsModule } from './bank-accounts/bank-accounts.module';
+import { typeOrmConfig } from './config/typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
+    ConfigModule.forRoot({ isGlobal: true, load: [typeOrmConfig] }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) =>
+        configService.get('typeorm')!,
     }),
     UsersModule,
     AuthModule,
@@ -25,7 +30,7 @@ import { SupabaseModule } from './supabase/supabase.module';
     VenuesModule,
     MapsModule,
     ChatbotModule,
-    SupabaseModule,
+    BankAccountsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
