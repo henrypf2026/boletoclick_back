@@ -7,7 +7,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('BoletoClick')
-    .setDescription('Aplicación backend de BoletoClick (Henry PF cohorte PT31')
+    .setDescription('Aplicación backend de BoletoClick (Henry PF cohorte PT31)')
     .setVersion('1.0')
     .addTag('')
     .build();
