@@ -1,15 +1,24 @@
 import {
+  BadRequestException,
   Injectable,
   UnauthorizedException,
-  BadRequestException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { SupabaseService } from '../supabase/supabase.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { Profile } from './entities/profile.entity';
+import { Role } from './enums/role.enum';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(
+    private readonly supabaseService: SupabaseService,
+
+    @InjectRepository(Profile)
+    private readonly profileRepository: Repository<Profile>,
+  ) {}
 
   async register(registerDto: RegisterDto) {
     const supabase = this.supabaseService.getClient();
@@ -23,9 +32,29 @@ export class AuthService {
       throw new BadRequestException(error.message);
     }
 
+    if (!data.user) {
+      throw new BadRequestException('No se pudo crear el usuario');
+    }
+
+    const profile = this.profileRepository.create({
+      supabaseUserId: data.user.id,
+      email: registerDto.email,
+      name: registerDto.name,
+      birthDate: registerDto.birthDate,
+      documentNumber: registerDto.documentNumber,
+      profileImageUrl: registerDto.profileImageUrl,
+      allowNewsletter: registerDto.allowNewsletter,
+      businessName: registerDto.businessName,
+      role: Role.USER,
+      isActive: true,
+    });
+
+    const savedProfile = await this.profileRepository.save(profile);
+
     return {
       message: 'Usuario registrado correctamente',
       user: data.user,
+      profile: savedProfile,
       session: data.session,
     };
   }
