@@ -27,19 +27,13 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.4.4",
     "@nestjs/typeorm": "^11.0.1",
-<<<<<<< HEAD
     "@supabase/supabase-js": "^2.106.2",
-=======
->>>>>>> 6458d7986868e7ea9efff59cfa5998f85a9b5b72
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "pg": "^8.21.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-<<<<<<< HEAD
     "swagger-ui-express": "^5.0.1",
-=======
->>>>>>> 6458d7986868e7ea9efff59cfa5998f85a9b5b72
     "typeorm": "^1.0.0"
   },
   "devDependencies": {
