@@ -1,14 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Put,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Body, Param, Delete, Put, Req } from '@nestjs/common';
 import { BankAccountsService } from './bank-accounts.service';
 import { CreateBankAccountDto } from './dto/create-bank-account.dto';
 import { BankAccount } from './entities/bank-account.entity';
@@ -41,16 +31,6 @@ export class BankAccountsController {
     );
   }
 
-  @Get()
-  getAllBankAccounts() {
-    return this.bankAccountsService.getAllBankAccounts();
-  }
-
-  @Get(':id')
-  getBankAccountById(@Param('id') id: string) {
-    return this.bankAccountsService.getBankAccountById(id);
-  }
-
   @Get('me')
   // @UseGuards(JwtAuthGuard) // Recuerda activarlo cuando el Guard esté listo
   @ApiOperation({ summary: 'Get the bank account of the authenticated user' })
@@ -63,13 +43,25 @@ export class BankAccountsController {
     status: 404,
     description: 'Bank account not found for this user.',
   })
-  async findMe(@Req() req: any): Promise<BankAccount> {
+  async getBankAccountByUserId(@Req() req: any): Promise<BankAccount> {
     const userId = req.user?.id;
 
     return await this.bankAccountsService.getBankAccountByUserId(userId);
   }
+  @Get()
+  //proteger esta ruta solo para admins
+  getAllBankAccounts() {
+    return this.bankAccountsService.getAllBankAccounts();
+  }
+
+  @Get(':id')
+  //proteger esta ruta solo para admins
+  getBankAccountById(@Param('id') id: string) {
+    return this.bankAccountsService.getBankAccountById(id);
+  }
 
   @Delete(':id')
+  // @UseGuards(JwtAuthGuard) // Descoméntalo cuando tengan listo el guard de autenticación
   deactivateBankAccount(@Param('id') id: string) {
     return this.bankAccountsService.deactivateBankAccount(id);
   }
