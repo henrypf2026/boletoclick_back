@@ -23,4 +23,11 @@ export class UsersService {
   remove(id: number) {
     return `This action removes a #${id} user`;
   }
+
+  updateUserImage(userId: string, imgUrl: string) {
+    return {
+      userId,
+      imgUrl,
+    };
+  }
 }

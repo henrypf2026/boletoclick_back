@@ -2,6 +2,7 @@ import {
   Controller,
   FileTypeValidator,
   MaxFileSizeValidator,
+  Param,
   ParseFilePipe,
   Put,
   UploadedFile,
@@ -14,9 +15,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 export class FileUploadController {
   constructor(private readonly fileUploadService: FileUploadService) {}
 
-  @Put('uploadImage/')
+  @Put('uploadImage/:id')
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(
+    @Param('id') userId: string,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -33,6 +35,6 @@ export class FileUploadController {
     )
     file: Express.Multer.File,
   ) {
-    return this.fileUploadService.uploadImage(file);
+    return this.fileUploadService.uploadImage(userId, file);
   }
 }
