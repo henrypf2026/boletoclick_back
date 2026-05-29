@@ -14,6 +14,7 @@ import { typeOrmConfig } from './config/typeorm';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { FileUploadModule } from './file-upload/file-upload.module';
+import { TicketTypesModule } from './ticket-types/ticket-types.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { FileUploadModule } from './file-upload/file-upload.module';
     ChatbotModule,
     BankAccountsModule,
     FileUploadModule,
+    TicketTypesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
