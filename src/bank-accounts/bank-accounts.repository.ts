@@ -45,6 +45,7 @@ export class BankAccountsRepository {
     userId: string,
     accountData: CreateBankAccountDto,
   ): Promise<BankAccount> {
+    //falta tener el servicio de users para primero validar que el usuario exista
     const existingAccount = await this.ormBankAccountsRepository.findOne({
       where: { userId },
     });
@@ -64,8 +65,17 @@ export class BankAccountsRepository {
     return await this.ormBankAccountsRepository.save(newAccount);
   }
 
-  async deactivateAccount(id: string): Promise<boolean> {
+  async deactivateOwnAccount(userId: string): Promise<void> {
+    const result = await this.ormBankAccountsRepository.softDelete({ userId });
+    if ((result.affected ?? 0) === 0) {
+      throw new NotFoundException('No active bank account found for this user');
+    }
+  }
+
+  async deactivateAccountAsAdmin(id: string): Promise<void> {
     const result = await this.ormBankAccountsRepository.softDelete({ id });
-    return (result.affected ?? 0) > 0;
+    if ((result.affected ?? 0) === 0) {
+      throw new NotFoundException('No active bank account found for this user');
+    }
   }
 }
