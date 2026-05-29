@@ -11,6 +11,7 @@ async function bootstrap() {
     .setDescription('Aplicación backend de BoletoClick (Henry PF cohorte PT31)')
     .setVersion('1.0')
     .addTag('')
+    .addBearerAuth()
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);

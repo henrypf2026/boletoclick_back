@@ -8,7 +8,8 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
 import { Role } from './enums/role.enum';
-
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { ForgotPasswordDto } from './dto/forgotpassword.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -23,19 +24,20 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
-  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard)
   @Get('me')
   getMe(@CurrentUser() user) {
     return user;
   }
 
   @Post('forgot-password')
-  async forgotPassword(@Body('email') email: string) {
-    return this.authService.forgotPassword(email);
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto.email);
   }
 
-  // Compañeros de equipo pueden probar estas rutas para verificar los roles y permisos :)
-
+  //---- Compañeros de equipo pueden probar estas rutas para verificar los roles y permisos :) ---//
+  @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Get('admin-test')
@@ -45,6 +47,7 @@ export class AuthController {
     };
   }
 
+  @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard, RolesGuard)
   @Roles(Role.PRODUCER, Role.ADMIN)
   @Get('producer-test')
@@ -54,6 +57,7 @@ export class AuthController {
     };
   }
 
+  @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard, RolesGuard)
   @Roles(Role.USER, Role.PRODUCER, Role.ADMIN)
   @Get('user-test')
