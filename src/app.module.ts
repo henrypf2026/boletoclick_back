@@ -13,6 +13,8 @@ import { BankAccountsModule } from './bank-accounts/bank-accounts.module';
 import { typeOrmConfig } from './config/typeorm';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { FileUploadModule } from './file-upload/file-upload.module';
+import { TicketTypesModule } from './ticket-types/ticket-types.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     MapsModule,
     ChatbotModule,
     BankAccountsModule,
+    FileUploadModule,
+    TicketTypesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

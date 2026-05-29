@@ -5,6 +5,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 
 export enum BankAccountType {
@@ -69,6 +70,14 @@ export class BankAccount {
   })
   @Column({ name: 'holder_document', type: 'varchar', length: 50 })
   holderDocument!: string;
+
+  @ApiProperty({
+    description: 'The timestamp when the bank account was soft-deleted',
+    example: null,
+    nullable: true,
+  })
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true })
+  deletedAt!: Date | null;
 
   @ApiProperty({
     description: 'The timestamp when the bank account record was created',
