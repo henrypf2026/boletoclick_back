@@ -31,7 +31,11 @@ export class BankAccountsService {
     );
   }
 
-  async deactivateBankAccount(id: string) {
-    return await this.bankAccountsRepository.deactivateAccount(id);
+  async deactivateOwnAccount(userId: string): Promise<void> {
+    await this.bankAccountsRepository.deactivateOwnAccount(userId);
+  }
+
+  async deactivateAccountAsAdmin(id: string) {
+    return await this.bankAccountsRepository.deactivateAccountAsAdmin(id);
   }
 }
