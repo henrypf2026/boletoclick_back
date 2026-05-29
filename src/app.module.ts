@@ -5,7 +5,6 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
 import { TicketsModule } from './tickets/tickets.module';
-import { UploadImagesModule } from './upload-images/upload-images.module';
 import { VenuesModule } from './venues/venues.module';
 import { MapsModule } from './maps/maps.module';
 import { ChatbotModule } from './chatbot/chatbot.module';
@@ -28,7 +27,6 @@ import { TicketTypesModule } from './ticket-types/ticket-types.module';
     AuthModule,
     EventsModule,
     TicketsModule,
-    UploadImagesModule,
     VenuesModule,
     MapsModule,
     ChatbotModule,

@@ -30,7 +30,7 @@ export class EventsController {
   @Post()
   @ApiConsumes('multipart/form-data') // 💡 Le dice a Swagger que este endpoint recibe un archivo binario
   @ApiOperation({
-    summary: 'Create a new event with its ticket types transationally',
+    summary: 'Create a new event with its ticket types',
   })
   @ApiResponse({
     status: 201,

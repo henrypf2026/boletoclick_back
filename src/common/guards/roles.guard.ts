@@ -5,20 +5,15 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from '../entities/users.entity';
-
-import { ROLES_KEY } from '../decorators/roles.decorator';
-import { Role } from '../enums/role.enum';
+import { UsersService } from '../../users/users.service';
+import { ROLES_KEY } from '../../common/decorators/roles.decorator';
+import { Role } from '../../common/enums/role.enum';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly usersService: UsersService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -35,23 +30,21 @@ export class RolesGuard implements CanActivate {
     const user = request.user;
 
     if (!user) {
-      throw new ForbiddenException('Usuario no autenticado');
+      throw new ForbiddenException('Login required');
     }
 
-    const userDb = await this.userRepository.findOne({
-      where: {
-        supabaseUserId: user.id,
-      },
-    });
+    const userDb = await this.usersService.findUserById(user.id);
 
     if (!userDb) {
-      throw new ForbiddenException('Usuario no encontrado');
+      throw new ForbiddenException('Login required');
     }
 
     const userRole = userDb.role;
 
     if (!requiredRoles.includes(userRole)) {
-      throw new ForbiddenException('No tienes permisos para esta ruta');
+      throw new ForbiddenException(
+        'You do not have permission to access this resource',
+      );
     }
 
     return true;
