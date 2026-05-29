@@ -24,9 +24,40 @@ export class AuthController {
   }
 
   @UseGuards(SupabaseAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.PRODUCER)
   @Get('me')
   getMe(@CurrentUser() user) {
     return user;
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string) {
+    return this.authService.forgotPassword(email);
+  }
+
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get('admin-test')
+  adminTest() {
+    return {
+      message: 'Ruta exclusiva para ADMIN',
+    };
+  }
+
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.PRODUCER, Role.ADMIN)
+  @Get('producer-test')
+  producerTest() {
+    return {
+      message: 'Ruta para PRODUCER o ADMIN',
+    };
+  }
+
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.USER, Role.PRODUCER, Role.ADMIN)
+  @Get('user-test')
+  userTest() {
+    return {
+      message: 'Ruta para cualquier usuario autenticado',
+    };
   }
 }

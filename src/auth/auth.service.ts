@@ -78,4 +78,19 @@ export class AuthService {
       access_token: data.session?.access_token,
     };
   }
+  async forgotPassword(email: string) {
+    const supabase = this.supabaseService.getClient();
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'http://localhost:5173/update-password',
+    });
+
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+
+    return {
+      message: 'Si el correo existe, se enviará un enlace de recuperación',
+    };
+  }
 }
