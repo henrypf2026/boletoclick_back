@@ -16,13 +16,13 @@ export class SupabaseAuthGuard implements CanActivate {
     const authHeader = request.headers.authorization;
 
     if (!authHeader) {
-      throw new UnauthorizedException('Token no proporcionado');
+      throw new UnauthorizedException('Token not received');
     }
 
     const [type, token] = authHeader.split(' ');
 
     if (type !== 'Bearer' || !token) {
-      throw new UnauthorizedException('Formato de token inválido');
+      throw new UnauthorizedException('Invalid Token format');
     }
 
     const supabase = this.supabaseService.getClient();
@@ -30,7 +30,7 @@ export class SupabaseAuthGuard implements CanActivate {
     const { data, error } = await supabase.auth.getUser(token);
 
     if (error || !data.user) {
-      throw new UnauthorizedException('Token inválido o expirado');
+      throw new UnauthorizedException('Invalid or expired token');
     }
 
     request.user = data.user;

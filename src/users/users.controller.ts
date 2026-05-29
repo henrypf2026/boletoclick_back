@@ -1,34 +1,51 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  NotFoundException,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { User } from './entities/user.entity';
+import { SupabaseAuthGuard } from '../common/guards/supabase-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
-  }
-
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  @ApiOperation({ summary: 'Get a user profile by ID' })
+  async findUserById(@Param('id') id: string): Promise<User> {
+    const user = await this.usersService.findUserById(id);
+
+    if (!user) {
+      throw new NotFoundException('User profile not found');
+    }
+
+    return user;
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
-  }
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard)
+  @Get('me')
+  @ApiOperation({
+    summary: 'Get the profile of the currently authenticated user',
+  })
+  @ApiResponse({ status: 200, description: 'Profile retrieved successfully.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  async getMe(@CurrentUser() user): Promise<User> {
+    const userProfile = await this.usersService.findUserById(user.id);
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+    if (!userProfile) {
+      throw new NotFoundException('User profile not found');
+    }
+
+    return userProfile;
   }
 }

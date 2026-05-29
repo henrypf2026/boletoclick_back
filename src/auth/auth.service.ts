@@ -3,29 +3,25 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { SupabaseService } from '../supabase/supabase.service';
-import { RegisterDto } from './dto/register.dto';
+import { RegisterDto } from '../users/dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { User } from './entities/users.entity';
-import { Role } from './enums/role.enum';
+import { UsersRepository } from '../users/users.repository';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly supabaseService: SupabaseService,
-
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly usersService: UsersService,
   ) {}
 
-  async register(registerDto: RegisterDto) {
+  async register(userData: RegisterDto) {
     const supabase = this.supabaseService.getClient();
 
     const { data, error } = await supabase.auth.signUp({
-      email: registerDto.email,
-      password: registerDto.password,
+      email: userData.email,
+      password: userData.password,
     });
 
     if (error) {
@@ -33,28 +29,21 @@ export class AuthService {
     }
 
     if (!data.user) {
-      throw new BadRequestException('No se pudo crear el usuario');
+      throw new BadRequestException(
+        'Could not create user in the authentication provider',
+      );
     }
+    const { password, ...profileData } = userData;
 
-    const user = this.userRepository.create({
-      supabaseUserId: data.user.id,
-      email: registerDto.email,
-      name: registerDto.name,
-      birthDate: registerDto.birthDate,
-      documentNumber: registerDto.documentNumber,
-      profileImageUrl: registerDto.profileImageUrl,
-      allowNewsletter: registerDto.allowNewsletter,
-      businessName: registerDto.businessName,
-      role: Role.USER,
-      isActive: true,
-    });
-
-    const savedUser = await this.userRepository.save(user);
+    const savedUserProfile = await this.usersService.createUserProfile(
+      data.user.id,
+      profileData,
+    );
 
     return {
-      message: 'Usuario registrado correctamente',
+      message: 'User registered successfully',
       user: data.user,
-      userProfile: savedUser,
+      userProfile: savedUserProfile,
       session: data.session,
     };
   }
@@ -78,6 +67,7 @@ export class AuthService {
       access_token: data.session?.access_token,
     };
   }
+
   async forgotPassword(email: string) {
     const supabase = this.supabaseService.getClient();
 
@@ -90,7 +80,7 @@ export class AuthService {
     }
 
     return {
-      message: 'Si el correo existe, se enviará un enlace de recuperación',
+      message: 'If the email exists, a recovery link will be sent',
     };
   }
 }
