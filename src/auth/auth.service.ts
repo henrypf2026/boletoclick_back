@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { SupabaseService } from '../supabase/supabase.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { Profile } from './entities/profile.entity';
+import { User } from './entities/users.entity';
 import { Role } from './enums/role.enum';
 
 @Injectable()
@@ -16,8 +16,8 @@ export class AuthService {
   constructor(
     private readonly supabaseService: SupabaseService,
 
-    @InjectRepository(Profile)
-    private readonly profileRepository: Repository<Profile>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -36,7 +36,7 @@ export class AuthService {
       throw new BadRequestException('No se pudo crear el usuario');
     }
 
-    const profile = this.profileRepository.create({
+    const user = this.userRepository.create({
       supabaseUserId: data.user.id,
       email: registerDto.email,
       name: registerDto.name,
@@ -49,12 +49,12 @@ export class AuthService {
       isActive: true,
     });
 
-    const savedProfile = await this.profileRepository.save(profile);
+    const savedUser = await this.userRepository.save(user);
 
     return {
       message: 'Usuario registrado correctamente',
       user: data.user,
-      profile: savedProfile,
+      userProfile: savedUser,
       session: data.session,
     };
   }

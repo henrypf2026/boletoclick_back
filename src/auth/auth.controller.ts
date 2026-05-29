@@ -34,6 +34,8 @@ export class AuthController {
     return this.authService.forgotPassword(email);
   }
 
+  // Compañeros de equipo pueden probar estas rutas para verificar los roles y permisos :)
+
   @UseGuards(SupabaseAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Get('admin-test')

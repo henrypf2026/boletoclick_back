@@ -7,7 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Profile } from '../entities/profile.entity';
+import { User } from '../entities/users.entity';
 
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { Role } from '../enums/role.enum';
@@ -17,8 +17,8 @@ export class RolesGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
 
-    @InjectRepository(Profile)
-    private readonly profileRepository: Repository<Profile>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -38,17 +38,17 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('Usuario no autenticado');
     }
 
-    const profile = await this.profileRepository.findOne({
+    const userDb = await this.userRepository.findOne({
       where: {
         supabaseUserId: user.id,
       },
     });
 
-    if (!profile) {
-      throw new ForbiddenException('Perfil no encontrado');
+    if (!userDb) {
+      throw new ForbiddenException('Usuario no encontrado');
     }
 
-    const userRole = profile.role;
+    const userRole = userDb.role;
 
     if (!requiredRoles.includes(userRole)) {
       throw new ForbiddenException('No tienes permisos para esta ruta');

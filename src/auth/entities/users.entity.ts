@@ -7,8 +7,8 @@ import {
 } from 'typeorm';
 import { Role } from '../enums/role.enum';
 
-@Entity('profiles')
-export class Profile {
+@Entity('users')
+export class User {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
