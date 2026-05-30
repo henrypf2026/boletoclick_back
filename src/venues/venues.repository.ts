@@ -3,10 +3,14 @@ import { CreateVenueDto } from './dto/create-venue.dto';
 import { UpdateVenueDto } from './dto/update-venue.dto';
 import { Repository } from 'typeorm';
 import { Venue } from './entities/venue.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class VenuesRepository {
-  constructor(private readonly ormVenueRepository: Repository<Venue>) {}
+  constructor(
+    @InjectRepository(Venue)
+    private readonly ormVenueRepository: Repository<Venue>,
+  ) {}
   async create(createVenueDto: CreateVenueDto) {
     const venue = new Venue();
     venue.address = createVenueDto.address;

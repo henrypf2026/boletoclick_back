@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsDecimal, IsInt, IsLatitude, IsLongitude, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateVenueDto {
   @ApiProperty({
@@ -29,7 +29,7 @@ export class CreateVenueDto {
     description: 'Number of people that can be',
     example: '500',
   })
-  @IsString()
+  @IsInt()
   @IsNotEmpty()
   capacity!: number;
 
@@ -44,7 +44,7 @@ export class CreateVenueDto {
     description: 'latitude of the place ',
     example: '48.8584',
   })
-  @IsString()
+  @IsLatitude()
   @IsNotEmpty()
   latitude!: number;
 
@@ -52,7 +52,7 @@ export class CreateVenueDto {
     description: 'Longitude of the place',
     example: '2.2945',
   })
-  @IsString()
+  @IsLongitude()
   @IsNotEmpty()
   longitude!: number;
 }

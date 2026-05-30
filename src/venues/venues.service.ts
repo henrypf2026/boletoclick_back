@@ -11,8 +11,8 @@ export class VenuesService {
     return this.venueRepository.create(createVenueDto);
   }
 
-  findAll() {
-    return this.venueRepository.findAll();
+  async findAll() {
+    return await this.venueRepository.findAll();
   }
 
   findOne(id: string) {
