@@ -1,27 +1,27 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { UsersRepository } from './users.repository';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(private readonly usersRepository: UsersRepository) {}
+
+  async findUserById(id: string): Promise<User | null> {
+    return await this.usersRepository.findUserById(id);
   }
 
-  findAll() {
-    return `This action returns all users`;
-  }
+  async createUserProfile(
+    id: string,
+    profileData: Partial<User>,
+  ): Promise<User> {
+    // const today = new Date();
+    // const birth = new Date(profileData.birthDate!);
+    // let age = today.getFullYear() - birth.getFullYear();
+    // if (age < 18) {
+    //   throw new BadRequestException('User must be at least 18 years old');
+    // }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
-
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+    return await this.usersRepository.createUserProfile(id, profileData);
   }
 
   updateUserImage(userId: string, imgUrl: string) {
