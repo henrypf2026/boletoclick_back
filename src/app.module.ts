@@ -14,6 +14,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { FileUploadModule } from './file-upload/file-upload.module';
 import { TicketTypesModule } from './ticket-types/ticket-types.module';
+import { MunicipalitiesModule } from './municipalities/municipalities.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { TicketTypesModule } from './ticket-types/ticket-types.module';
     BankAccountsModule,
     FileUploadModule,
     TicketTypesModule,
+    MunicipalitiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
