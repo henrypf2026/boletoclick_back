@@ -10,11 +10,12 @@ export class FileUploadService {
   ) {}
 
   async uploadImage(userId: string, file: Express.Multer.File) {
-    if (!userId) throw new NotFoundException('UserId no existe');
+    const foundUser = await this.usersService.findUserById(userId);
+    if (!foundUser) throw new NotFoundException('UserId no existe');
+
     const result = await this.fileUploadRepository.uploadImage(file);
-    if (!result.secure_url)
-      throw new NotFoundException(`Falla al cargar imagen`);
-    this.usersService.updateUserImage(userId, result.secure_url);
-    return result.secure_url;
+    const imgUrl = result.secure_url;
+    if (!imgUrl) throw new NotFoundException(`Falla al cargar imagen`);
+    return this.usersService.updateUserImage(userId, imgUrl);
   }
 }
