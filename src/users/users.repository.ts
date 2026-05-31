@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -34,5 +34,17 @@ export class UsersRepository {
     });
 
     return await this.ormUserRepository.save(newUser);
+  }
+
+  async updateUserImgUrl(id: string, imgUrl: string): Promise<User> {
+    const userFound = await this.ormUserRepository.findOneBy({ id });
+    if (!userFound)
+      throw new NotFoundException({
+        message: `No se encontro usuario con Id= ${id}`,
+      });
+
+    userFound.profileImageUrl = imgUrl;
+    await this.ormUserRepository.save(userFound);
+    return userFound;
   }
 }
