@@ -69,6 +69,7 @@ export class AuthService {
     };
   }
 
+  //modificacion
   async forgotPassword(email: string) {
     const supabase = this.supabaseService.getClient();
 
