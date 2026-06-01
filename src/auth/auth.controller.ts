@@ -74,6 +74,22 @@ export class AuthController {
     };
   }
 
+  @Post('forgot-password')
+  @ApiOperation({
+    summary: 'Send password recovery email',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Password recovery email sent successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid email address',
+  })
+  forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto.email);
+  }
+
   //---- Compañeros de equipo pueden probar estas rutas para verificar los roles y permisos :) ---//
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard, RolesGuard)
