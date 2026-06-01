@@ -52,7 +52,9 @@ export class AuthController {
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard)
   @Get('me')
-  @ApiOperation({ summary: 'Get current authenticated user session data' })
+  @ApiOperation({
+    summary: 'Get current authenticated user session data',
+  })
   @ApiResponse({
     status: 200,
     description:
@@ -63,20 +65,28 @@ export class AuthController {
     description: 'Unauthorized. Token missing or invalid.',
   })
   getMe(@CurrentUser() user) {
-    return user;
+    return {
+      id: user.id,
+      email: user.email,
+      provider: user.app_metadata?.provider,
+      name: user.user_metadata?.full_name ?? null,
+      avatarUrl: user.user_metadata?.avatar_url ?? null,
+    };
   }
 
   @Post('forgot-password')
-  @ApiOperation({ summary: 'Request a password reset email link' })
+  @ApiOperation({
+    summary: 'Send password recovery email',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Recovery email process handled successfully.',
+    description: 'Password recovery email sent successfully',
   })
   @ApiResponse({
     status: 400,
-    description: 'Bad Request. Invalid email format or provider error.',
+    description: 'Invalid email address',
   })
-  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+  forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     return this.authService.forgotPassword(forgotPasswordDto.email);
   }
 
