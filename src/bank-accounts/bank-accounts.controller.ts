@@ -1,15 +1,37 @@
-import { Controller, Get, Body, Param, Delete, Put, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Body,
+  Param,
+  Delete,
+  Put,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { BankAccountsService } from './bank-accounts.service';
 import { CreateBankAccountDto } from './dto/create-bank-account.dto';
 import { BankAccount } from './entities/bank-account.entity';
-import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { SupabaseAuthGuard } from '../common/guards/supabase-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/enums/role.enum';
 
+@ApiTags('Bank Accounts')
+@ApiBearerAuth()
 @Controller('bank-accounts')
 export class BankAccountsController {
   constructor(private readonly bankAccountsService: BankAccountsService) {}
 
   @Put()
-  // @UseGuards(JwtAuthGuard) // Descoméntalo cuando tengan listo el guard de autenticación
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.PRODUCER)
   @ApiOperation({
     summary: 'Create or update the bank account for the authenticated user',
   })
@@ -32,7 +54,8 @@ export class BankAccountsController {
   }
 
   @Get('me')
-  // @UseGuards(JwtAuthGuard) // Recuerda activarlo cuando el Guard esté listo
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.PRODUCER)
   @ApiOperation({ summary: 'Get the bank account of the authenticated user' })
   @ApiResponse({
     status: 200,
@@ -49,7 +72,8 @@ export class BankAccountsController {
     return await this.bankAccountsService.getBankAccountByUserId(userId);
   }
   @Get()
-  // @Roles(Role.ADMIN)
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Get all bank accounts (Admin only)' })
   @ApiResponse({
     status: 200,
@@ -62,7 +86,8 @@ export class BankAccountsController {
   }
 
   @Get(':id')
-  // @Roles(Role.ADMIN)
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiOperation({
     summary: 'Get a specific bank account by its ID (Admin only)',
   })
@@ -82,7 +107,8 @@ export class BankAccountsController {
   }
 
   @Delete()
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.PRODUCER)
   @ApiOperation({
     summary: 'Deactivate the authenticated user bank account (User dashboard)',
   })
@@ -100,8 +126,8 @@ export class BankAccountsController {
   }
 
   @Delete(':id')
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(Role.ADMIN)
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiOperation({
     summary: 'Deactivate ANY bank account by its ID (Admin panel only)',
   })

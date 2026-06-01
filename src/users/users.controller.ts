@@ -17,19 +17,6 @@ import { UsersInterceptor } from '../interceptors/user.interceptor';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get(':id')
-  @UseInterceptors(UsersInterceptor)
-  @ApiOperation({ summary: 'Get a user profile by ID' })
-  async findUserById(@Param('id') id: string): Promise<User> {
-    const user = await this.usersService.findUserById(id);
-
-    if (!user) {
-      throw new NotFoundException('User profile not found');
-    }
-
-    return user;
-  }
-
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard)
   @Get('me')
@@ -46,5 +33,18 @@ export class UsersController {
     }
 
     return userProfile;
+  }
+
+  @Get(':id')
+  @UseInterceptors(UsersInterceptor)
+  @ApiOperation({ summary: 'Get a user profile by ID' })
+  async findUserById(@Param('id') id: string): Promise<User> {
+    const user = await this.usersService.findUserById(id);
+
+    if (!user) {
+      throw new NotFoundException('User profile not found');
+    }
+
+    return user;
   }
 }

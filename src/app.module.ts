@@ -15,6 +15,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { FileUploadModule } from './file-upload/file-upload.module';
 import { TicketTypesModule } from './ticket-types/ticket-types.module';
 import { MunicipalitiesModule } from './municipalities/municipalities.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { MunicipalitiesModule } from './municipalities/municipalities.module';
     FileUploadModule,
     TicketTypesModule,
     MunicipalitiesModule,
+    CategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

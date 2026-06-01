@@ -13,10 +13,7 @@ export class EventsService {
     private readonly ticketTypesRepository: TicketTypesRepository,
   ) {}
 
-  /**
-   * 🏗️ Caso de Uso: Crear un evento junto con sus localidades en una transacción atómica.
-   * 💡 Nombre alineado perfectamente con el repositorio: 'createEvent'
-   */
+  //TODO, validar que el valor total del stock de los ticket-types no supere la capacidad del venue
   async createEvent(
     producerId: string,
     eventData: CreateEventDto,
