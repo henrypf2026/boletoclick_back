@@ -6,14 +6,15 @@ import {
 import { SupabaseService } from '../supabase/supabase.service';
 import { RegisterDto } from '../users/dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { UsersRepository } from '../users/users.repository';
 import { UsersService } from '../users/users.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly supabaseService: SupabaseService,
     private readonly usersService: UsersService,
+    private readonly configService: ConfigService,
   ) {}
 
   async register(userData: RegisterDto) {
@@ -30,7 +31,7 @@ export class AuthService {
 
     if (!data.user) {
       throw new BadRequestException(
-        'Could not create user in the authentication provider',
+        'No se pudo registrar el usuario en el sistema de autenticación.',
       );
     }
     const { password, ...profileData } = userData;
@@ -41,7 +42,7 @@ export class AuthService {
     );
 
     return {
-      message: 'User registered successfully',
+      message: 'Usuario registrado exitosamente.',
       user: data.user,
       userProfile: savedUserProfile,
       session: data.session,
@@ -61,7 +62,7 @@ export class AuthService {
     }
 
     return {
-      message: 'Login correcto',
+      message: 'Inicio de sesión correcto',
       user: data.user,
       session: data.session,
       access_token: data.session?.access_token,
@@ -71,8 +72,9 @@ export class AuthService {
   async forgotPassword(email: string) {
     const supabase = this.supabaseService.getClient();
 
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'http://localhost:5173/update-password',
+      redirectTo: `${frontendUrl}/update-password`,
     });
 
     if (error) {
@@ -80,7 +82,8 @@ export class AuthService {
     }
 
     return {
-      message: 'If the email exists, a recovery link will be sent',
+      message:
+        'Si el correo electrónico está registrado, se enviará un enlace para restablecer la contraseña.',
     };
   }
 }

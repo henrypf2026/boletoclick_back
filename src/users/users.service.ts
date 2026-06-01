@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  Injectable,
+} from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { User } from './entities/user.entity';
 
@@ -24,10 +28,7 @@ export class UsersService {
     return await this.usersRepository.createUserProfile(id, profileData);
   }
 
-  updateUserImage(userId: string, imgUrl: string) {
-    return {
-      userId,
-      imgUrl,
-    };
+  updateUserImage(userId: string, imgUrl: string): Promise<User> {
+    return this.usersRepository.updateUserImgUrl(userId, imgUrl);
   }
 }
