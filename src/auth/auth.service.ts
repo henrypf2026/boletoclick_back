@@ -30,7 +30,7 @@ export class AuthService {
 
     if (!data.user) {
       throw new BadRequestException(
-        'Could not create user in the authentication provider',
+        'No se pudo registrar el usuario en el sistema de autenticación.',
       );
     }
     const { password, ...profileData } = userData;
@@ -41,7 +41,7 @@ export class AuthService {
     );
 
     return {
-      message: 'User registered successfully',
+      message: 'Usuario registrado exitosamente.',
       user: data.user,
       userProfile: savedUserProfile,
       session: data.session,
@@ -80,7 +80,8 @@ export class AuthService {
     }
 
     return {
-      message: 'If the email exists, a recovery link will be sent',
+      message:
+        'Si el correo electrónico está registrado, se enviará un enlace para restablecer la contraseña.',
     };
   }
 }
