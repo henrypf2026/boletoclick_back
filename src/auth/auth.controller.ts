@@ -135,7 +135,7 @@ export class AuthController {
   })
   userTest() {
     return {
-      message: 'This route is available to any authenticated user.',
+      message: 'Esta ruta está disponible para cualquier usuario autenticado',
     };
   }
 }
