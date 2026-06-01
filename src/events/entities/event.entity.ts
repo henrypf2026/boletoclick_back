@@ -8,11 +8,10 @@ import {
   OneToMany,
   JoinColumn,
 } from 'typeorm';
-// Importa aquí tus otras entidades cuando las crees:
-// import { User } from '../../users/entities/user.entity';
-// import { Venue } from '../../venues/entities/venue.entity';
-// import { Category } from '../../categories/entities/category.entity';
-// import { TicketType } from '../../ticket-types/entities/ticket-type.entity';
+import { Category } from '../../categories/entities/category.entity';
+import { User } from '../../users/entities/user.entity';
+import { Venue } from '../../venues/entities/venue.entity';
+import { TicketType } from '../../ticket-types/entities/ticket-type.entity';
 
 export enum EventStatus {
   DRAFT = 'DRAFT',
@@ -65,24 +64,24 @@ export class Event {
   // RELACIONES (Muchos a Uno) - Tus Llaves Foráneas
   // =========================================================================
 
-  // @ManyToOne('User', 'events', { onDelete: 'RESTRICT' })
-  // @JoinColumn({ name: 'producerId' })
-  // producer: any; // Cambiar 'any' por 'User' cuando importes la entidad
+  @ManyToOne('User', 'events', { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'producerId' })
+  producer!: User;
 
-  // @ManyToOne('Venue', 'events', { onDelete: 'RESTRICT' })
-  // @JoinColumn({ name: 'venueId' })
-  // venue: any; // Cambiar 'any' por 'Venue' cuando importes la entidad
+  @ManyToOne('Venue', 'events', { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'venueId' })
+  venue!: Venue; // Cambiar 'any' por 'Venue' cuando importes la entidad
 
-  // @ManyToOne('Category', 'events', { onDelete: 'RESTRICT' })
-  // @JoinColumn({ name: 'categoryId' })
-  // category: any; // Cambiar 'any' por 'Category' cuando importes la entidad
+  @ManyToOne('Category', 'events', { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'categoryId' })
+  category!: Category;
 
   // =========================================================================
   // RELACIONES (Uno a Muchos) - Los hijos de Eventos
   // =========================================================================
 
   @OneToMany('TicketType', 'event')
-  ticketTypes!: any[]; // Cambiar 'any[]' por 'TicketType[]' cuando corresponda
+  ticketTypes!: TicketType[]; // Cambiar 'any[]' por 'TicketType[]' cuando corresponda
 
   //   // Nota: Más adelante mapearás aquí coupons, payments y favorites siguiendo este mismo patrón.
 }

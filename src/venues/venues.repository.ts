@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateVenueDto } from './dto/create-venue.dto';
 import { UpdateVenueDto } from './dto/update-venue.dto';
 import { Repository } from 'typeorm';
@@ -19,7 +23,7 @@ export class VenuesRepository {
     venue.imgUrl = createVenueDto.imgUrl;
     venue.latitude = createVenueDto.latitude;
     venue.longitude = createVenueDto.longitude;
-    venue.name = createVenueDto.address;
+    venue.name = createVenueDto.name;
 
     return await this.ormVenueRepository.save(venue);
   }
@@ -54,8 +58,10 @@ export class VenuesRepository {
   }
 
   async remove(id: string) {
-    const date = new Date().toString();
+    const result = await this.ormVenueRepository.softDelete({ id });
 
-    return await this.ormVenueRepository.update(id, { deletedAt: date });
+    if ((result.affected ?? 0) === 0) {
+      throw new NotFoundException('Venue not found or already deleted');
+    }
   }
 }
