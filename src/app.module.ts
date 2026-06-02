@@ -17,6 +17,7 @@ import { TicketTypesModule } from './ticket-types/ticket-types.module';
 import { ProvinceModule } from './province/province.module';
 import { MunicipalitiesModule } from './municipalities/municipalities.module';
 import { CategoriesModule } from './categories/categories.module';
+import { SeedModule } from './utils/seed.module';
 import { ProvinceService } from './province/province.service';
 import { MunicipalitiesService } from './municipalities/municipalities.service';
 
@@ -41,6 +42,7 @@ import { MunicipalitiesService } from './municipalities/municipalities.service';
     ProvinceModule,
     MunicipalitiesModule,
     CategoriesModule,
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -80,8 +80,8 @@ export class Event {
   // RELACIONES (Uno a Muchos) - Los hijos de Eventos
   // =========================================================================
 
-  @OneToMany('TicketType', 'event')
-  ticketTypes!: TicketType[]; // Cambiar 'any[]' por 'TicketType[]' cuando corresponda
+  @OneToMany('TicketType', 'event', { cascade: true })
+  ticketTypes!: TicketType[];
 
   //   // Nota: Más adelante mapearás aquí coupons, payments y favorites siguiendo este mismo patrón.
 }
