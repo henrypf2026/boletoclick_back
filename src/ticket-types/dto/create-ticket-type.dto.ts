@@ -11,14 +11,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateTicketTypeDto {
   @ApiProperty({
-    description: 'The UUID of the event this ticket type belongs to',
-    example: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
-  })
-  @IsUUID()
-  @IsNotEmpty()
-  eventId!: string;
-
-  @ApiProperty({
     description: 'Name of the ticket category or location',
     example: 'VIP Platea Delantera',
   })

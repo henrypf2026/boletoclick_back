@@ -9,6 +9,7 @@ import {
   UploadedFile,
   Req,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -17,18 +18,33 @@ import {
   ApiResponse,
   ApiConsumes,
   ApiParam,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { Event } from './entities/event.entity';
+import { SupabaseAuthGuard } from '../common/guards/supabase-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/enums/role.enum';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { UserPayload } from '../common/interfaces/user-payload.interface';
+// import { FileUploadService } from '../file-upload/file-upload.service';
 
 @ApiTags('events')
+@ApiBearerAuth()
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(
+    private readonly eventsService: EventsService,
+    // private readonly fileUploadService: FileUploadService,
+  ) {}
 
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.PRODUCER)
   @Post()
-  @ApiConsumes('multipart/form-data') // 💡 Le dice a Swagger que este endpoint recibe un archivo binario
+  // @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Create a new event with its ticket types',
   })
@@ -37,32 +53,21 @@ export class EventsController {
     description: 'Event and ticket types successfully created.',
     type: Event,
   })
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles('producer')
-  @UseInterceptors(FileInterceptor('poster')) // 📸 Atrapa el archivo binario del campo 'poster'
+  @ApiResponse({ status: 400, description: 'Bad Request. Validation failed.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden. Producers only.' })
+  // @UseInterceptors(FileInterceptor('poster'))
   async createEvent(
-    @Req() req: any,
+    @CurrentUser() user: UserPayload,
     @Body() eventData: CreateEventDto,
-    @UploadedFile() file: Express.Multer.File,
+    // @UploadedFile() file: Express.Multer.File,
   ): Promise<Event> {
-    // EXTRAER EL PRODUCTOR: En producción vendrá del JwtAuthGuard.
-    // Dejamos un fallback ID quemado por si estás probando en Postman sin token aún.
-    const producerId = req.user?.id || 'd3b07384-d113-4ec5-a587-343d92001234';
+    // const posterUrl = await this.fileUploadService.uploadImage(file);
 
-    // FLUJO DE CLOUDINARY: Aquí llamarías a tu servicio de subida de archivos.
-    // const posterUrl = await this.cloudinaryService.uploadImage(file);
-    const mockPosterUrl =
+    const posterUrl =
       'https://res.cloudinary.com/boletoclick/image/upload/v12345/default-poster.jpg';
-    const posterUrl = file
-      ? `https://res.cloudinary.com/mock-path/${file.originalname}`
-      : mockPosterUrl;
 
-    // Ejecutamos la transacción atómica pasando las 3 piezas limpias
-    return await this.eventsService.createEvent(
-      producerId,
-      eventData,
-      posterUrl,
-    );
+    return await this.eventsService.createEvent(user.id, eventData, posterUrl);
   }
 
   @Get()
@@ -82,21 +87,24 @@ export class EventsController {
   })
   @ApiParam({ name: 'id', description: 'The UUID of the event' })
   @ApiResponse({ status: 200, description: 'Event found.', type: Event })
+  @ApiResponse({ status: 404, description: 'Not Found. Event does not exist.' })
   async getEventById(@Param('id', ParseUUIDPipe) id: string): Promise<Event> {
     return await this.eventsService.getEventById(id);
   }
 
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.PRODUCER, Role.ADMIN)
   @Delete(':id')
   @ApiOperation({ summary: 'Deactivate an event (Soft Delete)' })
   @ApiParam({ name: 'id', description: 'The UUID of the event to deactivate' })
   @ApiResponse({ status: 200, description: 'Event successfully deactivated.' })
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles('producer')
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Not Found.' })
   async deactivateEvent(@Param('id', ParseUUIDPipe) id: string) {
-    // El servicio y el repositorio se encargan de validar la existencia y gritar si no existe
     await this.eventsService.deactivateEvent(id);
 
-    // Mantenemos tu formato consistente de respuesta de éxito para el Frontend
     return {
       success: true,
       message:

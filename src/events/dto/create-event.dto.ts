@@ -13,7 +13,7 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EventStatus } from '../entities/event.entity';
 import { CreateTicketTypeDto } from '../../ticket-types/dto/create-ticket-type.dto';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class CreateEventDto {
   @ApiProperty({
@@ -69,11 +69,12 @@ export class CreateEventDto {
   status?: EventStatus;
 
   @ApiProperty({
-    description: 'Array of ticket types to be created along with the event',
-    type: [CreateTicketTypeDto], // 💡 Así Swagger sabe qué estructura tiene el array
+    description: 'List of ticket types available for this event',
+    type: [CreateTicketTypeDto],
   })
   @IsArray()
-  @ValidateNested({ each: true }) // 🕵️‍♂️ Inspecciona cada elemento del array
-  @Type(() => CreateTicketTypeDto) // 🔄 Convierte el JSON plano a la clase del DTO
+  @ValidateNested({ each: true })
+  @Type(() => CreateTicketTypeDto)
+  @IsNotEmpty()
   ticketTypes!: CreateTicketTypeDto[];
 }

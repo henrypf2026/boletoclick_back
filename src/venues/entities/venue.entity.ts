@@ -1,4 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('venues')
 export class Venue {
@@ -52,18 +59,18 @@ export class Venue {
    * Date on which places are deactivated
    * @example '2026-05-29T15:30:00.000Z'
    */
-  @Column({ type: 'timestamptz', nullable: true })
-  deletedAt!: string;
+  @CreateDateColumn({ type: 'timestamptz', nullable: true })
+  deletedAt!: Date;
   /**
    * Date on which the place was registered
    * @example '2026-05-22T11:30:00.000Z'
    */
-  @Column({ type: 'timestamptz' })
-  createdAt!: string;
+  @UpdateDateColumn({ type: 'timestamptz' })
+  createdAt!: Date;
   /**
    * Date on which the record was updated
    * @example '2026-05-25T15:00:00.000Z'
    */
-  @Column({ type: 'timestamptz' })
-  updatedAt!: string;
+  @DeleteDateColumn({ type: 'timestamptz' })
+  updatedAt!: Date;
 }
