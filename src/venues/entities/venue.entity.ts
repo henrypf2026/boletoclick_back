@@ -60,17 +60,17 @@ export class Venue {
    * @example '2026-05-29T15:30:00.000Z'
    */
   @CreateDateColumn({ type: 'timestamptz', nullable: true })
-  deletedAt!: Date;
+  createdAt!: Date;
   /**
    * Date on which the place was registered
    * @example '2026-05-22T11:30:00.000Z'
    */
   @UpdateDateColumn({ type: 'timestamptz' })
-  createdAt!: Date;
+  updatedAt!: Date;
   /**
    * Date on which the record was updated
    * @example '2026-05-25T15:00:00.000Z'
    */
   @DeleteDateColumn({ type: 'timestamptz' })
-  updatedAt!: Date;
+  deletedAt!: Date;
 }
