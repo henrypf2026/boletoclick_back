@@ -16,6 +16,7 @@ import { FileUploadModule } from './file-upload/file-upload.module';
 import { TicketTypesModule } from './ticket-types/ticket-types.module';
 import { MunicipalitiesModule } from './municipalities/municipalities.module';
 import { CategoriesModule } from './categories/categories.module';
+import { SeedModule } from './utils/seed.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { CategoriesModule } from './categories/categories.module';
     TicketTypesModule,
     MunicipalitiesModule,
     CategoriesModule,
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [AppService],
