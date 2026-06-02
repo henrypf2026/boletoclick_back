@@ -25,7 +25,7 @@ export class EventsService {
     await queryRunner.startTransaction();
 
     try {
-      const { ticketTypes, ...eventDetails } = eventData;
+      const { ticketTypes, poster, ...eventDetails } = eventData;
 
       // Llamamos a 'createEvent' en el repositorio
       const savedEvent = await this.eventsRepository.createEvent(

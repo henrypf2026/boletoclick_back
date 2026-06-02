@@ -71,10 +71,28 @@ export class CreateEventDto {
   @ApiProperty({
     description: 'List of ticket types available for this event',
     type: [CreateTicketTypeDto],
+    example: [
+      {
+        name: 'VIP Platea Delantera',
+        price: 85000,
+        stock: 500,
+        zone: 'Second Floor - Western Zone',
+      },
+    ],
   })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? JSON.parse(value) : value,
+  )
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateTicketTypeDto)
   @IsNotEmpty()
   ticketTypes!: CreateTicketTypeDto[];
+
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    description: 'Imagen en format .jpg,.png,.gif,.webp,.jpeg. No mayor a 2MB',
+  })
+  poster!: any;
 }
