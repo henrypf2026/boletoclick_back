@@ -25,6 +25,7 @@ export class EventsRepository {
       relations: {
         venue: true,
         category: true,
+        ticketTypes: true,
       },
       order: { createdAt: 'DESC' },
     });
