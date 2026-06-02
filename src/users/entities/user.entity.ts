@@ -5,7 +5,7 @@ import {
   Entity,
   PrimaryColumn,
   UpdateDateColumn,
-  OneToMany, // 💡 Importamos el decorador para relaciones 1:N
+  OneToMany,
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Role } from '../../common/enums/role.enum';
