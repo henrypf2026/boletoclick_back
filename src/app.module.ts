@@ -18,6 +18,8 @@ import { ProvinceModule } from './province/province.module';
 import { MunicipalitiesModule } from './municipalities/municipalities.module';
 import { CategoriesModule } from './categories/categories.module';
 import { SeedModule } from './utils/seed.module';
+import { ProvinceService } from './province/province.service';
+import { MunicipalitiesService } from './municipalities/municipalities.service';
 
 @Module({
   imports: [
