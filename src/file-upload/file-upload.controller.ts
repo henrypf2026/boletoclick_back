@@ -70,7 +70,7 @@ export class FileUploadController {
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({
-            maxSize: 1024 * 1024, // 1MB
+            maxSize: 1024 * 1024 * 2, // 2MB
             errorMessage: 'Supera el peso maximo',
           }),
           new FileTypeValidator({

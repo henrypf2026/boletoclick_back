@@ -1,34 +1,45 @@
 import {
-  BadRequestException,
-  NotFoundException,
   Injectable,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
-import { UsersRepository } from './users.repository';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { UpdateUserDto } from './dto/updateUser.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    @InjectRepository(User)
+    private readonly usersRepo: Repository<User>,
+  ) {}
 
-  async findUserById(id: string): Promise<User | null> {
-    return await this.usersRepository.findUserById(id);
+  // ─── Buscar por ID ────────────────────────────────────────────
+
+  async findUserById(id: string): Promise<User> {
+    const user = await this.usersRepo.findOne({ where: { id } });
+    if (!user) throw new NotFoundException(`User ${id} not found`);
+    return user;
   }
 
-  async createUserProfile(
-    id: string,
-    profileData: Partial<User>,
-  ): Promise<User> {
-    // const today = new Date();
-    // const birth = new Date(profileData.birthDate!);
-    // let age = today.getFullYear() - birth.getFullYear();
-    // if (age < 18) {
-    //   throw new BadRequestException('User must be at least 18 years old');
-    // }
+  // ─── Actualizar avatar (Cloudinary URL) ───────────────────────
 
-    return await this.usersRepository.createUserProfile(id, profileData);
+  async updateUserImage(userId: string, imgUrl: string): Promise<User> {
+    const user = await this.findUserById(userId);
+    user.profileImageUrl = imgUrl;
+    return this.usersRepo.save(user);
   }
 
-  updateUserImage(userId: string, imgUrl: string): Promise<User> {
-    return this.usersRepository.updateUserImgUrl(userId, imgUrl);
+  async upsertProfile(id: string, userData: UpdateUserDto): Promise<User> {
+    let user = await this.usersRepo.findOne({ where: { id } });
+
+    if (!user) {
+      user = this.usersRepo.create({ id });
+    }
+
+    Object.assign(user, userData);
+
+    return this.usersRepo.save(user);
   }
 }

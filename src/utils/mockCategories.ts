@@ -1,0 +1,16 @@
+export const mockCategories = [
+  { name: 'Partidos', slug: 'partidos' },
+  { name: 'Conciertos', slug: 'conciertos' },
+  { name: 'MMA', slug: 'mma' },
+  { name: 'Teatro y Ópera', slug: 'teatro-y-opera' },
+  { name: 'Stand-up Comedy', slug: 'stand-up-comedy' },
+  { name: 'Festivales de Música', slug: 'festivales-de-musica' },
+  { name: 'E-sports y Gaming', slug: 'e-sports-y-gaming' },
+  { name: 'Conferencias y Negocios', slug: 'conferencias-y-negocios' },
+  { name: 'Gastronomía y Catas', slug: 'gastronomia-y-catas' },
+  { name: 'Cursos y Talleres', slug: 'cursos-y-talleres' },
+  { name: 'Ferias y Exposiciones', slug: 'ferias-y-exposiciones' },
+  { name: 'Fiestas y Vida Nocturna', slug: 'fiestas-y-vida-nocturna' },
+  { name: 'Cine y Documentales', slug: 'cine-y-documentales' },
+  { name: 'Otros', slug: 'otros' },
+];

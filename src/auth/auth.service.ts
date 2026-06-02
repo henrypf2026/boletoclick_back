@@ -36,7 +36,7 @@ export class AuthService {
     }
     const { password, ...profileData } = userData;
 
-    const savedUserProfile = await this.usersService.createUserProfile(
+    const savedUserProfile = await this.usersService.upsertProfile(
       data.user.id,
       profileData,
     );
