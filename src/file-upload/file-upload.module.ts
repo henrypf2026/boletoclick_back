@@ -9,5 +9,6 @@ import { UsersModule } from '../users/users.module';
   imports: [UsersModule],
   controllers: [FileUploadController],
   providers: [FileUploadService, CloudinaryConfig, FileUploadRepository],
+  exports: [FileUploadService],
 })
 export class FileUploadModule {}

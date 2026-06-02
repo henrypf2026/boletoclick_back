@@ -18,4 +18,11 @@ export class FileUploadService {
     if (!imgUrl) throw new NotFoundException(`Falla al cargar imagen`);
     return this.usersService.updateUserImage(userId, imgUrl);
   }
+
+  async uploadEventImage(file: Express.Multer.File) {
+    const result = await this.fileUploadRepository.uploadImage(file);
+    const imgUrl = result.secure_url;
+    if (!imgUrl) throw new NotFoundException(`Falla al cargar imagen`);
+    return imgUrl;
+  }
 }

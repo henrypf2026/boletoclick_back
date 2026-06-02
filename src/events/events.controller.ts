@@ -7,9 +7,11 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
-  Req,
   ParseUUIDPipe,
   UseGuards,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -29,7 +31,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UserPayload } from '../common/interfaces/user-payload.interface';
-// import { FileUploadService } from '../file-upload/file-upload.service';
+import { FileUploadService } from '../file-upload/file-upload.service';
 
 @ApiTags('events')
 @ApiBearerAuth()
@@ -37,14 +39,14 @@ import { UserPayload } from '../common/interfaces/user-payload.interface';
 export class EventsController {
   constructor(
     private readonly eventsService: EventsService,
-    // private readonly fileUploadService: FileUploadService,
+    private readonly fileUploadService: FileUploadService,
   ) {}
 
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard, RolesGuard)
   @Roles(Role.PRODUCER)
   @Post()
-  // @ApiConsumes('multipart/form-data')
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Create a new event with its ticket types',
   })
@@ -56,16 +58,27 @@ export class EventsController {
   @ApiResponse({ status: 400, description: 'Bad Request. Validation failed.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden. Producers only.' })
-  // @UseInterceptors(FileInterceptor('poster'))
+  @UseInterceptors(FileInterceptor('poster'))
   async createEvent(
     @CurrentUser() user: UserPayload,
     @Body() eventData: CreateEventDto,
-    // @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: 1024 * 1024 * 2, // 2MB
+            errorMessage: 'Supera el peso maximo de 2MB',
+          }),
+          new FileTypeValidator({
+            fileType: /(.jpg|.png|.gif|.webp|.jpeg)/,
+            errorMessage: 'Extensión del archivo no es valida',
+          }),
+        ],
+      }),
+    )
+    poster: Express.Multer.File,
   ): Promise<Event> {
-    // const posterUrl = await this.fileUploadService.uploadImage(file);
-
-    const posterUrl =
-      'https://res.cloudinary.com/boletoclick/image/upload/v12345/default-poster.jpg';
+    const posterUrl = await this.fileUploadService.uploadEventImage(poster);
 
     return await this.eventsService.createEvent(user.id, eventData, posterUrl);
   }
