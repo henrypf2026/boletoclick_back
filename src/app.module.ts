@@ -14,6 +14,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { FileUploadModule } from './file-upload/file-upload.module';
 import { TicketTypesModule } from './ticket-types/ticket-types.module';
+import { ProvinceModule } from './province/province.module';
 import { MunicipalitiesModule } from './municipalities/municipalities.module';
 import { CategoriesModule } from './categories/categories.module';
 import { SeedModule } from './utils/seed.module';
@@ -36,6 +37,7 @@ import { SeedModule } from './utils/seed.module';
     BankAccountsModule,
     FileUploadModule,
     TicketTypesModule,
+    ProvinceModule,
     MunicipalitiesModule,
     CategoriesModule,
     SeedModule,
@@ -43,4 +45,15 @@ import { SeedModule } from './utils/seed.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  constructor(
+    private readonly provinceService: ProvinceService,
+    private readonly municipalityService: MunicipalitiesService,
+  ) {}
+  async onApplicationBootstrap() {
+    await this.provinceService.addSedder();
+    console.log('Provincias Agregadas');
+    await this.municipalityService.addSedder();
+    console.log('Municipios Agregados');
+  }
+}
