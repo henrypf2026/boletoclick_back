@@ -51,7 +51,7 @@ export class ProvinceController {
     description: 'Respuesta exitosa',
     schema: {
       example: {
-        message: 'Todas las provicias de Colombia',
+        message: 'Todas las provincias de México',
         allProvinces: [
           {
             id: '87909d57-273a-40ef-97e4-98108a93cf45',
