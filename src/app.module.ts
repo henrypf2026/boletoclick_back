@@ -20,6 +20,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { SeedModule } from './utils/seed.module';
 import { ProvinceService } from './province/province.service';
 import { MunicipalitiesService } from './municipalities/municipalities.service';
+import { SeedService } from './utils/seed.service';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { MunicipalitiesService } from './municipalities/municipalities.service';
 })
 export class AppModule {
   constructor(
+    private readonly seedService: SeedService,
     private readonly provinceService: ProvinceService,
     private readonly municipalityService: MunicipalitiesService,
   ) {}
@@ -61,4 +63,5 @@ export class AppModule {
   //   await this.municipalityService.addSedder();
   //   console.log('Municipios Agregados');
   // }
+
 }

@@ -1,4 +1,8 @@
-import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  OnApplicationBootstrap,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from '../categories/entities/category.entity';
@@ -9,9 +13,10 @@ import { Role } from '../common/enums/role.enum'; // 👈 Importamos tu Enum ofi
 import { mockCategories } from './mockCategories';
 import { mockVenues } from './mockVenues';
 import { mockEvents } from './mockEvents';
+import { MunicipalitiesService } from '../municipalities/municipalities.service';
 
 @Injectable()
-export class SeedService implements OnApplicationBootstrap {
+export class SeedService {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepo: Repository<Category>,
@@ -21,20 +26,10 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly eventRepo: Repository<Event>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private readonly municipalityService: MunicipalitiesService,
   ) {}
 
-  async onApplicationBootstrap() {
-    console.log('🌱 [Seeder] Verificando si es necesario sembrar datos...');
-
-    const categoriesCount = await this.categoryRepo.count();
-
-    if (categoriesCount > 0) {
-      console.log('🌱 [Seeder] La base ya contiene datos. Seeder omitido.');
-      return;
-    }
-
-    console.log('🌱 [Seeder] Base vacía detectada. Iniciando seeder...');
-
+  async addSedder() {
     try {
       // 1. INYECTAR UN PRODUCTOR MOCK (Obligatorio para los eventos)
       const mockProducerId = '00000000-0000-0000-0000-000000000000';
@@ -56,7 +51,30 @@ export class SeedService implements OnApplicationBootstrap {
       console.log(`✅ [Seeder] ${savedCategories.length} Categorías cargadas.`);
 
       // 3. INYECTAR VENUES
-      const savedVenues = await this.venueRepo.save(mockVenues);
+
+      const promisesFormattedVenues = mockVenues.map(async (venue) => {
+        const municipality =
+          await this.municipalityService.findByMunicpalityCode(
+            venue.municipalityCode,
+          );
+        if (!municipality)
+          throw new BadRequestException('Error en la siembra de venues');
+
+        const formattedV = new Venue();
+        formattedV.name = venue.name;
+        formattedV.address = venue.address;
+        formattedV.capacity = venue.capacity;
+        formattedV.imgUrl = venue.imgUrl;
+        formattedV.latitude = venue.latitude;
+        formattedV.longitude = venue.longitude;
+        formattedV.municipality = municipality;
+
+        return formattedV;
+      });
+
+      const formattedVenues = await Promise.all(promisesFormattedVenues);
+
+      const savedVenues = await this.venueRepo.save(formattedVenues);
       console.log(
         `✅ [Seeder] ${savedVenues.length} Recintos (Venues) cargados.`,
       );

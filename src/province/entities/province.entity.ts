@@ -17,8 +17,13 @@ export class Province {
   /**
    * @example '10'
    */
-  @Column({ type: 'integer', unique: true })
-  provinceCode!: number;
+  @Column({ type: 'varchar', unique: true })
+  provinceCode!: string;
+  /**
+   * @example 'Ac'
+   */
+  @Column({ type: 'varchar' })
+  abbreviation!: string;
   /**
    * Date on which places are deactivated
    * @example '2026-05-29T15:30:00.000Z'
