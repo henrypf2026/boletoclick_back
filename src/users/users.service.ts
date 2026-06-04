@@ -42,4 +42,11 @@ export class UsersService {
 
     return this.usersRepo.save(user);
   }
+
+  async updateUserInfo(userId: string, userData: UpdateUserDto): Promise<User> {
+    const user = await this.findUserById(userId);
+    if (!user) throw new NotFoundException(`User id= ${userId} not found`);
+    Object.assign(user, userData);
+    return await this.usersRepo.save(user);
+  }
 }
