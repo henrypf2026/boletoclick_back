@@ -3,9 +3,11 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Municipality } from '../../municipalities/entities/municipality.entity';
 
 @Entity('venues')
 export class Venue {
@@ -25,12 +27,12 @@ export class Venue {
    */
   @Column({ type: 'varchar' })
   address!: string;
-  /**
-   * Tambien puede ser un pueblo
-   * @example 'calle 4 sur # 71d 85'
-   */
-  @Column({ type: 'varchar' })
-  city!: string;
+  // /**
+  //  * Tambien puede ser un pueblo
+  //  * @example 'calle 4 sur # 71d 85'
+  //  */
+  // @Column({ type: 'varchar' })
+  // city!: string;
   /**
    * Number of people that can be
    * @example '1000'
@@ -73,4 +75,7 @@ export class Venue {
    */
   @DeleteDateColumn({ type: 'timestamptz' })
   deletedAt!: Date;
+
+  @ManyToOne(() => Municipality, (municipality) => municipality.venues)
+  municipality!: Municipality;
 }

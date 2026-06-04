@@ -31,20 +31,20 @@ import { Role } from '../common/enums/role.enum';
 export class VenuesController {
   constructor(private readonly venuesService: VenuesService) {}
 
-  @Post()
-  @UseGuards(SupabaseAuthGuard, RolesGuard)
-  @Roles(Role.PRODUCER)
-  @ApiResponse({
-    status: 201,
-    type: Venue,
-    description: 'Respuesta exitosa',
-  })
-  @ApiBody({
-    type: CreateVenueDto,
-  })
-  create(@Body() createVenueDto: CreateVenueDto) {
-    return this.venuesService.create(createVenueDto);
-  }
+  // @Post()
+  // @UseGuards(SupabaseAuthGuard, RolesGuard)
+  // @Roles(Role.PRODUCER)
+  // @ApiResponse({
+  //   status: 201,
+  //   type: Venue,
+  //   description: 'Respuesta exitosa',
+  // })
+  // @ApiBody({
+  //   type: CreateVenueDto,
+  // })
+  // create(@Body() createVenueDto: CreateVenueDto) {
+  //   return this.venuesService.create(createVenueDto);
+  // }
 
   @Get()
   async findAll() {

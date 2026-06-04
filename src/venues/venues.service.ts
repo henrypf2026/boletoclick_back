@@ -7,9 +7,9 @@ import { VenuesRepository } from './venues.repository';
 export class VenuesService {
   constructor(private readonly venueRepository: VenuesRepository) {}
 
-  create(createVenueDto: CreateVenueDto) {
-    return this.venueRepository.create(createVenueDto);
-  }
+  // create(createVenueDto: CreateVenueDto) {
+  //   return this.venueRepository.create(createVenueDto);
+  // }
 
   async findAll() {
     return await this.venueRepository.findAll();

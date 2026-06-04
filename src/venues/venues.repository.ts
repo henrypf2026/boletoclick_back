@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateVenueDto } from './dto/create-venue.dto';
+// import { CreateVenueDto } from './dto/create-venue.dto';
 import { UpdateVenueDto } from './dto/update-venue.dto';
 import { Repository } from 'typeorm';
 import { Venue } from './entities/venue.entity';
@@ -15,18 +15,18 @@ export class VenuesRepository {
     @InjectRepository(Venue)
     private readonly ormVenueRepository: Repository<Venue>,
   ) {}
-  async create(createVenueDto: CreateVenueDto) {
-    const venue = new Venue();
-    venue.address = createVenueDto.address;
-    venue.capacity = createVenueDto.capacity;
-    venue.city = createVenueDto.city;
-    venue.imgUrl = createVenueDto.imgUrl;
-    venue.latitude = createVenueDto.latitude;
-    venue.longitude = createVenueDto.longitude;
-    venue.name = createVenueDto.name;
+  // async create(createVenueDto: CreateVenueDto) {
+  //   const venue = new Venue();
+  //   venue.address = createVenueDto.address;
+  //   venue.capacity = createVenueDto.capacity;
+  //   venue.city = createVenueDto.city;
+  //   venue.imgUrl = createVenueDto.imgUrl;
+  //   venue.latitude = createVenueDto.latitude;
+  //   venue.longitude = createVenueDto.longitude;
+  //   venue.name = createVenueDto.name;
 
-    return await this.ormVenueRepository.save(venue);
-  }
+  //   return await this.ormVenueRepository.save(venue);
+  // }
 
   async findAll() {
     return await this.ormVenueRepository.find();
