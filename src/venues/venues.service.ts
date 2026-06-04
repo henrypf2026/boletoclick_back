@@ -7,23 +7,23 @@ import { VenuesRepository } from './venues.repository';
 export class VenuesService {
   constructor(private readonly venueRepository: VenuesRepository) {}
 
-  // create(createVenueDto: CreateVenueDto) {
-  //   return this.venueRepository.create(createVenueDto);
-  // }
-
-  async findAll() {
-    return await this.venueRepository.findAll();
+  createVenue(createVenueDto: CreateVenueDto) {
+    return this.venueRepository.createVenue(createVenueDto);
   }
 
-  findOne(id: string) {
-    return this.venueRepository.findOne(id);
+  async findAllVenues() {
+    return await this.venueRepository.findAllVenues();
   }
 
-  update(id: string, updateVenueDto: UpdateVenueDto) {
-    return this.venueRepository.update(id, updateVenueDto);
+  findVenueById(id: string) {
+    return this.venueRepository.findVenueById(id);
   }
 
-  remove(id: string) {
-    return this.venueRepository.remove(id);
+  updateVenue(id: string, updateVenueDto: UpdateVenueDto) {
+    return this.venueRepository.updateVenue(id, updateVenueDto);
+  }
+
+  removeVenue(id: string) {
+    return this.venueRepository.removeVenue(id);
   }
 }

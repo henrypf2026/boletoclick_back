@@ -18,7 +18,7 @@ export class Venue {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
   /**
-   * @example 'Eduard'
+   * @example 'BAR EL PEPINO'
    */
   @Column({ type: 'varchar' })
   name!: string;
@@ -27,12 +27,7 @@ export class Venue {
    */
   @Column({ type: 'varchar' })
   address!: string;
-  // /**
-  //  * Tambien puede ser un pueblo
-  //  * @example 'calle 4 sur # 71d 85'
-  //  */
-  // @Column({ type: 'varchar' })
-  // city!: string;
+
   /**
    * Number of people that can be
    * @example '1000'
@@ -49,31 +44,31 @@ export class Venue {
    * latitude of the place
    * @example '48.8584'
    */
-  @Column({ type: 'decimal', precision: 8, scale: 2 })
+  @Column({ type: 'decimal', precision: 9, scale: 6 })
   latitude!: number;
   /**
    * Longitude of the place
    * @example '2.2945'
    */
-  @Column({ type: 'decimal', precision: 8, scale: 2 })
+  @Column({ type: 'decimal', precision: 9, scale: 6 })
   longitude!: number;
-  /**
-   * Date on which places are deactivated
-   * @example '2026-05-29T15:30:00.000Z'
-   */
-  @CreateDateColumn({ type: 'timestamptz', nullable: true })
-  createdAt!: Date;
   /**
    * Date on which the place was registered
    * @example '2026-05-22T11:30:00.000Z'
    */
-  @UpdateDateColumn({ type: 'timestamptz' })
-  updatedAt!: Date;
+  @CreateDateColumn({ type: 'timestamptz' })
+  createdAt!: Date;
   /**
    * Date on which the record was updated
    * @example '2026-05-25T15:00:00.000Z'
    */
-  @DeleteDateColumn({ type: 'timestamptz' })
+  @UpdateDateColumn({ type: 'timestamptz' })
+  updatedAt!: Date;
+  /**
+   * Date on which places are deactivated
+   * @example '2026-05-29T15:30:00.000Z'
+   */
+  @DeleteDateColumn({ type: 'timestamptz', nullable: true })
   deletedAt!: Date;
 
   @ManyToOne(() => Municipality, (municipality) => municipality.venues)

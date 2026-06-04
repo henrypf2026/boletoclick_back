@@ -8,6 +8,7 @@ import { TicketTypesModule } from '../ticket-types/ticket-types.module';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { UsersModule } from '../users/users.module';
 import { FileUploadModule } from '../file-upload/file-upload.module';
+import { VenuesModule } from '../venues/venues.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { FileUploadModule } from '../file-upload/file-upload.module';
     SupabaseModule,
     UsersModule,
     FileUploadModule,
+    VenuesModule,
   ],
   controllers: [EventsController],
   providers: [EventsService, EventsRepository],

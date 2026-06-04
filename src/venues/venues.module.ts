@@ -11,5 +11,6 @@ import { UsersModule } from '../users/users.module';
   imports: [TypeOrmModule.forFeature([Venue]), SupabaseModule, UsersModule],
   controllers: [VenuesController],
   providers: [VenuesService, VenuesRepository],
+  exports: [VenuesService],
 })
 export class VenuesModule {}
