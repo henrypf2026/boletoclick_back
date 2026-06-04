@@ -7,12 +7,12 @@ import {
   DeleteDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
+import { Event } from '../../events/entities/event.entity';
+import { ApiProperty } from '@nestjs/swagger';
+import { Ticket } from '../../tickets/entities/ticket.entity';
 
-/**
- * Truco de producción: Postgres retorna los tipos DECIMAL como strings en JavaScript
- * para evitar pérdidas de precisión. Este transformer lo convierte a un 'number' real de TS automáticamente.
- */
 export class ColumnNumericTransformer {
   to(data: number | null): number | null {
     return data;
@@ -56,11 +56,14 @@ export class TicketType {
   @DeleteDateColumn({ type: 'timestamptz', nullable: true })
   deletedAt!: Date | null;
 
-  // =========================================================================
-  // RELACIONES (Muchos a Uno) - Conexión con Evento
-  // =========================================================================
-
   @ManyToOne('Event', 'ticketTypes', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'eventId' })
-  event: any; // Cambiar 'any' por 'Event' cuando importes la entidad en el futuro
+  event!: Event;
+
+  @ApiProperty({
+    type: () => [Ticket],
+    description: 'Lista de tiquetes emitidos para este tipo de localidad',
+  })
+  @OneToMany(() => Ticket, (ticket) => ticket.ticketType)
+  tickets!: Ticket[];
 }
