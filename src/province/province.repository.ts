@@ -45,7 +45,7 @@ export class ProvinceRepository {
     });
 
     return {
-      message: 'Todas las provicias de Colombia',
+      message: 'Todas las provicias de Mexico',
       allProvincesFormatted,
     };
   }

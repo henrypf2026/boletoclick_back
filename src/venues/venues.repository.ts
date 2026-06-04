@@ -60,7 +60,14 @@ export class VenuesRepository {
       municipality: { id: municipalityId },
     });
 
-    return await this.ormVenueRepository.save(venue);
+    const savedVenue = await this.ormVenueRepository.save(venue);
+
+    return (await this.ormVenueRepository.findOne({
+      where: { id: savedVenue.id },
+      relations: {
+        municipality: true,
+      },
+    }))!;
   }
 
   async updateVenue(
