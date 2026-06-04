@@ -20,14 +20,15 @@ import { CategoriesModule } from './categories/categories.module';
 import { SeedModule } from './utils/seed.module';
 import { ProvinceService } from './province/province.service';
 import { MunicipalitiesService } from './municipalities/municipalities.service';
-
+import { StripeModule } from './stripe/stripe.module';
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, load: [typeOrmConfig] }),
+    ConfigModule.forRoot({ isGlobal: true, load: [typeOrmConfig] }),StripeModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) =>
         configService.get('typeorm')!,
+      
     }),
     UsersModule,
     AuthModule,
