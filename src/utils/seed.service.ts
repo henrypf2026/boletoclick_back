@@ -24,9 +24,16 @@ export class SeedService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap() {
-    console.log(
-      '🌱 [Seeder] Detectada base de datos limpia por TypeORM. Sembrando datos...',
-    );
+    console.log('🌱 [Seeder] Verificando si es necesario sembrar datos...');
+
+    const categoriesCount = await this.categoryRepo.count();
+
+    if (categoriesCount > 0) {
+      console.log('🌱 [Seeder] La base ya contiene datos. Seeder omitido.');
+      return;
+    }
+
+    console.log('🌱 [Seeder] Base vacía detectada. Iniciando seeder...');
 
     try {
       // 1. INYECTAR UN PRODUCTOR MOCK (Obligatorio para los eventos)
