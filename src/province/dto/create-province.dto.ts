@@ -7,6 +7,6 @@ export class CreateProvinceDto {
   name!: string;
 
   @IsNotEmpty()
-  @Type(() => Number)
-  provinceCode!: number;
+  @IsString()
+  provinceCode!: string;
 }

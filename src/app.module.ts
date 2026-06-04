@@ -20,6 +20,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { SeedModule } from './utils/seed.module';
 import { ProvinceService } from './province/province.service';
 import { MunicipalitiesService } from './municipalities/municipalities.service';
+import { SeedService } from './utils/seed.service';
 
 @Module({
   imports: [
@@ -49,13 +50,19 @@ import { MunicipalitiesService } from './municipalities/municipalities.service';
 })
 export class AppModule {
   constructor(
+    private readonly seedService: SeedService,
     private readonly provinceService: ProvinceService,
     private readonly municipalityService: MunicipalitiesService,
   ) {}
   async onApplicationBootstrap() {
+    console.log(
+      '🌱 [Seeder] Detectada base de datos limpia por TypeORM. Sembrando datos...',
+    );
+
     await this.provinceService.addSedder();
-    console.log('Provincias Agregadas');
+    console.log('✅ [Seeder]  Provincias cargadas.');
     await this.municipalityService.addSedder();
-    console.log('Municipios Agregados');
+    console.log('✅ [Seeder]  Municipios cargadas.');
+    await this.seedService.addSedder();
   }
 }

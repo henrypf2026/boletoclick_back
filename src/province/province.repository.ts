@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Province } from './entities/province.entity';
 import { CreateProvinceDto } from './dto/create-province.dto';
-import { all_provinces_colombia } from '../common/data/all_provinces_colombia';
 import { UpdateProvinceDto } from './dto/update-province.dto';
+import { all_provinces_mexico } from '../common/data/all_provinces_mexico';
 
 @Injectable()
 export class ProvinceRepository {
@@ -34,32 +34,50 @@ export class ProvinceRepository {
 
   async findAll() {
     const allProvinces = await this.ormProvinceRepository.find();
+
+    if (!allProvinces.length)
+      throw new BadRequestException('Provincia no encontrada');
+
+    const allProvincesFormatted = allProvinces.map((province) => {
+      const { deletedAt, createdAt, updatedAt, ...formattedProvince } =
+        province;
+      return formattedProvince;
+    });
+
     return {
       message: 'Todas las provicias de Colombia',
-      allProvinces,
+      allProvincesFormatted,
     };
   }
   async findOne(id: string) {
-    const provinceSearched = await this.ormProvinceRepository.findOne({
+    const province = await this.ormProvinceRepository.findOne({
       where: { id: id },
       relations: { municipality: true },
+      select: {
+        id: true,
+        name: true,
+        abbreviation: true,
+        municipality: {
+          id: true,
+          name: true,
+        },
+      },
     });
 
-    if (!provinceSearched)
-      throw new BadRequestException('Provincia no encontrada');
+    if (!province) throw new BadRequestException('Provincia no encontrada');
     return {
       message: 'Provincia encontrada',
-      provinceSearched,
+      province,
     };
   }
 
   async addSedder() {
-    const promises_insert = all_provinces_colombia.map(async (info) => {
-      const newProvicenCode = Number(info.Codigo_province);
+    const promises_insert = all_provinces_mexico.map(async (info) => {
       const date = new Date().toString();
       const newProvince = new Province();
-      newProvince.name = info.Province;
-      newProvince.provinceCode = newProvicenCode;
+      newProvince.name = info.Entidad_federativa;
+      newProvince.provinceCode = info.Province_key;
+      newProvince.abbreviation = info.Abreviatura;
       newProvince.createdAt = date;
       return this.ormProvinceRepository.save(newProvince);
     });
@@ -69,7 +87,7 @@ export class ProvinceRepository {
     return 'Provincias agregadas';
   }
 
-  async findByProvinceCode(code: number) {
+  async findByProvinceCode(code: string) {
     return await this.ormProvinceRepository.findOneBy({
       provinceCode: code,
     });

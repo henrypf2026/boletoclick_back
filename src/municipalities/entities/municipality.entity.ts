@@ -1,5 +1,12 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Province } from '../../province/entities/province.entity';
+import { Venue } from '../../venues/entities/venue.entity';
 
 @Entity('municipality')
 export class Municipality {
@@ -15,10 +22,11 @@ export class Municipality {
   @Column({ type: 'varchar' })
   name!: string;
   /**
-   * @example '10'
+   * @example '01010'
    */
-  @Column({ type: 'integer' })
-  municipalityCode!: number;
+  @Column({ type: 'varchar', unique: true })
+  municipalityUniqueCode!: string;
+
   /**
    * Date on which places are deactivated
    * @example '2026-05-29T15:30:00.000Z'
@@ -40,4 +48,7 @@ export class Municipality {
 
   @ManyToOne(() => Province, (province) => province.municipality)
   province!: Province;
+
+  @OneToMany(() => Venue, (venue) => venue.municipality)
+  venues!: Venue[];
 }
