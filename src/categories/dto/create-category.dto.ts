@@ -1,37 +1,37 @@
-import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsNotEmpty,
-  IsString,
-  MaxLength,
-  MinLength,
-  Matches,
-} from 'class-validator';
+import { IsBoolean, IsOptional, IsString, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateCategoryDto {
   @ApiProperty({
-    description: 'The commercial and visible name of the category',
-    example: 'Rock & Metal',
-    minLength: 3,
-    maxLength: 100,
+    example: 'Música',
+    description: 'Nombre único de la categoría',
   })
   @IsString()
-  @IsNotEmpty()
-  @MinLength(3)
-  @MaxLength(100)
+  @MinLength(2)
   name!: string;
 
   @ApiProperty({
-    description:
-      'The URL-friendly formatted version of the name (lowercase, hyphens instead of spaces)',
-    example: 'rock-and-metal',
-    maxLength: 120,
+    example: 'musica',
+    description: 'Slug único para URLs amigables',
   })
   @IsString()
-  @IsNotEmpty()
-  @MaxLength(120)
-  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
-    message:
-      'Slug must be lowercase, alphanumeric, and separated only by hyphens (e.g., stand-up-comedy)',
-  })
+  @MinLength(2)
   slug!: string;
+
+  @ApiPropertyOptional({
+    example: 'Eventos musicales de todo tipo',
+    description: 'Descripción opcional de la categoría',
+  })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Indica si la categoría está activa. Por defecto true.',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }
