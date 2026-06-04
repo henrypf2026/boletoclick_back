@@ -52,10 +52,13 @@ export class AppModule {
     private readonly provinceService: ProvinceService,
     private readonly municipalityService: MunicipalitiesService,
   ) {}
-  async onApplicationBootstrap() {
-    await this.provinceService.addSedder();
-    console.log('Provincias Agregadas');
-    await this.municipalityService.addSedder();
-    console.log('Municipios Agregados');
-  }
+
+  // Método para agregar datos de prueba al iniciar la aplicación esta comentado porque no se pueden estar insertando cada vez que inicie
+  //
+  // async onApplicationBootstrap() {
+  //   await this.provinceService.addSedder();
+  //   console.log('Provincias Agregadas');
+  //   await this.municipalityService.addSedder();
+  //   console.log('Municipios Agregados');
+  // }
 }
