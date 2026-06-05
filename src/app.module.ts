@@ -21,6 +21,7 @@ import { SeedModule } from './utils/seed.module';
 import { ProvinceService } from './province/province.service';
 import { MunicipalitiesService } from './municipalities/municipalities.service';
 import { SeedService } from './utils/seed.service';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { SeedService } from './utils/seed.service';
     MunicipalitiesModule,
     CategoriesModule,
     SeedModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
