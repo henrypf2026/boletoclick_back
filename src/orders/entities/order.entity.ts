@@ -11,13 +11,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from '../../users/entities/user.entity'; // 💡 Ajusta las rutas según tu estructura
 import { Ticket } from '../../tickets/entities/ticket.entity';
-
-export enum OrderStatus {
-  PENDING = 'PENDING',
-  PAID = 'PAID',
-  FAILED = 'FAILED',
-  REFUNDED = 'REFUNDED',
-}
+import { OrderStatus } from '../../common/enums/order-status.enum';
 
 // Transformer para convertir strings de DECIMAL de Postgres a numbers de TS automáticamente
 const numericTransformer = {

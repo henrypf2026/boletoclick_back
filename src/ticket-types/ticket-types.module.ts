@@ -9,6 +9,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   imports: [TypeOrmModule.forFeature([TicketType])],
   controllers: [TicketTypesController],
   providers: [TicketTypesService, TicketTypesRepository],
-  exports: [TicketTypesRepository],
+  exports: [TicketTypesService],
 })
 export class TicketTypesModule {}

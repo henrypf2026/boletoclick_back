@@ -3,7 +3,7 @@ import { EventsService } from './events.service';
 import { EventsController } from './events.controller';
 import { Event } from './entities/event.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { EventsRepository } from './events.repository';
+import { EventsRepository } from './events.repository'; // 👈 Importación agregada
 import { TicketTypesModule } from '../ticket-types/ticket-types.module';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { UsersModule } from '../users/users.module';
@@ -21,5 +21,6 @@ import { VenuesModule } from '../venues/venues.module';
   ],
   controllers: [EventsController],
   providers: [EventsService, EventsRepository],
+  exports: [EventsService],
 })
 export class EventsModule {}
