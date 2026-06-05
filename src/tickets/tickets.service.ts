@@ -34,4 +34,26 @@ export class TicketsService {
       orderId,
     );
   }
+
+  async createBulkTickets(
+    orderId: string,
+    ticketTypeId: string,
+    quantity: number,
+  ): Promise<Ticket[]> {
+    const ticketsToCreate: Partial<Ticket>[] = [];
+
+    for (let i = 1; i <= quantity; i++) {
+      // 🚧 PLACEHOLDER TEMPORAL PARA EL QR
+      // 💸 CUANDO SE IMPLEMENTE: Aquí llamarás a la librería de QR (ej: qrcode)
+      const qrPlaceholder = `CLICK-TICKET-${orderId}-${i}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      ticketsToCreate.push({
+        qrCode: qrPlaceholder, // Usamos el string plano temporal que el Front puede leer
+        order: { id: orderId } as any,
+        ticketType: { id: ticketTypeId } as any,
+      });
+    }
+
+    return await this.ticketsRepository.createBulkTickets(ticketsToCreate);
+  }
 }

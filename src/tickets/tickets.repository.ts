@@ -69,4 +69,8 @@ export class TicketsRepository {
       },
     });
   }
+
+  async createBulkTickets(ticketsData: Partial<Ticket>[]): Promise<Ticket[]> {
+    return await this.ormTicketRepository.save(ticketsData);
+  }
 }
