@@ -14,7 +14,7 @@ export class TicketTypesRepository {
    * 📦 Crea múltiples localidades en bloque (Bulk Insert).
    * Soporta transacciones si el servicio le pasa el transactionalManager del QueryRunner.
    */
-  async createBulkTickets(
+  async createBulkTicketTypes(
     ticketsData: Partial<TicketType>[],
     transactionalManager?: EntityManager,
   ): Promise<TicketType[]> {

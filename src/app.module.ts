@@ -21,6 +21,7 @@ import { SeedModule } from './utils/seed.module';
 import { ProvinceService } from './province/province.service';
 import { MunicipalitiesService } from './municipalities/municipalities.service';
 import { SeedService } from './utils/seed.service';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { SeedService } from './utils/seed.service';
     MunicipalitiesModule,
     CategoriesModule,
     SeedModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -54,15 +56,14 @@ export class AppModule {
     private readonly provinceService: ProvinceService,
     private readonly municipalityService: MunicipalitiesService,
   ) {}
-  async onApplicationBootstrap() {
-    console.log(
-      '🌱 [Seeder] Detectada base de datos limpia por TypeORM. Sembrando datos...',
-    );
 
-    await this.provinceService.addSedder();
-    console.log('✅ [Seeder]  Provincias cargadas.');
-    await this.municipalityService.addSedder();
-    console.log('✅ [Seeder]  Municipios cargadas.');
-    await this.seedService.addSedder();
-  }
+  // Método para agregar datos de prueba al iniciar la aplicación esta comentado porque no se pueden estar insertando cada vez que inicie
+  //
+  // async onApplicationBootstrap() {
+  //   await this.provinceService.addSedder();
+  //   console.log('Provincias Agregadas');
+  //   await this.municipalityService.addSedder();
+  //   console.log('Municipios Agregados');
+  // }
+
 }
