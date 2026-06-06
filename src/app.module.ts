@@ -22,6 +22,7 @@ import { ProvinceService } from './province/province.service';
 import { MunicipalitiesService } from './municipalities/municipalities.service';
 import { SeedService } from './utils/seed.service';
 import { ScheduleModule } from '@nestjs/schedule';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     MunicipalitiesModule,
     CategoriesModule,
     SeedModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
