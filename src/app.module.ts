@@ -21,6 +21,7 @@ import { SeedModule } from './utils/seed.module';
 import { ProvinceService } from './province/province.service';
 import { MunicipalitiesService } from './municipalities/municipalities.service';
 import { SeedService } from './utils/seed.service';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { SeedService } from './utils/seed.service';
       useFactory: (configService: ConfigService) =>
         configService.get('typeorm')!,
     }),
+    ScheduleModule.forRoot(),
     UsersModule,
     AuthModule,
     EventsModule,
@@ -63,5 +65,4 @@ export class AppModule {
   //   await this.municipalityService.addSedder();
   //   console.log('Municipios Agregados');
   // }
-
 }
