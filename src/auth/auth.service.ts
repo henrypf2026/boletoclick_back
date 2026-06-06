@@ -73,7 +73,9 @@ export class AuthService {
   async forgotPassword(email: string) {
     const supabase = this.supabaseService.getClient();
 
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3002';
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${frontendUrl}/update-password`,
     });
