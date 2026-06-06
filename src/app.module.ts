@@ -21,9 +21,12 @@ import { SeedModule } from './utils/seed.module';
 import { ProvinceService } from './province/province.service';
 import { MunicipalitiesService } from './municipalities/municipalities.service';
 import { StripeModule } from './stripe/stripe.module';
+import { OrdersModule } from './orders/orders.module';
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, load: [typeOrmConfig] }),StripeModule,
+    ConfigModule.forRoot({ isGlobal: true, load: [typeOrmConfig] }),
+    StripeModule,
+    OrdersModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) =>
