@@ -12,6 +12,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { User } from '../../users/entities/user.entity'; // 💡 Ajusta las rutas según tu estructura
 import { Ticket } from '../../tickets/entities/ticket.entity';
 import { OrderStatus } from '../../common/enums/order-status.enum';
+import { Coupon } from '../../coupons/entities/coupon.entity';
 
 // Transformer para convertir strings de DECIMAL de Postgres a numbers de TS automáticamente
 const numericTransformer = {
@@ -108,12 +109,12 @@ export class Order {
   // ==========================================
 
   @ManyToOne(() => User, (user) => user.orders)
-  @JoinColumn({ name: 'userId' }) // Coincide con tu FK de la tabla
+  @JoinColumn({ name: 'userId' })
   user!: User;
 
-  //   @ManyToOne(() => Coupon, (coupon) => coupon.orders, { nullable: true })
-  //   @JoinColumn({ name: 'couponId' }) // Coincide con tu FK de la tabla
-  //   coupon!: Coupon;
+  @ManyToOne(() => Coupon, (coupon) => coupon.orders, { nullable: true })
+  @JoinColumn({ name: 'couponId' })
+  coupon!: Coupon;
 
   @ApiProperty({
     type: () => [Ticket],

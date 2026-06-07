@@ -26,6 +26,7 @@ export class EventsRepository {
         venue: { municipality: { province: true } },
         category: true,
         ticketTypes: true,
+        coupons: true,
       },
       select: {
         venue: {
@@ -58,6 +59,7 @@ export class EventsRepository {
         ticketTypes: true,
         venue: { municipality: { province: true } },
         category: true,
+        coupons: true,
       },
       select: {
         venue: {
