@@ -25,7 +25,7 @@ export class OrdersRepository {
         tickets: {
           ticketType: true,
         },
-        // coupon: true,
+        coupon: true,
       },
     });
   }
@@ -59,7 +59,7 @@ export class OrdersRepository {
         tickets: {
           ticketType: true,
         },
-        // coupon: true,
+        coupon: true,
       },
     });
   }
@@ -83,7 +83,7 @@ export class OrdersRepository {
       },
       relations: {
         user: true,
-        // coupon: true,
+        coupon: true,
         tickets: {
           ticketType: true,
         },

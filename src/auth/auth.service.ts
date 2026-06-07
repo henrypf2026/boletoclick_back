@@ -20,6 +20,7 @@ export class AuthService {
   async register(userData: RegisterDto) {
     const supabase = this.supabaseService.getClient();
 
+    //prueba
     const { data, error } = await supabase.auth.signUp({
       email: userData.email,
       password: userData.password,
