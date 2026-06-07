@@ -8,6 +8,7 @@ import { SupabaseModule } from '../supabase/supabase.module'; // 💡 Ajusta seg
 import { UsersModule } from '../users/users.module'; // 💡 Ajusta según tu árbol de carpetas
 import { TicketTypesModule } from '../ticket-types/ticket-types.module';
 import { TicketsModule } from '../tickets/tickets.module';
+import { CouponsModule } from '../coupons/coupons.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { TicketsModule } from '../tickets/tickets.module';
     UsersModule,
     TicketTypesModule,
     TicketsModule,
+    CouponsModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService, OrdersRepository],

@@ -22,6 +22,7 @@ import { ProvinceService } from './province/province.service';
 import { MunicipalitiesService } from './municipalities/municipalities.service';
 import { SeedService } from './utils/seed.service';
 import { OrdersModule } from './orders/orders.module';
+import { CouponsModule } from './coupons/coupons.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { OrdersModule } from './orders/orders.module';
     CategoriesModule,
     SeedModule,
     OrdersModule,
+    CouponsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
