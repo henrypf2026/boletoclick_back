@@ -1,7 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Municipality } from '../../municipalities/entities/municipality.entity';
 
-@Entity('province')
+@Entity('provinces')
 export class Province {
   /**
    * Numero incremental

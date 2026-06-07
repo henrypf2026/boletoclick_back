@@ -8,7 +8,7 @@ import {
 import { Province } from '../../province/entities/province.entity';
 import { Venue } from '../../venues/entities/venue.entity';
 
-@Entity('municipality')
+@Entity('municipalities')
 export class Municipality {
   /**
    * Numero incremental

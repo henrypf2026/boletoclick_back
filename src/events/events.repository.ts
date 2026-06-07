@@ -27,6 +27,26 @@ export class EventsRepository {
         category: true,
         ticketTypes: true,
       },
+      select: {
+        venue: {
+          id: true,
+          name: true,
+          address: true,
+          capacity: true,
+          imgUrl: true,
+          latitude: true,
+          longitude: true,
+          municipality: {
+            id: true,
+            name: true,
+            province: {
+              id: true,
+              name: true,
+              abbreviation: true,
+            },
+          },
+        },
+      },
       order: { createdAt: 'DESC' },
     });
   }
@@ -38,6 +58,26 @@ export class EventsRepository {
         ticketTypes: true,
         venue: { municipality: { province: true } },
         category: true,
+      },
+      select: {
+        venue: {
+          id: true,
+          name: true,
+          address: true,
+          capacity: true,
+          imgUrl: true,
+          latitude: true,
+          longitude: true,
+          municipality: {
+            id: true,
+            name: true,
+            province: {
+              id: true,
+              name: true,
+              abbreviation: true,
+            },
+          },
+        },
       },
     });
 

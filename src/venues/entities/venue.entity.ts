@@ -4,10 +4,12 @@ import {
   DeleteDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Municipality } from '../../municipalities/entities/municipality.entity';
+import { Event } from '../../events/entities/event.entity';
 
 @Entity('venues')
 export class Venue {
@@ -73,4 +75,7 @@ export class Venue {
 
   @ManyToOne(() => Municipality, (municipality) => municipality.venues)
   municipality!: Municipality;
+
+  @OneToMany(() => Event, (event) => event.venue)
+  events!: Event[];
 }

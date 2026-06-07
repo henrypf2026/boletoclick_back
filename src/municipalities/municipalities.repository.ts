@@ -24,7 +24,7 @@ export class MunicipalitiesRepository {
   async findOne(id: string) {
     const allMunicipalities = await this.ormMunicipalitiesRepository.findOne({
       where: { id: id },
-      relations: { venues: true },
+      relations: { venues: { events: true } },
       select: {
         id: true,
         name: true,

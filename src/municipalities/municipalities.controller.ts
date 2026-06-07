@@ -14,6 +14,11 @@ export class MunicipalitiesController {
   // async findAll() {
   //   return await this.municipalitiesService.findAll();
   // }
+  
+  // @Get()
+  // async findAllWithEvents() {
+  //   return await this.municipalitiesService.findAllWithEvents();
+  // }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
