@@ -23,19 +23,8 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
-<<<<<<< HEAD
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   const PORT = process.env.PORT ?? 3001;
-=======
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      forbidNonWhitelisted: true,
-    }),
-  );
-  const PORT = process.env.PORT ?? 3000;
->>>>>>> 979f4138f8e69a55bc78157a1650cbc480bf2bbc
   await app.listen(PORT);
   console.log(`Server listening on port ${PORT}`);
 }

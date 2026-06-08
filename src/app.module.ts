@@ -18,27 +18,20 @@ import { ProvinceModule } from './province/province.module';
 import { MunicipalitiesModule } from './municipalities/municipalities.module';
 import { CategoriesModule } from './categories/categories.module';
 import { SeedModule } from './utils/seed.module';
+import { SeedService } from './utils/seed.service';
 import { ProvinceService } from './province/province.service';
 import { MunicipalitiesService } from './municipalities/municipalities.service';
-<<<<<<< HEAD
 import { StripeModule } from './stripe/stripe.module';
-import { OrdersModule } from './orders/orders.module';
-=======
-import { SeedService } from './utils/seed.service';
 import { OrdersModule } from './orders/orders.module';
 import { CouponsModule } from './coupons/coupons.module';
 
->>>>>>> 979f4138f8e69a55bc78157a1650cbc480bf2bbc
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [typeOrmConfig] }),
-    StripeModule,
-    OrdersModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) =>
         configService.get('typeorm')!,
-      
     }),
     UsersModule,
     AuthModule,
@@ -54,6 +47,7 @@ import { CouponsModule } from './coupons/coupons.module';
     MunicipalitiesModule,
     CategoriesModule,
     SeedModule,
+    StripeModule,
     OrdersModule,
     CouponsModule,
   ],
@@ -67,13 +61,10 @@ export class AppModule {
     private readonly municipalityService: MunicipalitiesService,
   ) {}
 
-  // Método para agregar datos de prueba al iniciar la aplicación esta comentado porque no se pueden estar insertando cada vez que inicie
-  //
   // async onApplicationBootstrap() {
   //   await this.provinceService.addSedder();
   //   console.log('Provincias Agregadas');
   //   await this.municipalityService.addSedder();
   //   console.log('Municipios Agregados');
   // }
-
 }

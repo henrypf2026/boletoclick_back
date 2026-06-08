@@ -32,13 +32,4 @@ export class CreateCategoryDto {
   @MinLength(2)
   slug!: string;
 
-
-  @ApiPropertyOptional({
-    example: true,
-    description: 'Indica si la categoría está activa. Por defecto true.',
-    default: true,
-  })
-  @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
 }
