@@ -1,9 +1,11 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   Headers,
   Req,
+  Param,
   HttpCode,
   BadRequestException,
 } from '@nestjs/common';
@@ -40,6 +42,14 @@ export class StripeController {
     return { url: session.url };
   }
 
+  @Get('verify/:sessionId')
+  async verifySession(
+    @Param('sessionId') sessionId: string,
+  ): Promise<{ valid: boolean }> {
+    const valid = await this.stripeService.verifySession(sessionId);
+    return { valid };
+  }
+
   @Post('webhook')
   @HttpCode(200)
   async handleWebhook(
@@ -51,18 +61,30 @@ export class StripeController {
     }
 
     const event = this.stripeService.constructWebhookEvent(req.rawBody, signature);
-    const paymentIntent = event.data.object as any;
+    const session = event.data.object as any;
 
     switch (event.type) {
-      case 'payment_intent.succeeded':
-        this.eventEmitter.emit('order.confirmed', paymentIntent.id);
+      case 'checkout.session.completed':
+        this.eventEmitter.emit('order.confirmed', {
+          sessionId: session.id,
+          metadata: session.metadata,
+          
+        });
         break;
-      case 'payment_intent.payment_failed':
-        this.eventEmitter.emit('order.failed', paymentIntent.id);
+      case 'checkout.session.expired':
+        this.eventEmitter.emit('order.failed', session.id);
         break;
       case 'charge.refunded':
-        this.eventEmitter.emit('order.refunded', paymentIntent.payment_intent);
+        this.eventEmitter.emit('order.refunded', session.payment_intent);
         break;
+        case 'checkout.session.completed':
+  console.log('🔔 Webhook recibido: checkout.session.completed', session.id);
+  this.eventEmitter.emit('order.confirmed', {
+    sessionId: session.id,
+    metadata: session.metadata,
+  });
+  console.log('📤 Evento order.confirmed emitido');
+  break;
     }
 
     return { received: true };

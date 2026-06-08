@@ -1,13 +1,14 @@
-import { IsString, IsNumber, IsPositive, Min } from 'class-validator';
+import { IsString, IsNumber, IsPositive, IsUUID, IsOptional } from 'class-validator';
 
 export class CreateCheckoutSessionDto {
+  @IsOptional()
   @IsString()
-  id!: string;
+  id?: string;
 
-  @IsString()
+  @IsUUID()
   userId!: string;
 
-  @IsString()
+  @IsUUID()
   eventId!: string;
 
   @IsString()
@@ -22,17 +23,23 @@ export class CreateCheckoutSessionDto {
   @IsString()
   time!: string;
 
+  @IsOptional()
+  @IsString()
+  zone?: string;
+
   @IsNumber()
   @IsPositive()
   quantity!: number;
 
   @IsNumber()
-  @Min(1)
+  @IsPositive()
   total!: number;
 
+  @IsOptional()
   @IsString()
-  qrCode!: string;
+  qrCode?: string;
 
+  @IsOptional()
   @IsString()
-  purchasedAt!: string;
+  purchasedAt?: string;
 }

@@ -1,7 +1,12 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import Stripe from 'stripe';
 import type { CreateCheckoutSessionDto } from './dto/create-checkout-session.dto';
+import { Order } from '../orders/entities/order.entity';
+import { OrderStatus } from '../common/enums/order-status.enum';
+import { User } from '../users/entities/user.entity';
 
 type StripeClient = InstanceType<typeof Stripe>;
 
@@ -10,40 +15,63 @@ export class StripeService {
   constructor(
     @Inject('STRIPE_CLIENT') private readonly stripe: StripeClient,
     private readonly config: ConfigService,
+    @InjectRepository(Order)
+    private readonly orderRepo: Repository<Order>,
   ) {}
 
   async createPaymentIntent(amount: number, currency = 'usd'): Promise<any> {
     return this.stripe.paymentIntents.create({ amount, currency });
   }
 
-  async createCheckoutSession(data: CreateCheckoutSessionDto): Promise<any> {
-    const successUrl = this.config.getOrThrow<string>('FRONTEND_URL') + '/mis-tickets?success=true';
-    const cancelUrl = this.config.getOrThrow<string>('FRONTEND_URL') + '/eventos/' + data.eventId + '?canceled=true';
+  async createCheckoutSession(dto: CreateCheckoutSessionDto): Promise<any> {
+    const frontendUrl = this.config.getOrThrow<string>('FRONTEND_URL');
 
-    return this.stripe.checkout.sessions.create({
+    const platformFee = Math.round(dto.total * 0.05 * 100) / 100;
+    const producerSubtotal = Math.round((dto.total - platformFee) * 100) / 100;
+
+    const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
       line_items: [
         {
-          quantity: data.quantity,
+          quantity: dto.quantity,
           price_data: {
-            currency: 'mxn',
-            unit_amount: Math.round((data.total / data.quantity) * 100),
+            currency: 'usd',
+            unit_amount: Math.round((dto.total / dto.quantity) * 100),
             product_data: {
-              name: data.eventTitle,
-              description: `${data.venue} · ${data.date} ${data.time}`,
+              name: dto.eventTitle,
+              description: `${dto.venue} · ${dto.date} ${dto.time}`,
             },
           },
         },
       ],
       metadata: {
-        orderId: data.id,
-        userId: data.userId,
-        eventId: data.eventId,
+        userId: dto.userId,
+        eventId: dto.eventId,
+        quantity: dto.quantity.toString(),
       },
-      success_url: successUrl,
-      cancel_url: cancelUrl,
+      success_url: `${frontendUrl}/payment-result?status=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${frontendUrl}/eventos/${dto.eventId}?canceled=true`,
     });
+
+    const order = this.orderRepo.create({
+      total: dto.total,
+      producerSubtotal,
+      platformFee,
+      status: OrderStatus.PENDING,
+      transactionId: session.id,
+      user: { id: dto.userId } as User,
+    });
+    await this.orderRepo.save(order);
+
+    return session;
+  }
+
+  async verifySession(sessionId: string): Promise<boolean> {
+    const order = await this.orderRepo.findOne({
+      where: { transactionId: sessionId },
+    });
+    return order?.status === OrderStatus.PAID;
   }
 
   constructWebhookEvent(rawBody: Buffer, signature: string): any {

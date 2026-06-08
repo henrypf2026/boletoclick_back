@@ -1,12 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import Stripe from 'stripe';
 import { StripeService } from './stripe.service';
 import { StripeController } from './stripe.controller';
+import { Order } from '../orders/entities/order.entity';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [
+    ConfigModule,
+    TypeOrmModule.forFeature([Order]),
+  ],
   controllers: [StripeController],
   providers: [
     {
@@ -19,7 +23,7 @@ import { StripeController } from './stripe.controller';
       inject: [ConfigService],
     },
     StripeService,
-    EventEmitter2, 
+    
   ],
   exports: [StripeService],
 })
