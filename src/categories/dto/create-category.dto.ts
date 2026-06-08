@@ -1,4 +1,12 @@
-import { IsBoolean, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateCategoryDto {
@@ -15,16 +23,15 @@ export class CreateCategoryDto {
     description: 'Slug único para URLs amigables',
   })
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(120)
+  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+    message:
+      'Slug must be lowercase, alphanumeric, and separated only by hyphens (e.g., stand-up-comedy)',
+  })
   @MinLength(2)
   slug!: string;
 
-  @ApiPropertyOptional({
-    example: 'Eventos musicales de todo tipo',
-    description: 'Descripción opcional de la categoría',
-  })
-  @IsOptional()
-  @IsString()
-  description?: string;
 
   @ApiPropertyOptional({
     example: true,
