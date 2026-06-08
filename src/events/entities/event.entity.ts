@@ -12,6 +12,7 @@ import { Category } from '../../categories/entities/category.entity';
 import { User } from '../../users/entities/user.entity';
 import { Venue } from '../../venues/entities/venue.entity';
 import { TicketType } from '../../ticket-types/entities/ticket-type.entity';
+import { Coupon } from '../../coupons/entities/coupon.entity';
 
 export enum EventStatus {
   DRAFT = 'DRAFT',
@@ -83,5 +84,6 @@ export class Event {
   @OneToMany('TicketType', 'event', { cascade: true })
   ticketTypes!: TicketType[];
 
-  //   // Nota: Más adelante mapearás aquí coupons, payments y favorites siguiendo este mismo patrón.
+  @OneToMany(() => Coupon, (coupon) => coupon.event)
+  coupons!: Coupon[];
 }

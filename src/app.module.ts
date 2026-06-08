@@ -24,6 +24,7 @@ import { SeedService } from './utils/seed.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { OrdersModule } from './orders/orders.module';
 import { EmailModule } from './email/email.module';
+import { CouponsModule } from './coupons/coupons.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { EmailModule } from './email/email.module';
     SeedModule,
     OrdersModule,
     EmailModule,
+    CouponsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

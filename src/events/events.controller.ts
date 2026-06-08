@@ -34,7 +34,6 @@ import { UserPayload } from '../common/interfaces/user-payload.interface';
 import { FileUploadService } from '../file-upload/file-upload.service';
 
 @ApiTags('events')
-@ApiBearerAuth()
 @Controller('events')
 export class EventsController {
   constructor(

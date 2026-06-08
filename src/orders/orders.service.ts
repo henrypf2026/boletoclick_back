@@ -8,6 +8,7 @@ import { Order } from './entities/order.entity';
 import { OrderStatus } from '../common/enums/order-status.enum';
 import { TicketsService } from '../tickets/tickets.service';
 import { TicketTypesService } from '../ticket-types/ticket-types.service';
+import { CouponsService } from '../coupons/coupons.service';
 
 @Injectable()
 export class OrdersService {
@@ -15,7 +16,7 @@ export class OrdersService {
     private readonly ordersRepository: OrdersRepository,
     private readonly ticketsService: TicketsService,
     private readonly ticketTypesService: TicketTypesService,
-    // 🔔 PRODUCCIÓN: Inyectar CouponsService cuando esté listo
+    private readonly couponsService: CouponsService,
   ) {}
 
   async createOrder(
@@ -29,14 +30,32 @@ export class OrdersService {
     const ticketType =
       await this.ticketTypesService.getTicketTypeById(ticketTypeId);
     const basePrice = ticketType.price;
-    const total = basePrice * quantity;
-    const platformFee = total * 0.1;
-    const producerSubtotal = total - platformFee;
+    let total = basePrice * quantity;
 
     // 2. 🎫 Gestión de Cupones (Mocked) cambiar cuando se tenga el recurso de cupones implementado
     if (couponId) {
-      console.log(`[MOCK] Cupón ${couponId} recibido pero ignorado por ahora.`);
+      const coupon = await this.couponsService.getCouponById(couponId);
+      if (!coupon.isActive || new Date(coupon.expiresAt) < new Date()) {
+        throw new BadRequestException(
+          'El cupón proporcionado ya no está activo o ha expirado.',
+        );
+      }
+      if (coupon.eventId && coupon.eventId !== ticketType.eventId) {
+        throw new BadRequestException(
+          'Este cupón no es válido para las entradas de este evento específico.',
+        );
+      }
+      let discount = 0;
+      if (coupon.discountType === 'PERCENTAGE') {
+        discount = total * (coupon.discountValue / 100);
+      } else if (coupon.discountType === 'FIXED') {
+        discount = coupon.discountValue;
+      }
+      total = Math.max(0, total - discount);
     }
+
+    const platformFee = total * 0.1;
+    const producerSubtotal = total - platformFee;
 
     // 3. 💾 Persistencia inicial de la Orden
     // 🚧 MOCK: La guardamos directamente como PAID para que el Front funcione ya.
@@ -47,6 +66,7 @@ export class OrdersService {
       status: OrderStatus.PAID, // 🔔 PRODUCCIÓN: Cambiar a OrderStatus.PENDING (El usuario aún no ha pagado)
       transactionId: `mock_tx_${Math.random().toString(36).substring(2, 11).toUpperCase()}`, // 🔔 PRODUCCIÓN: Borrar esta línea. El ID real llega en el Webhook.
       user: { id: userId } as any,
+      coupon: couponId ? ({ id: couponId } as any) : null,
     });
 
     // 4. 💳 Conexión con la Pasarela de Pagos (Stripe / Mercado Pago)
@@ -93,8 +113,7 @@ export class OrdersService {
 
   async findOrderByIdAndUser(id: string, userId: string): Promise<Order> {
     const order = await this.ordersRepository.findOrderByIdAndUser(id, userId);
-    if (!order)
-      throw new NotFoundException('Orden no encontrada o no tienes acceso.');
+    if (!order) throw new NotFoundException('Orden no encontrada');
     return order;
   }
 
