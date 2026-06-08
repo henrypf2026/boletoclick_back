@@ -18,11 +18,13 @@ import { ProvinceModule } from './province/province.module';
 import { MunicipalitiesModule } from './municipalities/municipalities.module';
 import { CategoriesModule } from './categories/categories.module';
 import { SeedModule } from './utils/seed.module';
-import { SeedService } from './utils/seed.service';
 import { ProvinceService } from './province/province.service';
 import { MunicipalitiesService } from './municipalities/municipalities.service';
 import { StripeModule } from './stripe/stripe.module';
+import { SeedService } from './utils/seed.service';
+import { ScheduleModule } from '@nestjs/schedule';
 import { OrdersModule } from './orders/orders.module';
+import { EmailModule } from './email/email.module';
 import { CouponsModule } from './coupons/coupons.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 @Module({
@@ -33,6 +35,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       useFactory: (configService: ConfigService) =>
         configService.get('typeorm')!,
     }),
+    ScheduleModule.forRoot(),
     UsersModule,
     AuthModule,
     EventsModule,
@@ -49,6 +52,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     SeedModule,
     StripeModule,
     OrdersModule,
+    EmailModule,
     CouponsModule,
   ],
   controllers: [AppController],

@@ -4,9 +4,10 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule,{rawBody: true,});
+  const app = await NestFactory.create(AppModule);
 
-  const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, '') || 'http://localhost:3002';
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3002';
+
   app.enableCors({
     origin: frontendUrl,
     credentials: true,
@@ -22,7 +23,13 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
-  app.useGlobalPipes(new ValidationPipe({ transform: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
   const PORT = process.env.PORT ?? 3001;
   await app.listen(PORT);
   console.log(`Server listening on port ${PORT}`);

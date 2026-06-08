@@ -8,7 +8,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Role } from '../../common/enums/role.enum';
+
 
 /**
  * UpdateUserDto — Actualiza el perfil de un usuario.
