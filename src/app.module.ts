@@ -25,6 +25,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { OrdersModule } from './orders/orders.module';
 import { EmailModule } from './email/email.module';
 import { CouponsModule } from './coupons/coupons.module';
+import { FavoritesModule } from './favorites/favorites.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { CouponsModule } from './coupons/coupons.module';
     OrdersModule,
     EmailModule,
     CouponsModule,
+    FavoritesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
