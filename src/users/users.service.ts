@@ -13,6 +13,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepo: Repository<User>,
+    
   ) {}
 
   // ─── Buscar por ID ────────────────────────────────────────────
@@ -49,4 +50,9 @@ export class UsersService {
     Object.assign(user, userData);
     return await this.usersRepo.save(user);
   }
+
+  // async removeUser(id: string){
+
+  //  return await this. 
+  // }
 }

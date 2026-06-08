@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager } from 'typeorm';
 import { Event } from './entities/event.entity';
+import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 
 @Injectable()
 export class EventsRepository {
@@ -90,13 +91,25 @@ export class EventsRepository {
     return foundEvent;
   }
 
-  async deactivateEvent(id: string): Promise<void> {
-    const result = await this.ormEventsRepository.softDelete({ id });
+  async desactivateEvent(id: string): Promise<void> {
+    // En tu EventService
+    await this.ormEventsRepository.manager.transaction(
+      async (transactionalEntityManager: EntityManager): Promise<void> => {
+        // 1. Borramos lógicamente los tickets asociados al evento
+        await transactionalEntityManager.softDelete(TicketType, {
+          event: { id },
+        });
 
-    if ((result.affected ?? 0) === 0) {
-      throw new NotFoundException(
-        `Event with ID ${id} not found or already deactivated`,
-      );
-    }
+        // 2. Borramos lógicamente el evento principal
+        const result = await transactionalEntityManager.softDelete(Event, {
+          id,
+        });
+        if ((result.affected ?? 0) === 0) {
+          throw new NotFoundException(
+            `Event with ID ${id} not found or already deactivated`,
+          );
+        }
+      },
+    );
   }
 }

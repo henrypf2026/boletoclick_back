@@ -51,33 +51,52 @@ export class ProvinceRepository {
 
   async findAllWithEvents() {
     const allProvinces = await this.ormProvinceRepository
-      .createQueryBuilder('provnces') // 'user' es el alias para la tabla de usuarios
-      // 1. Une Provincia con sus Municipalidades
-      .innerJoinAndSelect('province.municipalities', 'municipality')
-
-      // 2. Une Municipalidad con sus Recintos (Venues)
+      .createQueryBuilder('province')
+      .orderBy('province.name', 'ASC')
+      .innerJoinAndSelect('province.municipality', 'municipality')
+      .addOrderBy('municipality.name', 'ASC')
       .innerJoinAndSelect('municipality.venues', 'venue')
-
-      // 3. Une Recinto con sus Eventos
+      .addOrderBy('venue.name', 'ASC')
       .innerJoinAndSelect('venue.events', 'event')
+      .addOrderBy('event.title', 'ASC')
+      .select([
+        'province.id', // Obligatorio el ID
+        'province.name', // Ejemplo: nombre de la provincia
+        'province.abbreviation', // Ejemplo: nombre de la provincia
 
-      // Filtro opcional: solo si el evento está activo (si aplica en tu lógica)
-      // .where('event.isActive = :status', { status: true })
-      .orderBy('user.createdAt', 'DESC')
-      .getMany(); // Ejecuta y retorna un arreglo de usuarios
+        'municipality.id', // Obligatorio el ID
+        'municipality.name', // Ejemplo: nombre del municipio
+
+        'venue.id', // Obligatorio el ID
+        'venue.name', // Ejemplo: nombre del lugar/recinto
+        // 'venue.address', // Ejemplo: nombre del lugar/recinto
+        // 'venue.capacity', // Ejemplo: nombre del lugar/recinto
+        // 'venue.imgUrl', // Ejemplo: nombre del lugar/recinto
+        // 'venue.latitude', // Ejemplo: nombre del lugar/recinto
+        // 'venue.longitude', // Ejemplo: nombre del lugar/recinto
+
+        'event.id', // Obligatorio el ID
+        'event.title', // Ejemplo: título del evento
+        'event.description', // Ejemplo: título del evento
+        'event.eventDate', // Ejemplo: título del evento
+        'event.posterUrl', // Ejemplo: título del evento
+        'event.createdAt', // Ejemplo: título del evento
+        'event.updatedAt', // Ejemplo: título del evento
+      ])
+      .getMany();
 
     if (!allProvinces.length)
       throw new BadRequestException('Provincia no encontrada');
 
-    const allProvincesFormatted = allProvinces.map((province) => {
-      const { deletedAt, createdAt, updatedAt, ...formattedProvince } =
-        province;
-      return formattedProvince;
-    });
+    // const allProvincesFormatted = allProvinces.map((province) => {
+    //   const { deletedAt, createdAt, updatedAt, ...formattedProvince } =
+    //     province;
+    //   return formattedProvince;
+    // });
 
     return {
-      message: 'Todas las provicias de Mexico',
-      allProvincesFormatted,
+      message: 'Provincias con sus eventos',
+      allProvinces,
     };
   }
 

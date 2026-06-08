@@ -26,6 +26,7 @@ export class EventsService {
 
     try {
       const { ticketTypes, poster, ...eventDetails } = eventData;
+      console.log({ eventDetails });
 
       const savedEvent = await this.eventsRepository.createEvent(
         {
@@ -72,7 +73,7 @@ export class EventsService {
     return await this.eventsRepository.getEventById(id);
   }
 
-  async deactivateEvent(id: string): Promise<void> {
-    await this.eventsRepository.deactivateEvent(id);
+  async desactivateEvent(id: string): Promise<void> {
+    await this.eventsRepository.desactivateEvent(id);
   }
 }

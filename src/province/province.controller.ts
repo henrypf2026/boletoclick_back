@@ -10,7 +10,7 @@ import {
 import { ProvinceService } from './province.service';
 import { CreateProvinceDto } from './dto/create-province.dto';
 import { UpdateProvinceDto } from './dto/update-province.dto';
-import { ApiBody, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { Province } from './entities/province.entity';
 
 @Controller('province')
@@ -45,6 +45,9 @@ export class ProvinceController {
   // }
 
   @Get()
+  @ApiOperation({
+    summary: 'Todas las provincias de México',
+  })
   @ApiResponse({
     status: 200,
     type: [Province],
@@ -78,13 +81,16 @@ export class ProvinceController {
   }
 
   @Get('events')
+  @ApiOperation({
+    summary: 'Las provincias con eventos',
+  })
   @ApiResponse({
     status: 200,
     type: [Province],
     description: 'Respuesta exitosa',
     schema: {
       example: {
-        message: 'Las provicias que tienen eventos',
+        message: 'Las provicias con eventos',
         allProvinces: [
           {
             id: '87909d57-273a-40ef-97e4-98108a93cf45',
@@ -111,6 +117,9 @@ export class ProvinceController {
   }
 
   @Get(':id')
+  @ApiOperation({
+    summary: 'Provincia con todos sus municipios',
+  })
   @ApiResponse({
     status: 200,
     type: [Province],

@@ -56,4 +56,9 @@ export class TicketsService {
 
     return await this.ticketsRepository.createBulkTickets(ticketsToCreate);
   }
+
+
+    async countActiveTicketsByUser(userId: string): Promise<number> {
+    return await this.countActiveTicketsByUser(userId);
+  }
 }

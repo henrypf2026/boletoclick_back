@@ -7,6 +7,7 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
 import { User } from '../../users/entities/user.entity';
@@ -54,6 +55,9 @@ export class Event {
     default: EventStatus.DRAFT,
   })
   status!: EventStatus;
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt!: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: string;

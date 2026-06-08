@@ -45,7 +45,6 @@ export class EventsController {
   @UseGuards(SupabaseAuthGuard, RolesGuard)
   @Roles(Role.PRODUCER)
   @Post()
-  @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Create a new event with its ticket types',
   })
@@ -57,6 +56,7 @@ export class EventsController {
   @ApiResponse({ status: 400, description: 'Bad Request. Validation failed.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden. Producers only.' })
+  @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('poster'))
   async createEvent(
     @CurrentUser() user: UserPayload,
@@ -77,7 +77,8 @@ export class EventsController {
     )
     poster: Express.Multer.File,
   ): Promise<Event> {
-    const posterUrl = await this.fileUploadService.uploadEventImage(poster);
+    // const posterUrl = await this.fileUploadService.uploadEventImage(poster);
+    const posterUrl = 'https://ejemplo.com';
 
     return await this.eventsService.createEvent(user.id, eventData, posterUrl);
   }
@@ -114,8 +115,8 @@ export class EventsController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @ApiResponse({ status: 404, description: 'Not Found.' })
-  async deactivateEvent(@Param('id', ParseUUIDPipe) id: string) {
-    await this.eventsService.deactivateEvent(id);
+  async desactivateEvent(@Param('id', ParseUUIDPipe) id: string) {
+    await this.eventsService.desactivateEvent(id);
 
     return {
       success: true,

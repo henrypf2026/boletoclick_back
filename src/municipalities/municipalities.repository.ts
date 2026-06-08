@@ -22,6 +22,48 @@ export class MunicipalitiesRepository {
   //   };
   // }
   async findOne(id: string) {
+    const municipalityById = await this.ormMunicipalitiesRepository
+      .createQueryBuilder('municipality')
+      .innerJoinAndSelect('municipality.venues', 'venue')
+      .addOrderBy('venue.name', 'ASC')
+      .innerJoinAndSelect('venue.events', 'event')
+      .addOrderBy('event.title', 'ASC')
+      .select([
+        'municipality.id', // Obligatorio el ID
+        'municipality.name', // Ejemplo: nombre del municipio
+
+        'venue.id', // Obligatorio el ID
+        'venue.name', // Ejemplo: nombre del lugar/recinto
+        // 'venue.address', // Ejemplo: nombre del lugar/recinto
+        // 'venue.capacity', // Ejemplo: nombre del lugar/recinto
+        // 'venue.imgUrl', // Ejemplo: nombre del lugar/recinto
+        // 'venue.latitude', // Ejemplo: nombre del lugar/recinto
+        // 'venue.longitude', // Ejemplo: nombre del lugar/recinto
+
+        'event.id', // Obligatorio el ID
+        'event.title', // Ejemplo: título del evento
+        'event.description', // Ejemplo: título del evento
+        'event.eventDate', // Ejemplo: título del evento
+        'event.posterUrl', // Ejemplo: título del evento
+        'event.createdAt', // Ejemplo: título del evento
+        'event.updatedAt', // Ejemplo: título del evento
+      ])
+      .getOne();
+
+    if (!municipalityById)
+      throw new BadRequestException('Municipio no encontrada');
+
+    // const allProvincesFormatted = allProvinces.map((province) => {
+    //   const { deletedAt, createdAt, updatedAt, ...formattedProvince } =
+    //     province;
+    //   return formattedProvince;
+    // });
+
+    return {
+      message: 'Municipio con sus eventos',
+      municipalityById,
+    };
+
     const allMunicipalities = await this.ormMunicipalitiesRepository.findOne({
       where: { id: id },
       relations: { venues: { events: true } },
