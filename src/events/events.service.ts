@@ -3,17 +3,17 @@ import { DataSource } from 'typeorm';
 import { EventsRepository } from './events.repository';
 import { CreateEventDto } from './dto/create-event.dto';
 import { Event } from './entities/event.entity';
-import { TicketTypesRepository } from '../ticket-types/ticket-types.repository';
+import { TicketTypesService } from '../ticket-types/ticket-types.service';
 
 @Injectable()
 export class EventsService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly eventsRepository: EventsRepository,
-    private readonly ticketTypesRepository: TicketTypesRepository,
+    private readonly ticketTypesService: TicketTypesService,
   ) {}
 
-  //TODO, validar que el valor total del stock de los ticket-types no supere la capacidad del venue
+  //revisar este método: cómo va a ser la lógica? se puede crear un evento sin crear sus localidades y dejarlas para después? o va a ser obligatorio que las cree el producer en ese momento?
   async createEvent(
     producerId: string,
     eventData: CreateEventDto,
@@ -27,7 +27,6 @@ export class EventsService {
     try {
       const { ticketTypes, poster, ...eventDetails } = eventData;
 
-      // Llamamos a 'createEvent' en el repositorio
       const savedEvent = await this.eventsRepository.createEvent(
         {
           ...eventDetails,
@@ -43,10 +42,11 @@ export class EventsService {
           eventId: savedEvent.id,
         }));
 
-        const savedTickets = await this.ticketTypesRepository.createBulkTickets(
-          tiquesConIdDelEvento,
-          queryRunner.manager,
-        );
+        const savedTickets =
+          await this.ticketTypesService.createBulkTicketTypes(
+            tiquesConIdDelEvento,
+            queryRunner.manager,
+          );
 
         savedEvent.ticketTypes = savedTickets;
       }
@@ -55,10 +55,7 @@ export class EventsService {
       return savedEvent;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-
-      // 💡 Validamos el tipo de error para calmar a TypeScript
       const message = error instanceof Error ? error.message : String(error);
-
       throw new InternalServerErrorException(
         `Failed to create event and tickets transactionally: ${message}`,
       );
@@ -67,23 +64,14 @@ export class EventsService {
     }
   }
 
-  /**
-   * 📋 Caso de Uso: Obtener la lista completa de eventos activos.
-   */
   async getAllEvents(): Promise<Event[]> {
     return await this.eventsRepository.getAllEvents();
   }
 
-  /**
-   * 🔍 Caso de Uso: Buscar un evento por su ID.
-   */
   async getEventById(id: string): Promise<Event> {
     return await this.eventsRepository.getEventById(id);
   }
 
-  /**
-   * 🗑️ Caso de Uso: Desactivar un evento (Soft Delete).
-   */
   async deactivateEvent(id: string): Promise<void> {
     await this.eventsRepository.deactivateEvent(id);
   }

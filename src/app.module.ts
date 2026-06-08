@@ -20,6 +20,11 @@ import { CategoriesModule } from './categories/categories.module';
 import { SeedModule } from './utils/seed.module';
 import { ProvinceService } from './province/province.service';
 import { MunicipalitiesService } from './municipalities/municipalities.service';
+import { SeedService } from './utils/seed.service';
+import { ScheduleModule } from '@nestjs/schedule';
+import { OrdersModule } from './orders/orders.module';
+import { EmailModule } from './email/email.module';
+import { CouponsModule } from './coupons/coupons.module';
 
 @Module({
   imports: [
@@ -29,6 +34,7 @@ import { MunicipalitiesService } from './municipalities/municipalities.service';
       useFactory: (configService: ConfigService) =>
         configService.get('typeorm')!,
     }),
+    ScheduleModule.forRoot(),
     UsersModule,
     AuthModule,
     EventsModule,
@@ -43,19 +49,26 @@ import { MunicipalitiesService } from './municipalities/municipalities.service';
     MunicipalitiesModule,
     CategoriesModule,
     SeedModule,
+    OrdersModule,
+    EmailModule,
+    CouponsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {
   constructor(
+    private readonly seedService: SeedService,
     private readonly provinceService: ProvinceService,
     private readonly municipalityService: MunicipalitiesService,
   ) {}
-  async onApplicationBootstrap() {
-    await this.provinceService.addSedder();
-    console.log('Provincias Agregadas');
-    await this.municipalityService.addSedder();
-    console.log('Municipios Agregados');
-  }
+
+  // Método para agregar datos de prueba al iniciar la aplicación esta comentado porque no se pueden estar insertando cada vez que inicie
+  //
+  // async onApplicationBootstrap() {
+  //   await this.provinceService.addSedder();
+  //   console.log('Provincias Agregadas');
+  //   await this.municipalityService.addSedder();
+  //   console.log('Municipios Agregados');
+  // }
 }

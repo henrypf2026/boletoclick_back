@@ -10,6 +10,7 @@ import {
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Role } from '../../common/enums/role.enum';
 
+<<<<<<< HEAD
 /**
  * UpdateUserDto — Actualiza el perfil de un usuario.
  *
@@ -82,3 +83,8 @@ export class UpdateUserDto {
   @IsEnum(Role)
   role?: Role;
 }
+=======
+export class UpdateUserDto extends PartialType(
+  OmitType(RegisterDto, ['email', 'password', 'role'] as const),
+) {}
+>>>>>>> 364f42c841cd9d23efcc6ec8b280939fbeff26cf

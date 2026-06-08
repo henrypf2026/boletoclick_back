@@ -16,7 +16,6 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiParam,
-  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -37,60 +36,76 @@ export class VenuesController {
   @ApiResponse({
     status: 201,
     type: Venue,
-    description: 'Respuesta exitosa',
+    description: 'Venue creado exitosamente',
   })
   @ApiBody({
     type: CreateVenueDto,
   })
-  create(@Body() createVenueDto: CreateVenueDto) {
-    return this.venuesService.create(createVenueDto);
+  createVenue(@Body() createVenueDto: CreateVenueDto): Promise<Venue> {
+    return this.venuesService.createVenue(createVenueDto);
   }
 
   @Get()
-  async findAll() {
-    return await this.venuesService.findAll();
+  @ApiResponse({
+    status: 200,
+    type: [Venue],
+    description: 'Lista de todos los venues con su municipio',
+  })
+  findAllVenues(): Promise<Venue[]> {
+    return this.venuesService.findAllVenues();
   }
 
   @Get(':id')
   @ApiResponse({
     status: 200,
     type: Venue,
-    description: 'Respuesta exitosa',
+    description: 'Detalle del venue encontrado',
   })
-  @ApiQuery({
+  @ApiParam({
     name: 'id',
-    description: 'Es un UUID version 4',
-    required: false,
+    description: 'Identificador único del venue (UUID v4)',
+    required: true,
   })
-  findOne(@Param('id') id: string) {
-    return this.venuesService.findOne(id);
+  findVenueById(@Param('id') id: string): Promise<Venue> {
+    return this.venuesService.findVenueById(id);
   }
 
   @Patch(':id')
   @UseGuards(SupabaseAuthGuard, RolesGuard)
   @Roles(Role.PRODUCER)
   @ApiResponse({
-    status: 201,
-    example: 'Producto modificado',
-    description: 'Respuesta exitosa',
+    status: 200,
+    type: Venue,
+    description: 'Venue modificado exitosamente',
   })
   @ApiBody({
-    type: CreateVenueDto,
-    description: 'Se puede omitir propiedades',
+    type: UpdateVenueDto,
   })
   @ApiParam({
     name: 'id',
-    description: 'Es un UUID version 4',
+    description: 'Identificador único del venue (UUID v4)',
     required: true,
   })
-  update(@Param('id') id: string, @Body() updateVenueDto: UpdateVenueDto) {
-    return this.venuesService.update(id, updateVenueDto);
+  updateVenue(
+    @Param('id') id: string,
+    @Body() updateVenueDto: UpdateVenueDto,
+  ): Promise<Venue> {
+    return this.venuesService.updateVenue(id, updateVenueDto);
   }
 
   @Delete(':id')
   @UseGuards(SupabaseAuthGuard, RolesGuard)
   @Roles(Role.PRODUCER)
-  remove(@Param('id') id: string) {
-    return this.venuesService.remove(id);
+  @ApiResponse({
+    status: 200,
+    description: 'Venue eliminado lógicamente (soft-delete)',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Identificador único del venue (UUID v4)',
+    required: true,
+  })
+  removeVenue(@Param('id') id: string): Promise<void> {
+    return this.venuesService.removeVenue(id);
   }
 }

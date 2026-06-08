@@ -15,13 +15,19 @@ export class MunicipalitiesService {
     return await this.municipalitesRepository.addSedder();
   }
 
-  // findAll() {
-  //   return `This action returns all municipalities`;
+  // async findAll() {
+  //   return await this.municipalitesRepository.findAll();
   // }
 
-  // findOne(id: number) {
-  //   return `This action returns a #${id} municipality`;
-  // }
+  async findOne(id: string) {
+    return await this.municipalitesRepository.findOne(id);
+  }
+
+  async findByMunicpalityCode(municipalityCode: string) {
+    return await this.municipalitesRepository.findByMunicpalityCode(
+      municipalityCode,
+    );
+  }
 
   // update(id: number, updateMunicipalityDto: UpdateMunicipalityDto) {
   //   return `This action updates a #${id} municipality`;
