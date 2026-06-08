@@ -23,9 +23,10 @@ export class EventsRepository {
   async getAllEvents(): Promise<Event[]> {
     return await this.ormEventsRepository.find({
       relations: {
-        venue: true,
+        venue: { municipality: { province: true } },
         category: true,
         ticketTypes: true,
+        coupons: true,
       },
       order: { createdAt: 'DESC' },
     });
@@ -36,8 +37,9 @@ export class EventsRepository {
       where: { id },
       relations: {
         ticketTypes: true,
-        venue: true,
+        venue: { municipality: { province: true } },
         category: true,
+        coupons: true,
       },
     });
 

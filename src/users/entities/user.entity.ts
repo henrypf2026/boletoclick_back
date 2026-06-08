@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Role } from '../../common/enums/role.enum';
+import { Order } from '../../orders/entities/order.entity';
 
 @Entity('users')
 export class User {
@@ -67,9 +68,8 @@ export class User {
   @OneToMany('Event', 'producer')
   events!: any[]; // Cambiar 'any' por 'Event' cuando importes la entidad oficialmente
 
-  // 2. Relación con las Órdenes de compra (Historial del comprador)
-  //   @OneToMany('Order', 'user')
-  //   orders!: any[];
+  @OneToMany('Order', 'user')
+  orders!: Order[];
 
   // 3. Relación con los bloqueos temporales de tiques en el carrito
   //   @OneToMany('TicketLock', 'user')

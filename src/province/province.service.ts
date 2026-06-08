@@ -22,7 +22,7 @@ export class ProvinceService {
     return await this.provinceRepository.findOne(id);
   }
 
-  async findByProvinceCode(code: number) {
+  async findByProvinceCode(code: string) {
     return await this.provinceRepository.findByProvinceCode(code);
   }
 

@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { MunicipalitiesService } from './municipalities.service';
 
 @Controller('municipalities')
@@ -11,14 +11,14 @@ export class MunicipalitiesController {
   // }
 
   // @Get()
-  // findAll() {
-  //   return this.municipalitiesService.findAll();
+  // async findAll() {
+  //   return await this.municipalitiesService.findAll();
   // }
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.municipalitiesService.findOne(+id);
-  // }
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.municipalitiesService.findOne(id);
+  }
 
   // @Patch(':id')
   // update(
