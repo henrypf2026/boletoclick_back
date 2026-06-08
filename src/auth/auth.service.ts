@@ -8,6 +8,7 @@ import { RegisterDto } from '../users/dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UsersService } from '../users/users.service';
 import { ConfigService } from '@nestjs/config';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +16,7 @@ export class AuthService {
     private readonly supabaseService: SupabaseService,
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
+    private readonly emailService: EmailService,
   ) {}
 
   async register(userData: RegisterDto) {
@@ -40,6 +42,8 @@ export class AuthService {
       data.user.id,
       profileData,
     );
+
+    await this.emailService.sendWelcomeEmail(userData.name, userData.email);
 
     return {
       message: 'Usuario registrado exitosamente.',

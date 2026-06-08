@@ -23,6 +23,7 @@ import { MunicipalitiesService } from './municipalities/municipalities.service';
 import { SeedService } from './utils/seed.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { OrdersModule } from './orders/orders.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { OrdersModule } from './orders/orders.module';
     CategoriesModule,
     SeedModule,
     OrdersModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
