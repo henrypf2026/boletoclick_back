@@ -21,7 +21,9 @@ import { SeedModule } from './utils/seed.module';
 import { ProvinceService } from './province/province.service';
 import { MunicipalitiesService } from './municipalities/municipalities.service';
 import { SeedService } from './utils/seed.service';
+import { ScheduleModule } from '@nestjs/schedule';
 import { OrdersModule } from './orders/orders.module';
+import { EmailModule } from './email/email.module';
 import { CouponsModule } from './coupons/coupons.module';
 
 @Module({
@@ -32,6 +34,7 @@ import { CouponsModule } from './coupons/coupons.module';
       useFactory: (configService: ConfigService) =>
         configService.get('typeorm')!,
     }),
+    ScheduleModule.forRoot(),
     UsersModule,
     AuthModule,
     EventsModule,
@@ -47,6 +50,7 @@ import { CouponsModule } from './coupons/coupons.module';
     CategoriesModule,
     SeedModule,
     OrdersModule,
+    EmailModule,
     CouponsModule,
   ],
   controllers: [AppController],
@@ -67,5 +71,4 @@ export class AppModule {
   //   await this.municipalityService.addSedder();
   //   console.log('Municipios Agregados');
   // }
-
 }

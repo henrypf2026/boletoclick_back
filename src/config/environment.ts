@@ -16,4 +16,7 @@ export const environment = {
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
 
   JWT_SECRET: process.env.JWT_SECRET,
+
+  BREVO_API_KEY: process.env.BREVO_API_KEY,
+  BREVO_SENDER_EMAIL: process.env.BREVO_SENDER_EMAIL,
 };
