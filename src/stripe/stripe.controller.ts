@@ -12,6 +12,7 @@ import type { Request } from 'express';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { StripeService } from './stripe.service';
 import { CreatePaymentIntentDto } from './dto/create-payment-intent.dto';
+import { CreateCheckoutSessionDto } from './dto/create-checkout-session.dto';
 
 @Controller('stripe')
 export class StripeController {
@@ -29,6 +30,14 @@ export class StripeController {
       dto.currency,
     );
     return { clientSecret: intent.client_secret };
+  }
+
+  @Post('create-session')
+  async createCheckoutSession(
+    @Body() dto: CreateCheckoutSessionDto,
+  ): Promise<{ url: string }> {
+    const session = await this.stripeService.createCheckoutSession(dto);
+    return { url: session.url };
   }
 
   @Post('webhook')
