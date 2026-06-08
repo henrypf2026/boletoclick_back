@@ -13,7 +13,7 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EventStatus } from '../entities/event.entity';
 import { CreateTicketTypeDto } from '../../ticket-types/dto/create-ticket-type.dto';
-import { Transform, Type } from 'class-transformer';
+import { plainToInstance, Transform, Type } from 'class-transformer';
 
 export class CreateEventDto {
   @ApiProperty({
@@ -80,9 +80,10 @@ export class CreateEventDto {
       },
     ],
   })
-  @Transform(({ value }) =>
-    typeof value === 'string' ? JSON.parse(value) : value,
-  )
+  @Transform(({ value }) => {
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    return plainToInstance(CreateTicketTypeDto, parsed);
+  })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateTicketTypeDto)
