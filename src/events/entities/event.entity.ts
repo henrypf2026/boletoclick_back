@@ -44,7 +44,7 @@ export class Event {
   description!: string;
 
   @Column({ type: 'timestamptz' })
-  eventDate!: string; // Viaja como ISO String desde el Front
+  eventDate!: string;
 
   @Column({ type: 'text', nullable: true })
   posterUrl!: string;
