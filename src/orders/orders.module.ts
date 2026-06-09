@@ -1,26 +1,21 @@
 import { Module } from '@nestjs/common';
-import { OrdersService } from './orders.service';
-import { OrdersController } from './orders.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Order } from './entities/order.entity';
-import { OrdersRepository } from './orders.repository';
-import { SupabaseModule } from '../supabase/supabase.module'; // 💡 Ajusta según tu árbol de carpetas
-import { UsersModule } from '../users/users.module'; // 💡 Ajusta según tu árbol de carpetas
-import { TicketTypesModule } from '../ticket-types/ticket-types.module';
-import { TicketsModule } from '../tickets/tickets.module';
-import { CouponsModule } from '../coupons/coupons.module';
+import { OrdersService } from './orders.service';
+import { OrdersController } from './orders.controller';
+import { Ticket } from '../tickets/entities/ticket.entity';
+import { TicketType } from '../ticket-types/entities/ticket-type.entity';
+import { SupabaseModule } from '../supabase/supabase.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order]),
+    TypeOrmModule.forFeature([Order, Ticket, TicketType]),
     SupabaseModule,
     UsersModule,
-    TicketTypesModule,
-    TicketsModule,
-    CouponsModule,
   ],
   controllers: [OrdersController],
-  providers: [OrdersService, OrdersRepository],
+  providers: [OrdersService],
   exports: [OrdersService],
 })
 export class OrdersModule {}

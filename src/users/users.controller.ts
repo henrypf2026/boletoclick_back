@@ -7,14 +7,18 @@ import {
   UseInterceptors,
   Patch,
   Body,
+  Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { User } from './entities/user.entity';
 import { SupabaseAuthGuard } from '../common/guards/supabase-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UsersInterceptor } from '../interceptors/user.interceptor';
 import { UpdateUserDto } from './dto/updateUser.dto';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/enums/role.enum';
+import { RolesGuard } from '../common/guards/roles.guard';
 
 @Controller('users')
 export class UsersController {
@@ -75,4 +79,21 @@ export class UsersController {
   ) {
     return this.usersService.updateUserInfo(id, newUserData);
   }
+
+  // @Delete(':id')
+  // @UseGuards(SupabaseAuthGuard, RolesGuard)
+  // @Roles(Role.USER)
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Usuario desactivado',
+  // })
+  // @ApiParam({
+  //   name: 'id',
+  //   description: 'Identificador único del venue (UUID v4)',
+  //   required: true,
+  // })
+  // removeVenue(@Param('id') id: string): Promise<void> {
+  //   return this.usersService.removeUser(id);
+  // }
+
 }

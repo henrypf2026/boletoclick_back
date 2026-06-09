@@ -4,6 +4,7 @@ import { EventsRepository } from './events.repository';
 import { CreateEventDto } from './dto/create-event.dto';
 import { Event } from './entities/event.entity';
 import { TicketTypesService } from '../ticket-types/ticket-types.service';
+import { UpdateEventDto } from './dto/update-event.dto';
 
 @Injectable()
 export class EventsService {
@@ -26,6 +27,7 @@ export class EventsService {
 
     try {
       const { ticketTypes, poster, ...eventDetails } = eventData;
+      console.log({ eventDetails });
 
       const savedEvent = await this.eventsRepository.createEvent(
         {
@@ -64,15 +66,26 @@ export class EventsService {
     }
   }
 
+  async updateEvent(
+    id: string,
+    updateEventDto: UpdateEventDto,
+  ): Promise<Event> {
+    return await this.eventsRepository.updateEvent(id, updateEventDto);
+  }
+
   async getAllEvents(): Promise<Event[]> {
     return await this.eventsRepository.getAllEvents();
+  }
+
+  async getEventsByProducerId(producerId: string): Promise<Event[]> {
+    return await this.eventsRepository.getEventsByProducerId(producerId);
   }
 
   async getEventById(id: string): Promise<Event> {
     return await this.eventsRepository.getEventById(id);
   }
 
-  async deactivateEvent(id: string): Promise<void> {
-    await this.eventsRepository.deactivateEvent(id);
+  async desactivateEvent(id: string): Promise<void> {
+    await this.eventsRepository.desactivateEvent(id);
   }
 }

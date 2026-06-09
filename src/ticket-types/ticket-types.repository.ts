@@ -10,53 +10,42 @@ export class TicketTypesRepository {
     private readonly ormTicketTypesRepository: Repository<TicketType>,
   ) {}
 
-  /**
-   * 📦 Crea múltiples localidades en bloque (Bulk Insert).
-   * Soporta transacciones si el servicio le pasa el transactionalManager del QueryRunner.
-   */
   async createBulkTicketTypes(
     ticketsData: Partial<TicketType>[],
     transactionalManager?: EntityManager,
   ): Promise<TicketType[]> {
-    // Si viene dentro de una transacción usa su manager, si no, el del repositorio aislado
     const manager =
       transactionalManager || this.ormTicketTypesRepository.manager;
-
     const newTickets = manager.create(TicketType, ticketsData);
     return await manager.save(TicketType, newTickets);
   }
 
-  /**
-   * 📋 Obtiene todas las localidades de un evento específico.
-   */
   async getTicketTypesByEvent(eventId: string): Promise<TicketType[]> {
     return await this.ormTicketTypesRepository.find({
       where: { eventId },
-      order: { price: 'ASC' }, // Las lista de la más barata a la más cara
+      order: { price: 'ASC' },
     });
   }
 
-  /**
-   * 🔍 Busca una localidad específica por su ID.
-   */
+  async getTicketTypesByZone(zone: string): Promise<TicketType[]> {
+    return await this.ormTicketTypesRepository.find({
+      where: { zone },
+      order: { price: 'ASC' },
+    });
+  }
+
   async getTicketTypeById(id: string): Promise<TicketType> {
     const foundTicketType = await this.ormTicketTypesRepository.findOne({
       where: { id },
     });
-
     if (!foundTicketType) {
       throw new NotFoundException(`Ticket type with ID ${id} not found`);
     }
-
     return foundTicketType;
   }
 
-  /**
-   * 🗑️ Desactivación lógica (Soft Delete) de una localidad.
-   */
   async deactivateTicketType(id: string): Promise<void> {
     const result = await this.ormTicketTypesRepository.softDelete({ id });
-
     if ((result.affected ?? 0) === 0) {
       throw new NotFoundException(
         `Ticket type with ID ${id} not found or already deleted`,

@@ -4,13 +4,25 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3002';
 
   app.enableCors({
     origin: frontendUrl,
     credentials: true,
+  });
+
+  app.use('/payments/webhook', (req: any, res: any, next: any) => {
+    let data = '';
+    req.setEncoding('utf8');
+    req.on('data', (chunk: string) => {
+      data += chunk;
+    });
+    req.on('end', () => {
+      req.rawBody = Buffer.from(data);
+      next();
+    });
   });
 
   const config = new DocumentBuilder()
@@ -30,7 +42,8 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
-  const PORT = process.env.PORT ?? 3000;
+
+  const PORT = process.env.PORT ?? 3001;
   await app.listen(PORT);
   console.log(`Server listening on port ${PORT}`);
 }

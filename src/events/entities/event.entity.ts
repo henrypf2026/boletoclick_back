@@ -7,12 +7,14 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
 import { User } from '../../users/entities/user.entity';
 import { Venue } from '../../venues/entities/venue.entity';
 import { TicketType } from '../../ticket-types/entities/ticket-type.entity';
 import { Coupon } from '../../coupons/entities/coupon.entity';
+import { Favorite } from '../../favorites/entities/favorite.entity';
 
 export enum EventStatus {
   DRAFT = 'DRAFT',
@@ -43,7 +45,7 @@ export class Event {
   description!: string;
 
   @Column({ type: 'timestamptz' })
-  eventDate!: string; // Viaja como ISO String desde el Front
+  eventDate!: string;
 
   @Column({ type: 'text', nullable: true })
   posterUrl!: string;
@@ -54,6 +56,9 @@ export class Event {
     default: EventStatus.DRAFT,
   })
   status!: EventStatus;
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt!: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: string;
@@ -86,4 +91,7 @@ export class Event {
 
   @OneToMany(() => Coupon, (coupon) => coupon.event)
   coupons!: Coupon[];
+
+  @OneToMany(() => Favorite, (favorite) => favorite.event)
+  favorites!: Favorite[];
 }

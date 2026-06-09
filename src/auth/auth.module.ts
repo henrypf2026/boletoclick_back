@@ -5,9 +5,10 @@ import { SupabaseModule } from '../supabase/supabase.module';
 import { SupabaseAuthGuard } from '../common/guards/supabase-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { UsersModule } from '../users/users.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
-  imports: [SupabaseModule, UsersModule],
+  imports: [SupabaseModule, UsersModule, EmailModule],
   controllers: [AuthController],
   providers: [AuthService, SupabaseAuthGuard, RolesGuard],
 })

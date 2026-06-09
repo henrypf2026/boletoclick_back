@@ -12,6 +12,7 @@ import {
   ParseFilePipe,
   MaxFileSizeValidator,
   FileTypeValidator,
+  Patch,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -32,6 +33,7 @@ import { Role } from '../common/enums/role.enum';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UserPayload } from '../common/interfaces/user-payload.interface';
 import { FileUploadService } from '../file-upload/file-upload.service';
+import { UpdateEventDto } from './dto/update-event.dto';
 
 @ApiTags('events')
 @Controller('events')
@@ -45,7 +47,6 @@ export class EventsController {
   @UseGuards(SupabaseAuthGuard, RolesGuard)
   @Roles(Role.PRODUCER)
   @Post()
-  @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Create a new event with its ticket types',
   })
@@ -57,6 +58,7 @@ export class EventsController {
   @ApiResponse({ status: 400, description: 'Bad Request. Validation failed.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden. Producers only.' })
+  @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('poster'))
   async createEvent(
     @CurrentUser() user: UserPayload,
@@ -93,6 +95,26 @@ export class EventsController {
     return await this.eventsService.getAllEvents();
   }
 
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.PRODUCER)
+  @Get('producer')
+  @ApiOperation({
+    summary: 'Get all events belonging to the logged-in producer',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of producer events retrieved successfully.',
+    type: [Event],
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden. Producers only.' })
+  async getEventsByProducerId(
+    @CurrentUser() user: UserPayload,
+  ): Promise<Event[]> {
+    return await this.eventsService.getEventsByProducerId(user.id);
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get a specific event by its ID along with its ticket types',
@@ -106,16 +128,40 @@ export class EventsController {
 
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.PRODUCER)
+  @Patch(':id')
+  @ApiOperation({
+    summary: 'Update an event and its ticket types from producer dashboard',
+  })
+  @ApiParam({ name: 'id', description: 'The UUID of the event to update' })
+  @ApiResponse({
+    status: 200,
+    description: 'Event updated successfully.',
+    type: Event,
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Event not found.' })
+  async updateEvent(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateEventDto: UpdateEventDto,
+  ): Promise<Event> {
+    return await this.eventsService.updateEvent(id, updateEventDto);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
   @Roles(Role.PRODUCER, Role.ADMIN)
   @Delete(':id')
-  @ApiOperation({ summary: 'Deactivate an event (Soft Delete)' })
+  @ApiOperation({ summary: 'Deactivate an event (Change status to INACTIVE)' })
   @ApiParam({ name: 'id', description: 'The UUID of the event to deactivate' })
   @ApiResponse({ status: 200, description: 'Event successfully deactivated.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @ApiResponse({ status: 404, description: 'Not Found.' })
-  async deactivateEvent(@Param('id', ParseUUIDPipe) id: string) {
-    await this.eventsService.deactivateEvent(id);
+  async desactivateEvent(@Param('id', ParseUUIDPipe) id: string) {
+    await this.eventsService.desactivateEvent(id);
 
     return {
       success: true,

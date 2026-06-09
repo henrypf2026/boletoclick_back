@@ -17,9 +17,7 @@ const config = {
   logging: false,
   synchronize: true,
 
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  ssl: environment.DB_HOST === 'localhost' ? false : { rejectUnauthorized: false },
 };
 
 export const typeOrmConfig = registerAs('typeorm', () => config);

@@ -20,18 +20,25 @@ import { CategoriesModule } from './categories/categories.module';
 import { SeedModule } from './utils/seed.module';
 import { ProvinceService } from './province/province.service';
 import { MunicipalitiesService } from './municipalities/municipalities.service';
+import { StripeModule } from './stripe/stripe.module';
 import { SeedService } from './utils/seed.service';
+import { ScheduleModule } from '@nestjs/schedule';
 import { OrdersModule } from './orders/orders.module';
+import { EmailModule } from './email/email.module';
 import { CouponsModule } from './coupons/coupons.module';
+import { FavoritesModule } from './favorites/favorites.module';
+import { EventEmitterModule } from '@nestjs/event-emitter/dist/event-emitter.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, load: [typeOrmConfig] }),
+    ConfigModule.forRoot({ isGlobal: true, load: [typeOrmConfig] }),EventEmitterModule.forRoot(),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) =>
         configService.get('typeorm')!,
     }),
+    ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot(),
     UsersModule,
     AuthModule,
     EventsModule,
@@ -46,8 +53,12 @@ import { CouponsModule } from './coupons/coupons.module';
     MunicipalitiesModule,
     CategoriesModule,
     SeedModule,
+    StripeModule,
     OrdersModule,
+    EmailModule,
     CouponsModule,
+    FavoritesModule,
+    StripeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -59,13 +70,10 @@ export class AppModule {
     private readonly municipalityService: MunicipalitiesService,
   ) {}
 
-  // Método para agregar datos de prueba al iniciar la aplicación esta comentado porque no se pueden estar insertando cada vez que inicie
-  //
   // async onApplicationBootstrap() {
   //   await this.provinceService.addSedder();
   //   console.log('Provincias Agregadas');
   //   await this.municipalityService.addSedder();
   //   console.log('Municipios Agregados');
   // }
-
 }
