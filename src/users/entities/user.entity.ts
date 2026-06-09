@@ -10,6 +10,7 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Role } from '../../common/enums/role.enum';
 import { Order } from '../../orders/entities/order.entity';
+import { Favorite } from '../../favorites/entities/favorite.entity';
 
 @Entity('users')
 export class User {
@@ -70,6 +71,9 @@ export class User {
 
   @OneToMany('Order', 'user')
   orders!: Order[];
+
+  @OneToMany(() => Favorite, (favorite) => favorite.user)
+  favorites!: Favorite[];
 
   // 3. Relación con los bloqueos temporales de tiques en el carrito
   //   @OneToMany('TicketLock', 'user')

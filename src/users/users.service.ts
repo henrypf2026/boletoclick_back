@@ -1,10 +1,6 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/updateUser.dto';
 
@@ -51,8 +47,10 @@ export class UsersService {
     return await this.usersRepo.save(user);
   }
 
-  // async removeUser(id: string){
-
-  //  return await this. 
-  // }
+  async getUsersToNotify(): Promise<User[]> {
+    const users = await this.usersRepo.find({
+      where: { allowNewsletter: true, deletedAt: IsNull() },
+    });
+    return users;
+  }
 }

@@ -81,13 +81,9 @@ export class CreateEventDto {
       },
     ],
   })
-  @Transform(({ value }) => {
-    console.log(value);
-
-    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
-    // 2. Forzamos la conversión explícita a instancias de la clase DTO
-    return plainToInstance(CreateTicketTypeDto, parsed);
-  })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? JSON.parse(value) : value,
+  )
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateTicketTypeDto)
