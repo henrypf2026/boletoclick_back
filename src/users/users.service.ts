@@ -9,6 +9,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepo: Repository<User>,
+    
   ) {}
 
   // ─── Buscar por ID ────────────────────────────────────────────
