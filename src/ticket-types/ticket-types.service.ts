@@ -28,4 +28,8 @@ export class TicketTypesService {
   async deactivateTicketType(id: string): Promise<void> {
     await this.ticketTypesRepository.deactivateTicketType(id);
   }
+
+  async getTicketTypesByZone(zone: string): Promise<TicketType[]> {
+  return await this.ticketTypesRepository.getTicketTypesByZone(zone);
+}
 }

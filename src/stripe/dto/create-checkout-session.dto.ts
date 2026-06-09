@@ -1,33 +1,13 @@
-import { IsString, IsNumber, IsPositive, IsUUID, IsOptional } from 'class-validator';
+import { IsUUID, IsInt, IsPositive, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateCheckoutSessionDto {
-  @IsOptional()
-  @IsString()
-  id?: string;
-
   @IsUUID()
   userId!: string;
 
   @IsUUID()
-  eventId!: string;
+  ticketTypeId!: string;
 
-  @IsString()
-  eventTitle!: string;
-
-  @IsString()
-  venue!: string;
-
-  @IsString()
-  date!: string;
-
-  @IsString()
-  time!: string;
-
-  @IsOptional()
-  @IsString()
-  zone?: string;
-
-  @IsNumber()
+  @IsInt()
   @IsPositive()
   quantity!: number;
 
@@ -36,10 +16,6 @@ export class CreateCheckoutSessionDto {
   total!: number;
 
   @IsOptional()
-  @IsString()
-  qrCode?: string;
-
-  @IsOptional()
-  @IsString()
-  purchasedAt?: string;
+  @IsUUID()
+  couponId?: string;
 }

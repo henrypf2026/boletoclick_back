@@ -5,12 +5,13 @@ import Stripe from 'stripe';
 import { StripeService } from './stripe.service';
 import { StripeController } from './stripe.controller';
 import { Order } from '../orders/entities/order.entity';
+import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([Order]),
+    TypeOrmModule.forFeature([Order,TicketType]),
     
 
   ],
