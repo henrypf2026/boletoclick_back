@@ -16,7 +16,9 @@ async function bootstrap() {
   app.use('/payments/webhook', (req: any, res: any, next: any) => {
     let data = '';
     req.setEncoding('utf8');
-    req.on('data', (chunk: string) => { data += chunk; });
+    req.on('data', (chunk: string) => {
+      data += chunk;
+    });
     req.on('end', () => {
       req.rawBody = Buffer.from(data);
       next();
