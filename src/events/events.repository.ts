@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager } from 'typeorm';
 import { Event, EventStatus } from './entities/event.entity';
 import { UpdateEventDto } from './dto/update-event.dto';
+import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 
 @Injectable()
 export class EventsRepository {
@@ -108,5 +109,47 @@ export class EventsRepository {
         `Event with ID ${id} not found or already deactivated`,
       );
     }
+  }
+
+  async desactivateEvent(id: string): Promise<void> {
+    // En tu EventService
+    await this.ormEventsRepository.manager.transaction(
+      async (transactionalEntityManager: EntityManager): Promise<void> => {
+        // 1. Cambiar el estado 'permite' a false en la tabla Tickets buscando por el ID del evento
+        await transactionalEntityManager
+          .createQueryBuilder()
+          .update('tickets') // Nombre exacto de tu tabla o la clase Entidad Ticket
+          // Reemplaza 'permite' por el nombre exacto de tu columna en la base de datos (ej: permite_entrada)
+          .set({ allowEntrance: false })
+          // Filtramos usando una subconsulta para hallar los tickets vinculados a los ticketTypes del evento
+          .where(
+            `ticketTypeId IN (
+              SELECT id FROM ticket_types WHERE "eventId" = :id
+            )`,
+            { id },
+          )
+          .execute();
+
+        // 2. Borramos lógicamente los ticketTypes asociados al evento
+        await transactionalEntityManager.softDelete(TicketType, {
+          event: { id },
+        });
+
+        await transactionalEntityManager.update(Event, id, {
+          status: EventStatus.INACTIVE,
+        });
+
+        // 3. Borramos lógicamente el evento principal
+        const result = await transactionalEntityManager.softDelete(Event, {
+          id,
+        });
+
+        if ((result.affected ?? 0) === 0) {
+          throw new NotFoundException(
+            `Event with ID ${id} not found or already deactivated`,
+          );
+        }
+      },
+    );
   }
 }

@@ -9,6 +9,7 @@ import {
   MinLength,
   IsArray,
   ValidateNested,
+  Allow,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EventStatus } from '../entities/event.entity';
@@ -82,6 +83,7 @@ export class CreateEventDto {
   })
   @Transform(({ value }) => {
     const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    // 2. Forzamos la conversión explícita a instancias de la clase DTO
     return plainToInstance(CreateTicketTypeDto, parsed);
   })
   @IsArray()
@@ -94,6 +96,8 @@ export class CreateEventDto {
     type: 'string',
     format: 'binary',
     description: 'Imagen en format .jpg,.png,.gif,.webp,.jpeg. No mayor a 2MB',
+    required: true,
   })
+  @Allow()
   poster!: any;
 }

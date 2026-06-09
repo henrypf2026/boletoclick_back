@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CreateProvinceDto } from './dto/create-province.dto';
+// import { CreateProvinceDto } from './dto/create-province.dto';
 import { UpdateProvinceDto } from './dto/update-province.dto';
 import { ProvinceRepository } from './province.repository';
 
@@ -7,15 +7,18 @@ import { ProvinceRepository } from './province.repository';
 export class ProvinceService {
   constructor(private readonly provinceRepository: ProvinceRepository) {}
 
-  async create(createProvinceDto: CreateProvinceDto) {
-    return await this.provinceRepository.create(createProvinceDto);
-  }
+  // async create(createProvinceDto: CreateProvinceDto) {
+  //   return await this.provinceRepository.create(createProvinceDto);
+  // }
 
   async addSedder() {
     return await this.provinceRepository.addSedder();
   }
   async findAll() {
     return await this.provinceRepository.findAll();
+  }
+  async findAllWithEvents() {
+    return await this.provinceRepository.findAllWithEvents();
   }
 
   async findOne(id: string) {
@@ -26,11 +29,11 @@ export class ProvinceService {
     return await this.provinceRepository.findByProvinceCode(code);
   }
 
-  async update(id: string, updateProvinceDto: UpdateProvinceDto) {
-    return await this.provinceRepository.update(id, updateProvinceDto);
-  }
+  // async update(id: string, updateProvinceDto: UpdateProvinceDto) {
+  //   return await this.provinceRepository.update(id, updateProvinceDto);
+  // }
 
-  async remove(id: string) {
-    return await this.provinceRepository.remove(id);
-  }
+  // async remove(id: string) {
+  //   return await this.provinceRepository.remove(id);
+  // }
 }

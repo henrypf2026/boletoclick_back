@@ -73,4 +73,19 @@ export class TicketsRepository {
   async createBulkTickets(ticketsData: Partial<Ticket>[]): Promise<Ticket[]> {
     return await this.ormTicketRepository.save(ticketsData);
   }
+
+  async countActiveTicketsByUser(userId: string): Promise<number> {
+    return await this.ormTicketRepository
+      .createQueryBuilder('ticket')
+      // 1. Unimos con 'orders' (alias 'o') para poder llegar al usuario
+      .innerJoin('ticket.order', 'o')
+      // 2. Unimos con 'eventos' (alias 'e') para revisar la fecha del evento
+      .innerJoin('ticket.evento', 'e')
+      // 3. Filtramos por el ID del usuario que está en la orden
+      .where('o.userId = :userId', { userId })
+      // 4. Filtramos para que solo cuente eventos que aún no han sucedido
+      .andWhere('e.fecha_ejecucion >= :hoy', { hoy: new Date() })
+      // Devuelve solo el número total de filas encontradas (muy rápido)
+      .getCount();
+  }
 }
