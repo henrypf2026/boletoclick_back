@@ -11,17 +11,13 @@ import {
 } from '@nestjs/common';
 import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { StripeService } from './stripe.service';
 import { CreatePaymentIntentDto } from './dto/create-payment-intent.dto';
 import { CreateCheckoutSessionDto } from './dto/create-checkout-session.dto';
 
-@Controller('stripe')
+@Controller('payments')
 export class StripeController {
-  constructor(
-    private readonly stripeService: StripeService,
-    private readonly eventEmitter: EventEmitter2,
-  ) {}
+  constructor(private readonly stripeService: StripeService) {}
 
   @Post('create-payment-intent')
   async createPaymentIntent(
@@ -59,34 +55,7 @@ export class StripeController {
     if (!req.rawBody) {
       throw new BadRequestException('Missing raw body');
     }
-
-    const event = this.stripeService.constructWebhookEvent(req.rawBody, signature);
-    const session = event.data.object as any;
-
-    switch (event.type) {
-      case 'checkout.session.completed':
-        this.eventEmitter.emit('order.confirmed', {
-          sessionId: session.id,
-          metadata: session.metadata,
-          
-        });
-        break;
-      case 'checkout.session.expired':
-        this.eventEmitter.emit('order.failed', session.id);
-        break;
-      case 'charge.refunded':
-        this.eventEmitter.emit('order.refunded', session.payment_intent);
-        break;
-        case 'checkout.session.completed':
-  console.log('🔔 Webhook recibido: checkout.session.completed', session.id);
-  this.eventEmitter.emit('order.confirmed', {
-    sessionId: session.id,
-    metadata: session.metadata,
-  });
-  console.log('📤 Evento order.confirmed emitido');
-  break;
-    }
-
+    await this.stripeService.handleWebhookEvent(req.rawBody, signature);
     return { received: true };
   }
 }
