@@ -81,9 +81,11 @@ export class CreateEventDto {
       },
     ],
   })
-  @Transform(({ value }) =>
-    typeof value === 'string' ? JSON.parse(value) : value,
-  )
+  @Transform(({ value }) => {
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    // 2. Forzamos la conversión explícita a instancias de la clase DTO
+    return plainToInstance(CreateTicketTypeDto, parsed);
+  })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateTicketTypeDto)
@@ -96,6 +98,6 @@ export class CreateEventDto {
     description: 'Imagen en format .jpg,.png,.gif,.webp,.jpeg. No mayor a 2MB',
     required: true,
   })
-  @Allow() 
+  @Allow()
   poster!: any;
 }
