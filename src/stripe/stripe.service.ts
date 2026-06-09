@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -8,6 +8,7 @@ import type { CreateCheckoutSessionDto } from './dto/create-checkout-session.dto
 import { Order } from '../orders/entities/order.entity';
 import { OrderStatus } from '../common/enums/order-status.enum';
 import { User } from '../users/entities/user.entity';
+import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 
 type StripeClient = InstanceType<typeof Stripe>;
 
@@ -19,6 +20,8 @@ export class StripeService {
     private readonly eventEmitter: EventEmitter2,
     @InjectRepository(Order)
     private readonly orderRepo: Repository<Order>,
+    @InjectRepository(TicketType)
+    private readonly ticketTypeRepo: Repository<TicketType>,
   ) {}
 
   async createPaymentIntent(amount: number, currency = 'usd'): Promise<any> {
@@ -27,6 +30,17 @@ export class StripeService {
 
   async createCheckoutSession(dto: CreateCheckoutSessionDto): Promise<any> {
     const frontendUrl = this.config.getOrThrow<string>('FRONTEND_URL');
+
+    const ticketType = await this.ticketTypeRepo.findOne({
+      where: { id: dto.ticketTypeId },
+      relations: { event: true },
+    });
+    if (!ticketType) throw new NotFoundException(`TicketType ${dto.ticketTypeId} no encontrado`);
+
+    const event = ticketType.event;
+    const eventDate = new Date(event.eventDate);
+    const date = eventDate.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const time = eventDate.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 
     const platformFee = Math.round(dto.total * 0.05 * 100) / 100;
     const producerSubtotal = Math.round((dto.total - platformFee) * 100) / 100;
@@ -41,19 +55,20 @@ export class StripeService {
             currency: 'usd',
             unit_amount: Math.round((dto.total / dto.quantity) * 100),
             product_data: {
-              name: dto.eventTitle,
-              description: `${dto.venue} · ${dto.date} ${dto.time}`,
+              name: event.title,
+              description: `${date} ${time}`,
             },
           },
         },
       ],
       metadata: {
         userId: dto.userId,
-        eventId: dto.eventId,
+        eventId: event.id,
+        ticketTypeId: dto.ticketTypeId,
         quantity: dto.quantity.toString(),
       },
       success_url: `${frontendUrl}/payment-result?status=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${frontendUrl}/eventos/${dto.eventId}?canceled=true`,
+      cancel_url: `${frontendUrl}/eventos/${event.id}?canceled=true`,
     });
 
     const order = this.orderRepo.create({

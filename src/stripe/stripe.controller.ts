@@ -52,10 +52,15 @@ export class StripeController {
     @Headers('stripe-signature') signature: string,
     @Req() req: RawBodyRequest<Request>,
   ): Promise<{ received: boolean }> {
-    if (!req.rawBody) {
+    console.log('🔔 Webhook recibido raw');
+    console.log('rawBody exists:', !!req.rawBody);
+
+    const rawBody = req.rawBody;
+    if (!rawBody) {
       throw new BadRequestException('Missing raw body');
     }
-    await this.stripeService.handleWebhookEvent(req.rawBody, signature);
+
+    await this.stripeService.handleWebhookEvent(rawBody, signature);
     return { received: true };
   }
 }
