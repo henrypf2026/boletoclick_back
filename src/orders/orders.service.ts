@@ -20,9 +20,14 @@ export class OrdersService {
   ) {}
 
   @OnEvent('order.confirmed')
-async confirmOrder(payload: { sessionId: string; metadata: Record<string, string> }): Promise<void> {
-  console.log('📥 order.confirmed recibido', payload.sessionId);
-    const order = await this.orderRepo.findOne({ where: { transactionId: payload.sessionId } });
+  async confirmOrder(payload: {
+    sessionId: string;
+    metadata: Record<string, string>;
+  }): Promise<void> {
+    console.log('📥 order.confirmed recibido', payload.sessionId);
+    const order = await this.orderRepo.findOne({
+      where: { transactionId: payload.sessionId },
+    });
     if (!order) {
       console.warn(`⚠️ Orden con sessionId ${payload.sessionId} no encontrada`);
       return;
@@ -46,15 +51,21 @@ async confirmOrder(payload: { sessionId: string; metadata: Record<string, string
         }),
       );
       await this.ticketRepo.save(tickets);
-      console.log(`✅ Orden ${order.id} confirmada — ${quantity} ticket(s) generados`);
+      console.log(
+        `✅ Orden ${order.id} confirmada — ${quantity} ticket(s) generados`,
+      );
     } else {
-      console.log(`✅ Orden ${order.id} confirmada — sin ticketType en metadata`);
+      console.log(
+        `✅ Orden ${order.id} confirmada — sin ticketType en metadata`,
+      );
     }
   }
 
   @OnEvent('order.failed')
   async failOrder(sessionId: string): Promise<void> {
-    const order = await this.orderRepo.findOne({ where: { transactionId: sessionId } });
+    const order = await this.orderRepo.findOne({
+      where: { transactionId: sessionId },
+    });
     if (!order) return;
 
     order.status = OrderStatus.FAILED;
@@ -64,11 +75,29 @@ async confirmOrder(payload: { sessionId: string; metadata: Record<string, string
 
   @OnEvent('order.refunded')
   async refundOrder(paymentIntentId: string): Promise<void> {
-    const order = await this.orderRepo.findOne({ where: { transactionId: paymentIntentId } });
+    const order = await this.orderRepo.findOne({
+      where: { transactionId: paymentIntentId },
+    });
     if (!order) return;
 
     order.status = OrderStatus.REFUNDED;
     await this.orderRepo.save(order);
     console.log(`💸 Orden ${order.id} reembolsada`);
+  }
+
+  async findMyOrders(userId: string): Promise<Order[]> {
+    return await this.orderRepo.find({
+      where: {
+        user: { id: userId },
+      },
+      relations: {
+        tickets: {
+          ticketType: true,
+        },
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
   }
 }
