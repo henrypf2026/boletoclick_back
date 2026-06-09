@@ -26,6 +26,8 @@ import { OrdersModule } from './orders/orders.module';
 import { EmailModule } from './email/email.module';
 import { CouponsModule } from './coupons/coupons.module';
 import { FavoritesModule } from './favorites/favorites.module';
+import { StripeModule } from './stripe/stripe.module';
+import { EventEmitterModule } from '@nestjs/event-emitter/dist/event-emitter.module';
 
 @Module({
   imports: [
@@ -36,6 +38,7 @@ import { FavoritesModule } from './favorites/favorites.module';
         configService.get('typeorm')!,
     }),
     ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot(),
     UsersModule,
     AuthModule,
     EventsModule,
@@ -54,6 +57,7 @@ import { FavoritesModule } from './favorites/favorites.module';
     EmailModule,
     CouponsModule,
     FavoritesModule,
+    StripeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

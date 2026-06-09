@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import Stripe from 'stripe';
 import type { CreateCheckoutSessionDto } from './dto/create-checkout-session.dto';
 import { Order } from '../orders/entities/order.entity';
@@ -15,6 +16,7 @@ export class StripeService {
   constructor(
     @Inject('STRIPE_CLIENT') private readonly stripe: StripeClient,
     private readonly config: ConfigService,
+    private readonly eventEmitter: EventEmitter2,
     @InjectRepository(Order)
     private readonly orderRepo: Repository<Order>,
   ) {}
@@ -67,11 +69,44 @@ export class StripeService {
     return session;
   }
 
+  async handleWebhookEvent(rawBody: Buffer, signature: string): Promise<void> {
+    const secret = this.config.getOrThrow<string>('STRIPE_WEBHOOK_SECRET');
+    const event = this.stripe.webhooks.constructEvent(rawBody, signature, secret);
+    const session = event.data.object as any;
+
+    switch (event.type) {
+      case 'checkout.session.completed':
+        console.log('🔔 Webhook recibido: checkout.session.completed', session.id);
+        this.eventEmitter.emit('order.confirmed', {
+          sessionId: session.id,
+          metadata: session.metadata,
+        });
+        console.log('📤 Evento order.confirmed emitido');
+        break;
+      case 'checkout.session.expired':
+        this.eventEmitter.emit('order.failed', session.id);
+        break;
+      case 'charge.refunded':
+        this.eventEmitter.emit('order.refunded', session.payment_intent);
+        break;
+    }
+  }
+
   async verifySession(sessionId: string): Promise<boolean> {
-    const order = await this.orderRepo.findOne({
-      where: { transactionId: sessionId },
-    });
-    return order?.status === OrderStatus.PAID;
+    const session = await this.stripe.checkout.sessions.retrieve(sessionId);
+
+    if (session.payment_status === 'paid') {
+      const order = await this.orderRepo.findOne({
+        where: { transactionId: sessionId },
+      });
+      if (order && order.status !== OrderStatus.PAID) {
+        order.status = OrderStatus.PAID;
+        await this.orderRepo.save(order);
+      }
+      return true;
+    }
+
+    return false;
   }
 
   constructWebhookEvent(rawBody: Buffer, signature: string): any {

@@ -6,10 +6,13 @@ import { StripeService } from './stripe.service';
 import { StripeController } from './stripe.controller';
 import { Order } from '../orders/entities/order.entity';
 
+
 @Module({
   imports: [
     ConfigModule,
     TypeOrmModule.forFeature([Order]),
+    
+
   ],
   controllers: [StripeController],
   providers: [
