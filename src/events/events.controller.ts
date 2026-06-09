@@ -79,8 +79,7 @@ export class EventsController {
     )
     poster: Express.Multer.File,
   ): Promise<Event> {
-    // const posterUrl = await this.fileUploadService.uploadEventImage(poster);
-    const posterUrl = 'https://ejemplo.com';
+    const posterUrl = await this.fileUploadService.uploadEventImage(poster);
 
     return await this.eventsService.createEvent(user.id, eventData, posterUrl);
   }
