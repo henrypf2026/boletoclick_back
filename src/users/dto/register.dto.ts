@@ -11,6 +11,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Role } from '../../common/enums/role.enum'; // 💡 Sincronizado con el path del AuthController
+import { IsAdult } from '../../common/decorators/is-adult.decorator';
 
 export class RegisterDto {
   @ApiProperty({
@@ -46,11 +47,18 @@ export class RegisterDto {
   name!: string;
 
   @ApiProperty({
-    example: '1995-05-10',
+    example: '2005-05-10',
     description:
-      'Fecha de nacimiento (YYYY-MM-DD) para validar mayoría de edad',
+      'Fecha de nacimiento (YYYY-MM-DD). Validación de mayoría de edad (mínimo 18 años).',
   })
-  @IsDateString()
+  @IsDateString(
+    {},
+    {
+      message:
+        'La fecha de nacimiento debe tener un formato válido (YYYY-MM-DD).',
+    },
+  )
+  @IsAdult(18) // 👈 Una belleza. Limpio y directo.
   birthDate!: string;
 
   @ApiPropertyOptional({
