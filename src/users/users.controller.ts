@@ -10,7 +10,12 @@ import {
   Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { User } from './entities/user.entity';
 import { SupabaseAuthGuard } from '../common/guards/supabase-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -28,15 +33,15 @@ export class UsersController {
   @UseGuards(SupabaseAuthGuard)
   @Get('me')
   @ApiOperation({
-    summary: 'Get the profile of the currently authenticated user',
+    summary: 'Obtener el perfil del usuario autenticado actualmente',
   })
-  @ApiResponse({ status: 200, description: 'Profile retrieved successfully.' })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 200, description: 'Perfil obtenido con éxito.' })
+  @ApiResponse({ status: 401, description: 'No autorizado (Unauthorized).' })
   async getMe(@CurrentUser() user): Promise<User> {
     const userProfile = await this.usersService.findUserById(user.id);
 
     if (!userProfile) {
-      throw new NotFoundException('User profile not found');
+      throw new NotFoundException('Perfil de usuario no encontrado');
     }
 
     return userProfile;
@@ -45,30 +50,31 @@ export class UsersController {
   @ApiBearerAuth()
   @Get(':id')
   @UseInterceptors(UsersInterceptor)
-  @ApiOperation({ summary: 'Get a user profile by ID' })
+  @ApiOperation({ summary: 'Obtener el perfil de un usuario por su ID' })
   async findUserById(@Param('id') id: string): Promise<User> {
     const user = await this.usersService.findUserById(id);
 
     if (!user) {
-      throw new NotFoundException('User profile not found');
+      throw new NotFoundException('Perfil de usuario no encontrado');
     }
 
     return user;
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Updates the user information' })
+  @ApiOperation({ summary: 'Actualiza la información del usuario' })
   @ApiResponse({
     status: 200,
-    description: 'User information updated',
+    description: 'Información del usuario actualizada con éxito.',
   })
   @ApiResponse({
     status: 400,
-    description: 'Update failed. Trying to update an invalid parameter',
+    description:
+      'Error al actualizar. Se intentó modificar un parámetro inválido.',
   })
   @ApiResponse({
     status: 404,
-    description: 'User not found',
+    description: 'Usuario no encontrado.',
   })
   @UseInterceptors(UsersInterceptor)
   @UseGuards(SupabaseAuthGuard)
@@ -95,5 +101,4 @@ export class UsersController {
   // removeVenue(@Param('id') id: string): Promise<void> {
   //   return this.usersService.removeUser(id);
   // }
-
 }
