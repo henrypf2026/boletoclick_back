@@ -10,6 +10,7 @@ import { UsersService } from '../users/users.service';
 import { ConfigService } from '@nestjs/config';
 import { EmailService } from '../email/email.service';
 import { ErrorTranslatorService } from '../common/services/error-translator.service';
+import { Role } from '../common/enums/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -41,11 +42,24 @@ export class AuthService {
         'No se pudo registrar el usuario en el sistema de autenticación.',
       );
     }
-    const { password, ...profileData } = userData;
+    const { password, role, ...profileData } = userData;
+
+    // Bloquear creación de usuarios ADMIN desde este endpoint público
+    if (role === Role.ADMIN) {
+      throw new BadRequestException(
+        'No está permitido crear usuarios ADMIN desde este endpoint.',
+      );
+    }
+
+    // Solo permitir producer o user; por defecto asignar USER
+    const assignedRole = role === Role.PRODUCER ? Role.PRODUCER : Role.USER;
 
     const savedUserProfile = await this.usersService.upsertProfile(
       data.user.id,
-      profileData,
+      {
+        ...profileData,
+        role: assignedRole,
+      },
     );
 
     await this.emailService.sendWelcomeEmail(userData.name, userData.email);
