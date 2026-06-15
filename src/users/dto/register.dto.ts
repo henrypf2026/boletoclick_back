@@ -22,7 +22,7 @@ export class RegisterDto {
   email!: string;
 
   @ApiProperty({
-    example: 'Aa1234*',
+    example: 'Aa12345*',
     description:
       'Contraseña de la cuenta (mínimo 8 caracteres, debe incluir al menos una mayúscula, una minúscula, un número y un carácter especial)',
   })
@@ -58,7 +58,7 @@ export class RegisterDto {
         'La fecha de nacimiento debe tener un formato válido (YYYY-MM-DD).',
     },
   )
-  @IsAdult(18) // 👈 Una belleza. Limpio y directo.
+  @IsAdult(18)
   birthDate!: string;
 
   @ApiPropertyOptional({
@@ -66,7 +66,7 @@ export class RegisterDto {
     description:
       'Número de documento o NIT. Obligatorio para Productores, opcional para compradores.',
   })
-  @IsOptional() // 👈 ¡Crucial! Evita que los compradores comunes queden bloqueados al registrarse
+  @IsOptional()
   @IsString()
   documentNumber?: string;
 

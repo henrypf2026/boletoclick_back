@@ -9,6 +9,7 @@ import { LoginDto } from './dto/login.dto';
 import { UsersService } from '../users/users.service';
 import { ConfigService } from '@nestjs/config';
 import { EmailService } from '../email/email.service';
+import { ErrorTranslatorService } from '../common/services/error-translator.service';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +18,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
     private readonly emailService: EmailService,
+    private readonly errorTranslator: ErrorTranslatorService,
   ) {}
 
   async register(userData: RegisterDto) {
@@ -29,7 +31,9 @@ export class AuthService {
     });
 
     if (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException(
+        this.errorTranslator.translateSupabaseError(error.message),
+      );
     }
 
     if (!data.user) {
@@ -63,7 +67,9 @@ export class AuthService {
     });
 
     if (error) {
-      throw new UnauthorizedException(error.message);
+      throw new UnauthorizedException(
+        this.errorTranslator.translateSupabaseError(error.message),
+      );
     }
 
     return {

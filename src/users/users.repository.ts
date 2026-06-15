@@ -30,7 +30,7 @@ export class UsersRepository {
       profileImageUrl: profileData.profileImageUrl,
       allowNewsletter: profileData.allowNewsletter,
       businessName: profileData.businessName,
-      role: profileData.role || Role.USER, // 💡 Si no viene rol, por defecto es USER
+      role: profileData.role || Role.USER,
     });
 
     return await this.ormUserRepository.save(newUser);

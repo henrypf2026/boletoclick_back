@@ -6,9 +6,10 @@ import { SupabaseAuthGuard } from '../common/guards/supabase-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { UsersModule } from '../users/users.module';
 import { EmailModule } from '../email/email.module';
+import { CommonModule } from '../common/common.module';
 
 @Module({
-  imports: [SupabaseModule, UsersModule, EmailModule],
+  imports: [SupabaseModule, UsersModule, EmailModule, CommonModule],
   controllers: [AuthController],
   providers: [AuthService, SupabaseAuthGuard, RolesGuard],
 })
