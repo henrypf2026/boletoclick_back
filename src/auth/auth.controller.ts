@@ -16,34 +16,40 @@ import {
 } from '@nestjs/swagger';
 import { ForgotPasswordDto } from './dto/forgotpassword.dto';
 
-@ApiTags('Authentication')
+@ApiTags('Autenticación')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  @ApiOperation({ summary: 'Register a new user and create their profile' })
+  @ApiOperation({ summary: 'Registrar un nuevo usuario y crear su perfil' })
   @ApiResponse({
     status: 201,
-    description: 'User registered successfully and profile saved in database.',
+    description:
+      'Usuario registrado con éxito y perfil guardado en la base de datos.',
   })
   @ApiResponse({
     status: 400,
-    description: 'Bad Request. Validation failed or email already exists.',
+    description:
+      'Solicitud incorrecta (Bad Request). Error de validación o el correo electrónico ya existe.',
   })
   register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
   @Post('login')
-  @ApiOperation({ summary: 'Authenticate user credentials via Supabase' })
+  @ApiOperation({
+    summary: 'Autenticar las credenciales del usuario a través de Supabase',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Login successful. Returns access token and user session.',
+    description:
+      'Inicio de sesión exitoso. Devuelve el token de acceso y la sesión del usuario.',
   })
   @ApiResponse({
     status: 401,
-    description: 'Unauthorized. Invalid email or password.',
+    description:
+      'No autorizado (Unauthorized). Correo electrónico o contraseña inválidos.',
   })
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
@@ -53,16 +59,16 @@ export class AuthController {
   @UseGuards(SupabaseAuthGuard)
   @Get('me')
   @ApiOperation({
-    summary: 'Get current authenticated user session data',
+    summary: 'Obtener los datos de sesión del usuario autenticado actual',
   })
   @ApiResponse({
     status: 200,
     description:
-      'Returns token payload data extracted from the current session.',
+      'Devuelve los datos del payload del token extraídos de la sesión actual.',
   })
   @ApiResponse({
     status: 401,
-    description: 'Unauthorized. Token missing or invalid.',
+    description: 'No autorizado (Unauthorized). Token ausente o inválido.',
   })
   getMe(@CurrentUser() user) {
     return {
@@ -76,15 +82,16 @@ export class AuthController {
 
   @Post('forgot-password')
   @ApiOperation({
-    summary: 'Send password recovery email',
+    summary: 'Enviar correo electrónico de recuperación de contraseña',
   })
   @ApiResponse({
     status: 200,
-    description: 'Password recovery email sent successfully',
+    description:
+      'Correo electrónico de recuperación de contraseña enviado con éxito.',
   })
   @ApiResponse({
     status: 400,
-    description: 'Invalid email address',
+    description: 'Dirección de correo electrónico inválida.',
   })
   forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     return this.authService.forgotPassword(forgotPasswordDto.email);
@@ -95,11 +102,17 @@ export class AuthController {
   @UseGuards(SupabaseAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Get('admin-test')
-  @ApiOperation({ summary: 'Test endpoint restricted strictly to ADMIN role' })
-  @ApiResponse({ status: 200, description: 'Access granted for Admin.' })
+  @ApiOperation({
+    summary: 'Endpoint de prueba restringido estrictamente al rol ADMIN',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Acceso concedido para Administrador.',
+  })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden. User does not have Admin permissions.',
+    description:
+      'Prohibido (Forbidden). El usuario no tiene permisos de Administrador.',
   })
   adminTest() {
     return {
@@ -112,15 +125,15 @@ export class AuthController {
   @Roles(Role.PRODUCER, Role.ADMIN)
   @Get('producer-test')
   @ApiOperation({
-    summary: 'Test endpoint restricted to PRODUCER or ADMIN roles',
+    summary: 'Endpoint de prueba restringido a los roles PRODUCER o ADMIN',
   })
   @ApiResponse({
     status: 200,
-    description: 'Access granted for Producer or Admin.',
+    description: 'Acceso concedido para Productor o Administrador.',
   })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden. Insufficient permissions.',
+    description: 'Prohibido (Forbidden). Permisos insuficientes.',
   })
   producerTest() {
     return {
@@ -133,15 +146,17 @@ export class AuthController {
   @Roles(Role.USER, Role.PRODUCER, Role.ADMIN)
   @Get('user-test')
   @ApiOperation({
-    summary: 'Test endpoint accessible by any authenticated user profile',
+    summary:
+      'Endpoint de prueba accesible por cualquier perfil de usuario autenticado',
   })
   @ApiResponse({
     status: 200,
-    description: 'Access granted for any valid database profile.',
+    description:
+      'Acceso concedido para cualquier perfil válido en la base de datos.',
   })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden. Active profile not found.',
+    description: 'Prohibido (Forbidden). Perfil activo no encontrado.',
   })
   userTest() {
     return {

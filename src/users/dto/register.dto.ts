@@ -6,10 +6,12 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  Matches,
   MinLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Role } from '../../common/enums/role.enum'; // 💡 Sincronizado con el path del AuthController
+import { IsAdult } from '../../common/decorators/is-adult.decorator';
 
 export class RegisterDto {
   @ApiProperty({
@@ -20,11 +22,21 @@ export class RegisterDto {
   email!: string;
 
   @ApiProperty({
-    example: '123456',
-    description: 'Contraseña para la cuenta (mínimo 6 caracteres)',
+    example: 'Aa12345*',
+    description:
+      'Contraseña de la cuenta (mínimo 8 caracteres, debe incluir al menos una mayúscula, una minúscula, un número y un carácter especial)',
   })
   @IsString()
-  @MinLength(6)
+  @MinLength(8, {
+    message: 'La contraseña debe tener al menos 8 caracteres.',
+  })
+  @Matches(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>_\-]).+$/,
+    {
+      message:
+        'La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial.',
+    },
+  )
   password!: string;
 
   @ApiProperty({
@@ -35,11 +47,18 @@ export class RegisterDto {
   name!: string;
 
   @ApiProperty({
-    example: '1995-05-10',
+    example: '2005-05-10',
     description:
-      'Fecha de nacimiento (YYYY-MM-DD) para validar mayoría de edad',
+      'Fecha de nacimiento (YYYY-MM-DD). Validación de mayoría de edad (mínimo 18 años).',
   })
-  @IsDateString()
+  @IsDateString(
+    {},
+    {
+      message:
+        'La fecha de nacimiento debe tener un formato válido (YYYY-MM-DD).',
+    },
+  )
+  @IsAdult(18)
   birthDate!: string;
 
   @ApiPropertyOptional({
@@ -47,7 +66,7 @@ export class RegisterDto {
     description:
       'Número de documento o NIT. Obligatorio para Productores, opcional para compradores.',
   })
-  @IsOptional() // 👈 ¡Crucial! Evita que los compradores comunes queden bloqueados al registrarse
+  @IsOptional()
   @IsString()
   documentNumber?: string;
 

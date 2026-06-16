@@ -9,6 +9,8 @@ import { LoginDto } from './dto/login.dto';
 import { UsersService } from '../users/users.service';
 import { ConfigService } from '@nestjs/config';
 import { EmailService } from '../email/email.service';
+import { ErrorTranslatorService } from '../common/services/error-translator.service';
+import { Role } from '../common/enums/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +19,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
     private readonly emailService: EmailService,
+    private readonly errorTranslator: ErrorTranslatorService,
   ) {}
 
   async register(userData: RegisterDto) {
@@ -29,7 +32,9 @@ export class AuthService {
     });
 
     if (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException(
+        this.errorTranslator.translateSupabaseError(error.message),
+      );
     }
 
     if (!data.user) {
@@ -37,11 +42,24 @@ export class AuthService {
         'No se pudo registrar el usuario en el sistema de autenticación.',
       );
     }
-    const { password, ...profileData } = userData;
+    const { password, role, ...profileData } = userData;
+
+    // Bloquear creación de usuarios ADMIN desde este endpoint público
+    if (role === Role.ADMIN) {
+      throw new BadRequestException(
+        'No está permitido crear usuarios ADMIN desde este endpoint.',
+      );
+    }
+
+    // Solo permitir producer o user; por defecto asignar USER
+    const assignedRole = role === Role.PRODUCER ? Role.PRODUCER : Role.USER;
 
     const savedUserProfile = await this.usersService.upsertProfile(
       data.user.id,
-      profileData,
+      {
+        ...profileData,
+        role: assignedRole,
+      },
     );
 
     await this.emailService.sendWelcomeEmail(userData.name, userData.email);
@@ -63,7 +81,9 @@ export class AuthService {
     });
 
     if (error) {
-      throw new UnauthorizedException(error.message);
+      throw new UnauthorizedException(
+        this.errorTranslator.translateSupabaseError(error.message),
+      );
     }
 
     return {

@@ -29,7 +29,7 @@ export class FavoritesController {
 
   @Post(':eventId/toggle')
   @UseGuards(SupabaseAuthGuard, RolesGuard)
-  @Roles(Role.USER)
+  @Roles(Role.USER, Role.PRODUCER)
   @ApiOperation({
     summary: 'Agregar o eliminar un evento de tus favoritos (Toggle)',
   })
