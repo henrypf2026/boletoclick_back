@@ -47,6 +47,9 @@ export class TicketType {
   @Column({ type: 'varchar', length: 255, nullable: true })
   zone!: string | null;
 
+  @DeleteDateColumn({ type: 'timestamptz', nullable: true })
+  deletedAt!: Date | null;
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: string;
 

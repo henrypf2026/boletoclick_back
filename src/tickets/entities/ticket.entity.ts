@@ -10,7 +10,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { TicketType } from '../../ticket-types/entities/ticket-type.entity'; // 💡 Ajusta la ruta según tu estructura
 import { Order } from '../../orders/entities/order.entity';
-import { TicketStatus } from '../../common/enums/ticket-status.enum';
+// import { TicketStatus } from '../../common/enums/ticket-status.enum';
 
 @Entity({ name: 'tickets' })
 export class Ticket {
@@ -55,12 +55,12 @@ export class Ticket {
   @Column({ type: 'boolean', default: true })
   allowEntrance!: boolean;
 
-  @Column({
-    type: 'enum',
-    enum: TicketStatus,
-    default: TicketStatus.VALID,
-  })
-  status!: TicketStatus;
+  // @Column({
+  //   type: 'enum',
+  //   enum: TicketStatus,
+  //   default: TicketStatus.VALID,
+  // })
+  // status!: TicketStatus;
 
   @ApiProperty({
     description:

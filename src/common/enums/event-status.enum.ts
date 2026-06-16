@@ -3,4 +3,5 @@ export enum EventStatus {
   ACTIVE = 'ACTIVE',
   SOLDOUT = 'SOLDOUT',
   CANCELLED = 'CANCELLED',
+  INACTIVE = 'INACTIVE',
 }

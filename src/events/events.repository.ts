@@ -150,7 +150,7 @@ export class EventsRepository {
         await transactionalEntityManager
           .createQueryBuilder()
           .update(Ticket)
-          .set({ status: TicketStatus.CANCELLED })
+          .set({ allowEntrance: false })
           .where(`ticketTypeId IN (${subQuery})`) // Inyectamos de forma segura la subconsulta estructurada
           .setParameter('eventId', id) // El parámetro se mapea correctamente aquí
           .execute();
