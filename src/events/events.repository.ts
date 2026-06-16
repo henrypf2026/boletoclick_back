@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, EntityManager } from 'typeorm';
+import { Repository, EntityManager, Between } from 'typeorm';
 import { Event, EventStatus } from './entities/event.entity';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
@@ -151,5 +151,27 @@ export class EventsRepository {
         }
       },
     );
+  }
+
+  async findUpcomingEvents(fromDate: Date, toDate: Date, limit: number) {
+    return await this.ormEventsRepository.find({
+      where: {
+        eventDate: Between(fromDate.toISOString(), toDate.toISOString()),
+      },
+      relations: {
+        venue: {
+          municipality: {
+            province: true,
+          },
+        },
+        category: true,
+        ticketTypes: true,
+        coupons: true,
+      },
+      order: {
+        eventDate: 'ASC',
+      },
+      take: limit,
+    });
   }
 }

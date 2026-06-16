@@ -3,13 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/updateUser.dto';
+import { user } from '@getbrevo/brevo/dist/cjs/api';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepo: Repository<User>,
-    
   ) {}
 
   // ─── Buscar por ID ────────────────────────────────────────────
@@ -51,6 +51,7 @@ export class UsersService {
     const users = await this.usersRepo.find({
       where: { allowNewsletter: true, deletedAt: IsNull() },
     });
+    console.log('users to notify coount = ' + users.length);
     return users;
   }
 }
