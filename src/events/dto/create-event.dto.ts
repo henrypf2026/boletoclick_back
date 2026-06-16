@@ -5,17 +5,16 @@ import {
   IsString,
   IsUUID,
   IsDateString,
-  IsUrl,
   MinLength,
   IsArray,
   ValidateNested,
   Allow,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { EventStatus } from '../entities/event.entity';
 import { CreateTicketTypeDto } from '../../ticket-types/dto/create-ticket-type.dto';
 import { plainToInstance, Transform, Type } from 'class-transformer';
 import { IsValidEventDate } from '../../common/decorators/is-valid-event-date.decorator';
+import { EventStatus } from '../../common/enums/event-status.enum';
 
 export class CreateEventDto {
   @ApiProperty({

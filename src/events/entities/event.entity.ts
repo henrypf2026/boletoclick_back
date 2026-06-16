@@ -15,14 +15,7 @@ import { Venue } from '../../venues/entities/venue.entity';
 import { TicketType } from '../../ticket-types/entities/ticket-type.entity';
 import { Coupon } from '../../coupons/entities/coupon.entity';
 import { Favorite } from '../../favorites/entities/favorite.entity';
-
-export enum EventStatus {
-  DRAFT = 'DRAFT',
-  ACTIVE = 'ACTIVE',
-  SOLDOUT = 'SOLDOUT',
-  CANCELLED = 'CANCELLED',
-  INACTIVE = 'INACTIVE',
-}
+import { EventStatus } from '../../common/enums/event-status.enum';
 
 @Entity('events')
 export class Event {

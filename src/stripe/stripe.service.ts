@@ -35,12 +35,22 @@ export class StripeService {
       where: { id: dto.ticketTypeId },
       relations: { event: true },
     });
-    if (!ticketType) throw new NotFoundException(`TicketType ${dto.ticketTypeId} no encontrado`);
+    if (!ticketType)
+      throw new NotFoundException(
+        `TicketType ${dto.ticketTypeId} no encontrado`,
+      );
 
     const event = ticketType.event;
     const eventDate = new Date(event.eventDate);
-    const date = eventDate.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const time = eventDate.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    const date = eventDate.toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+    const time = eventDate.toLocaleTimeString('es-AR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
 
     const platformFee = Math.round(dto.total * 0.05 * 100) / 100;
     const producerSubtotal = Math.round((dto.total - platformFee) * 100) / 100;
@@ -86,12 +96,19 @@ export class StripeService {
 
   async handleWebhookEvent(rawBody: Buffer, signature: string): Promise<void> {
     const secret = this.config.getOrThrow<string>('STRIPE_WEBHOOK_SECRET');
-    const event = this.stripe.webhooks.constructEvent(rawBody, signature, secret);
+    const event = this.stripe.webhooks.constructEvent(
+      rawBody,
+      signature,
+      secret,
+    );
     const session = event.data.object as any;
 
     switch (event.type) {
       case 'checkout.session.completed':
-        console.log('🔔 Webhook recibido: checkout.session.completed', session.id);
+        console.log(
+          '🔔 Webhook recibido: checkout.session.completed',
+          session.id,
+        );
         this.eventEmitter.emit('order.confirmed', {
           sessionId: session.id,
           metadata: session.metadata,

@@ -15,7 +15,7 @@ const config = {
 
   autoLoadEntities: true,
   logging: false,
-  synchronize: true,
+  synchronize: false,
 
   ssl: environment.DB_HOST === 'localhost' ? false : { rejectUnauthorized: false },
 };
