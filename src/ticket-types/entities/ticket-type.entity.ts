@@ -53,9 +53,6 @@ export class TicketType {
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt!: string;
 
-  @DeleteDateColumn({ type: 'timestamptz', nullable: true })
-  deletedAt!: Date | null;
-
   @ManyToOne('Event', 'ticketTypes', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'eventId' })
   event!: Event;

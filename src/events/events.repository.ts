@@ -1,9 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager } from 'typeorm';
-import { Event, EventStatus } from './entities/event.entity';
+import { Event } from './entities/event.entity';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
+import { EventStatus } from '../common/enums/event-status.enum';
+import { Ticket } from '../tickets/entities/ticket.entity';
+import { TicketStatus } from '../common/enums/ticket-status.enum';
 
 @Injectable()
 export class EventsRepository {
@@ -101,7 +104,7 @@ export class EventsRepository {
 
   async deactivateEvent(id: string): Promise<void> {
     const result = await this.ormEventsRepository.update(id, {
-      status: EventStatus.INACTIVE,
+      status: EventStatus.CANCELLED,
     });
 
     if ((result.affected ?? 0) === 0) {
@@ -130,25 +133,27 @@ export class EventsRepository {
           )
           .execute();
 
-        // 2. Borramos lógicamente los ticketTypes asociados al evento
-        await transactionalEntityManager.softDelete(TicketType, {
-          event: { id },
-        });
+        await transactionalEntityManager.update(
+          Event,
+          { id: id }, // 1. Condición: Buscar el evento por su ID
+          { status: EventStatus.CANCELLED }, // 2. Modificación: Cambiar el estado a CANCELLED
+        );
 
-        await transactionalEntityManager.update(Event, id, {
-          status: EventStatus.INACTIVE,
-        });
+        const subQuery = transactionalEntityManager
+          .createQueryBuilder()
+          .select('ticketType.id')
+          .from(TicketType, 'ticketType')
+          .where('ticketType.eventId = :eventId')
+          .getQuery(); // Esto genera el texto SQL interno: (SELECT id FROM ticket_types WHERE eventId = ...)
 
-        // 3. Borramos lógicamente el evento principal
-        const result = await transactionalEntityManager.softDelete(Event, {
-          id,
-        });
-
-        if ((result.affected ?? 0) === 0) {
-          throw new NotFoundException(
-            `Event with ID ${id} not found or already deactivated`,
-          );
-        }
+        // 2. Ejecutamos el UPDATE masivo inyectando la subconsulta en el WHERE
+        await transactionalEntityManager
+          .createQueryBuilder()
+          .update(Ticket)
+          .set({ status: TicketStatus.CANCELLED })
+          .where(`ticketTypeId IN (${subQuery})`) // Inyectamos de forma segura la subconsulta estructurada
+          .setParameter('eventId', id) // El parámetro se mapea correctamente aquí
+          .execute();
       },
     );
   }
