@@ -31,7 +31,8 @@ import { EventEmitterModule } from '@nestjs/event-emitter/dist/event-emitter.mod
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, load: [typeOrmConfig] }),EventEmitterModule.forRoot(),
+    ConfigModule.forRoot({ isGlobal: true, load: [typeOrmConfig] }),
+    EventEmitterModule.forRoot(),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) =>
@@ -59,6 +60,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter/dist/event-emitter.mod
     CouponsModule,
     FavoritesModule,
     StripeModule,
+    ChatbotModule,
   ],
   controllers: [AppController],
   providers: [AppService],
