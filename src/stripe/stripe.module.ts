@@ -6,14 +6,13 @@ import { StripeService } from './stripe.service';
 import { StripeController } from './stripe.controller';
 import { Order } from '../orders/entities/order.entity';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
-
+import { SupabaseModule } from '../supabase/supabase.module';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([Order,TicketType]),
-    
-
+    TypeOrmModule.forFeature([Order, TicketType]),
+    SupabaseModule,
   ],
   controllers: [StripeController],
   providers: [
@@ -27,7 +26,6 @@ import { TicketType } from '../ticket-types/entities/ticket-type.entity';
       inject: [ConfigService],
     },
     StripeService,
-    
   ],
   exports: [StripeService],
 })

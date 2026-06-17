@@ -28,17 +28,24 @@ export class StripeService {
     return this.stripe.paymentIntents.create({ amount, currency });
   }
 
-  async createCheckoutSession(dto: CreateCheckoutSessionDto): Promise<any> {
+  async createCheckoutSession(
+    dto: CreateCheckoutSessionDto & { userId: string },
+  ): Promise<any> {
     const frontendUrl = this.config.getOrThrow<string>('FRONTEND_URL');
 
     const ticketType = await this.ticketTypeRepo.findOne({
       where: { id: dto.ticketTypeId },
       relations: { event: true },
     });
-    if (!ticketType)
-      throw new NotFoundException(
-        `TicketType ${dto.ticketTypeId} no encontrado`,
-      );
+    if (!ticketType) {
+      throw new NotFoundException(`TicketType ${dto.ticketTypeId} no encontrado`);
+    }
+
+    // ✅ Total calculado desde la DB — el frontend no puede manipular el precio
+    const unitPrice = Number(ticketType.price);
+    const total = Math.round(unitPrice * dto.quantity * 100) / 100;
+    const platformFee = Math.round(total * 0.05 * 100) / 100;
+    const producerSubtotal = Math.round((total - platformFee) * 100) / 100;
 
     const event = ticketType.event;
     const eventDate = new Date(event.eventDate);
@@ -52,9 +59,6 @@ export class StripeService {
       minute: '2-digit',
     });
 
-    const platformFee = Math.round(dto.total * 0.05 * 100) / 100;
-    const producerSubtotal = Math.round((dto.total - platformFee) * 100) / 100;
-
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
@@ -63,7 +67,8 @@ export class StripeService {
           quantity: dto.quantity,
           price_data: {
             currency: 'usd',
-            unit_amount: Math.round((dto.total / dto.quantity) * 100),
+            // ✅ unit_amount calculado desde ticketType.price, no desde dto.total
+            unit_amount: Math.round(unitPrice * 100),
             product_data: {
               name: event.title,
               description: `${date} ${time}`,
@@ -72,6 +77,7 @@ export class StripeService {
         },
       ],
       metadata: {
+        // ✅ userId viene del JWT (inyectado por el controller), no del body
         userId: dto.userId,
         eventId: event.id,
         ticketTypeId: dto.ticketTypeId,
@@ -82,7 +88,7 @@ export class StripeService {
     });
 
     const order = this.orderRepo.create({
-      total: dto.total,
+      total,
       producerSubtotal,
       platformFee,
       status: OrderStatus.PENDING,
@@ -96,19 +102,12 @@ export class StripeService {
 
   async handleWebhookEvent(rawBody: Buffer, signature: string): Promise<void> {
     const secret = this.config.getOrThrow<string>('STRIPE_WEBHOOK_SECRET');
-    const event = this.stripe.webhooks.constructEvent(
-      rawBody,
-      signature,
-      secret,
-    );
+    const event = this.stripe.webhooks.constructEvent(rawBody, signature, secret);
     const session = event.data.object as any;
 
     switch (event.type) {
       case 'checkout.session.completed':
-        console.log(
-          '🔔 Webhook recibido: checkout.session.completed',
-          session.id,
-        );
+        console.log('🔔 Webhook recibido: checkout.session.completed', session.id);
         this.eventEmitter.emit('order.confirmed', {
           sessionId: session.id,
           metadata: session.metadata,

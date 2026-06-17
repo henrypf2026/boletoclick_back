@@ -1,8 +1,7 @@
-import { IsUUID, IsInt, IsPositive, IsNumber, IsOptional } from 'class-validator';
+import { IsUUID, IsInt, IsPositive, IsOptional } from 'class-validator';
 
 export class CreateCheckoutSessionDto {
-  @IsUUID()
-  userId!: string;
+  
 
   @IsUUID()
   ticketTypeId!: string;
@@ -10,10 +9,6 @@ export class CreateCheckoutSessionDto {
   @IsInt()
   @IsPositive()
   quantity!: number;
-
-  @IsNumber()
-  @IsPositive()
-  total!: number;
 
   @IsOptional()
   @IsUUID()

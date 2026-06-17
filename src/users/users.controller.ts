@@ -3,11 +3,13 @@ import {
   Get,
   Param,
   NotFoundException,
+  ForbiddenException,
   UseGuards,
   UseInterceptors,
   Patch,
   Body,
   Delete,
+  Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
@@ -73,6 +75,10 @@ export class UsersController {
       'Error al actualizar. Se intentó modificar un parámetro inválido.',
   })
   @ApiResponse({
+    status: 403,
+    description: 'No tenés permiso para modificar esta cuenta.',
+  })
+  @ApiResponse({
     status: 404,
     description: 'Usuario no encontrado.',
   })
@@ -82,23 +88,16 @@ export class UsersController {
   async updateUser(
     @Param('id') id: string,
     @Body() newUserData: UpdateUserDto,
+    @CurrentUser() user,
   ) {
+    // Ownership check: sólo podés editar tu propio perfil
+    if (user.id !== id) {
+      throw new ForbiddenException(
+        'No tenés permiso para modificar esta cuenta',
+      );
+    }
+
     return this.usersService.updateUserInfo(id, newUserData);
   }
 
-  // @Delete(':id')
-  // @UseGuards(SupabaseAuthGuard, RolesGuard)
-  // @Roles(Role.USER)
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Usuario desactivado',
-  // })
-  // @ApiParam({
-  //   name: 'id',
-  //   description: 'Identificador único del venue (UUID v4)',
-  //   required: true,
-  // })
-  // removeVenue(@Param('id') id: string): Promise<void> {
-  //   return this.usersService.removeUser(id);
-  // }
 }
