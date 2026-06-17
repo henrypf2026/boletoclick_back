@@ -1,12 +1,15 @@
 import {
   Controller,
   FileTypeValidator,
+  ForbiddenException,
   MaxFileSizeValidator,
   Param,
   ParseFilePipe,
   ParseUUIDPipe,
   Put,
+  Req,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileUploadService } from './file-upload.service';
@@ -20,11 +23,13 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { UsersInterceptor } from '../interceptors/user.interceptor';
+import { SupabaseAuthGuard } from '../common/guards/supabase-auth.guard';
 
 @Controller('files')
 export class FileUploadController {
   constructor(private readonly fileUploadService: FileUploadService) {}
 
+  @UseGuards(SupabaseAuthGuard)
   @Put('uploadImage/:id')
   //#region API DOCUMENTATION
   @ApiBearerAuth()
@@ -58,6 +63,10 @@ export class FileUploadController {
       'No cumple con los parametros de tamaño o formato. Id no es en formato UUID',
   })
   @ApiResponse({
+    status: 403,
+    description: 'No tenés permiso para modificar la imagen de este usuario',
+  })
+  @ApiResponse({
     status: 404,
     description: 'No existe el usuario con el ID indicado',
   })
@@ -81,7 +90,15 @@ export class FileUploadController {
       }),
     )
     file: Express.Multer.File,
+    @Req() req: any,
   ) {
+    // Ownership check: sólo podés subir imagen para tu propio perfil
+    if (req.user?.id !== userId) {
+      throw new ForbiddenException(
+        'No tenés permiso para modificar la imagen de este usuario',
+      );
+    }
+
     return this.fileUploadService.uploadImage(userId, file);
   }
 }
