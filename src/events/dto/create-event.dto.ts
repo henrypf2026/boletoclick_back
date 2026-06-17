@@ -5,16 +5,16 @@ import {
   IsString,
   IsUUID,
   IsDateString,
-  IsUrl,
   MinLength,
   IsArray,
   ValidateNested,
   Allow,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { EventStatus } from '../entities/event.entity';
 import { CreateTicketTypeDto } from '../../ticket-types/dto/create-ticket-type.dto';
 import { plainToInstance, Transform, Type } from 'class-transformer';
+import { IsValidEventDate } from '../../common/decorators/is-valid-event-date.decorator';
+import { EventStatus } from '../../common/enums/event-status.enum';
 
 export class CreateEventDto {
   @ApiProperty({
@@ -53,11 +53,20 @@ export class CreateEventDto {
 
   @ApiProperty({
     description:
-      'The exact date and time when the event starts (ISO 8601 format)',
-    example: '2026-10-15T20:00:00.000Z',
+      'La fecha y hora exacta de inicio del evento (Formato ISO 8601). Plazo máximo de reserva: 1 año.',
+    example: '2026-12-31T22:00:00.000Z',
   })
-  @IsDateString()
-  @IsNotEmpty()
+  @IsDateString(
+    {},
+    {
+      message:
+        'La fecha del evento debe ser un string en formato ISO 8601 válido.',
+    },
+  )
+  @IsNotEmpty({
+    message: 'La fecha del evento es obligatoria.',
+  })
+  @IsValidEventDate()
   eventDate!: string;
 
   @ApiPropertyOptional({

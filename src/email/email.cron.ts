@@ -2,6 +2,7 @@ import { Cron } from '@nestjs/schedule';
 import { EmailService } from './email.service';
 import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
+import { environment } from '../config/environment';
 
 @Injectable()
 export class EmailCron {
@@ -10,7 +11,7 @@ export class EmailCron {
     private readonly userService: UsersService,
   ) {}
 
-  @Cron('15 17 * * 1', {
+  @Cron(environment.NEWSLETTER_CRON_FRECUENCY ?? '15 17 * * 1', {
     timeZone: 'America/Mexico_City',
   })
   async processPendingNotifications() {

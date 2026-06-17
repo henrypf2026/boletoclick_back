@@ -7,8 +7,8 @@ import {
   IsUrl,
   MinLength,
 } from 'class-validator';
-import { ApiPropertyOptional } from '@nestjs/swagger';
-
+import { ApiHideProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Role } from '../../common/enums/role.enum';
 
 /**
  * UpdateUserDto — Actualiza el perfil de un usuario.
@@ -57,6 +57,11 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   businessName?: string;
+
+  @ApiHideProperty()
+  @IsOptional()
+  @IsEnum(Role)
+  role?: Role;
 
   @ApiPropertyOptional({
     example: 'https://res.cloudinary.com/boletoclick/image/upload/profile.jpg',

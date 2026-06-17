@@ -3,20 +3,21 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/updateUser.dto';
+import { user } from '@getbrevo/brevo/dist/cjs/api';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepo: Repository<User>,
-    
   ) {}
 
   // ─── Buscar por ID ────────────────────────────────────────────
 
   async findUserById(id: string): Promise<User> {
     const user = await this.usersRepo.findOne({ where: { id } });
-    if (!user) throw new NotFoundException(`User ${id} not found`);
+    if (!user)
+      throw new NotFoundException(`Usuario con id:${id} no encontrado`);
     return user;
   }
 
@@ -42,7 +43,8 @@ export class UsersService {
 
   async updateUserInfo(userId: string, userData: UpdateUserDto): Promise<User> {
     const user = await this.findUserById(userId);
-    if (!user) throw new NotFoundException(`User id= ${userId} not found`);
+    if (!user)
+      throw new NotFoundException(`Usuario con id:${userId} no encontrado`);
     Object.assign(user, userData);
     return await this.usersRepo.save(user);
   }
@@ -51,6 +53,7 @@ export class UsersService {
     const users = await this.usersRepo.find({
       where: { allowNewsletter: true, deletedAt: IsNull() },
     });
+    console.log('users to notify coount = ' + users.length);
     return users;
   }
 }

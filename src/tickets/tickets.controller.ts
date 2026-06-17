@@ -1,11 +1,19 @@
-import { Controller, Get, Param, Query, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  UseGuards,
+  Req,
+  Body,
+  Post,
+} from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { Ticket } from './entities/ticket.entity';
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiParam,
-  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -66,5 +74,17 @@ export class TicketsController {
   ): Promise<Ticket[]> {
     // 🔥 Le pasamos su ID al servicio para bloquear el acceso al resto del universo
     return this.ticketsService.findAllTicketsByProducer(user.id, orderId);
+  }
+
+  @Post()
+  createBulkTickets(
+    @Body()
+    createTicketsDto: {
+      orderId: string;
+      ticketTypeId: string;
+      quantity: number;
+    },
+  ) {
+    return this.ticketsService.createBulkTickets(createTicketsDto);
   }
 }

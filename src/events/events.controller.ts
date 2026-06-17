@@ -28,6 +28,7 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { Event } from './entities/event.entity';
 import { SupabaseAuthGuard } from '../common/guards/supabase-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { OwnerGuard } from '../common/guards/owner.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -127,7 +128,7 @@ export class EventsController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @UseGuards(SupabaseAuthGuard, RolesGuard, OwnerGuard)
   @Roles(Role.PRODUCER)
   @Patch(':id')
   @ApiOperation({
@@ -146,12 +147,13 @@ export class EventsController {
   async updateEvent(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateEventDto: UpdateEventDto,
+    @CurrentUser() user: UserPayload,
   ): Promise<Event> {
-    return await this.eventsService.updateEvent(id, updateEventDto);
+    return await this.eventsService.updateEvent(id, updateEventDto, user.id);
   }
 
   @ApiBearerAuth()
-  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @UseGuards(SupabaseAuthGuard, RolesGuard, OwnerGuard)
   @Roles(Role.PRODUCER, Role.ADMIN)
   @Delete(':id')
   @ApiOperation({ summary: 'Deactivate an event (Change status to INACTIVE)' })
@@ -160,8 +162,11 @@ export class EventsController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @ApiResponse({ status: 404, description: 'Not Found.' })
-  async desactivateEvent(@Param('id', ParseUUIDPipe) id: string) {
-    await this.eventsService.desactivateEvent(id);
+  async desactivateEvent(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: UserPayload,
+  ) {
+    await this.eventsService.desactivateEvent(id, user.id);
 
     return {
       success: true,

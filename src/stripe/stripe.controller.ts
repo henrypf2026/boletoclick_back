@@ -8,12 +8,14 @@ import {
   Param,
   HttpCode,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
 import { StripeService } from './stripe.service';
 import { CreatePaymentIntentDto } from './dto/create-payment-intent.dto';
 import { CreateCheckoutSessionDto } from './dto/create-checkout-session.dto';
+import { SupabaseAuthGuard } from '../common/guards/supabase-auth.guard';
 
 @Controller('payments')
 export class StripeController {
@@ -30,14 +32,27 @@ export class StripeController {
     return { clientSecret: intent.client_secret };
   }
 
+  @UseGuards(SupabaseAuthGuard)
   @Post('create-session')
   async createCheckoutSession(
+    @Req() req: any,
     @Body() dto: CreateCheckoutSessionDto,
   ): Promise<{ url: string }> {
-    const session = await this.stripeService.createCheckoutSession(dto);
+    // userId viene del JWT — el frontend no puede falsificarlo
+    const userId = req.user?.id;
+    if (!userId) throw new BadRequestException('Usuario no autenticado');
+
+    // Pasamos userId del token; el service recalcula el total desde la DB
+    const session = await this.stripeService.createCheckoutSession({
+      ticketTypeId: dto.ticketTypeId,
+      quantity: dto.quantity,
+      couponId: dto.couponId,
+      userId,
+    });
     return { url: session.url };
   }
 
+  @UseGuards(SupabaseAuthGuard)
   @Get('verify/:sessionId')
   async verifySession(
     @Param('sessionId') sessionId: string,
@@ -46,6 +61,8 @@ export class StripeController {
     return { valid };
   }
 
+  // Sin guard — Stripe no manda JWT.
+  // La autenticidad se verifica con la firma STRIPE_WEBHOOK_SECRET.
   @Post('webhook')
   @HttpCode(200)
   async handleWebhook(
