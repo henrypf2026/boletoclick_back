@@ -2,16 +2,24 @@ import { BrevoClient } from '@getbrevo/brevo';
 import { Injectable } from '@nestjs/common';
 import { environment } from '../config/environment';
 import {
+  buildEventCard,
   formatNewsletterTemplate,
   formatWelcomeTemplate,
 } from '../utils/formatTemplates';
 import { UsersService } from '../users/users.service';
+import { User } from '../users/entities/user.entity';
+import { EventsService } from '../events/events.service';
+import { Event } from '../events/entities/event.entity';
+import { Console } from 'console';
 
 @Injectable()
 export class EmailService {
   private readonly brevo: BrevoClient;
 
-  constructor(private readonly userService: UsersService) {
+  constructor(
+    private readonly userService: UsersService,
+    private readonly eventsService: EventsService,
+  ) {
     this.brevo = new BrevoClient({
       apiKey: environment.BREVO_API_KEY!,
     });
@@ -41,11 +49,30 @@ export class EmailService {
   }
 
   async sendNewsLetterEmail() {
+    console.log('sendNewsLetterEmail');
+    const now = new Date();
+    const endDate = new Date();
+    endDate.setDate(
+      endDate.getDate() + 7 /* Proximos eventos en los siguientes 7 dias*/,
+    );
+    const events: Event[] = await this.eventsService.findUpcomingEvents(
+      now,
+      endDate,
+      3 /* Los siguientes 3 eventos */,
+    );
+    console.log('sendNewsLetterEmail, total de evebtos = ' + events.length);
+    const eventsHTML: string = events
+      .map((eve: Event) => buildEventCard(eve))
+      .join('');
+
     const users = await this.userService.getUsersToNotify();
     for (const user of users) {
-      const html = formatNewsletterTemplate(user.name);
+      const html = formatNewsletterTemplate(user.name, eventsHTML);
       const subject = 'Newsletter Boleto Click';
       await this.sendEmail(user.email, subject, html);
     }
+    console.log('EMsils enviados');
   }
+
+  async sendPurchaseEmail(userData: User, purchaseData) {}
 }

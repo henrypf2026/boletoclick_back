@@ -88,4 +88,12 @@ export class EventsService {
   async desactivateEvent(id: string): Promise<void> {
     await this.eventsRepository.desactivateEvent(id);
   }
+
+  async findUpcomingEvents(fromDate: Date, toDate: Date, limit: number) {
+    return await this.eventsRepository.findUpcomingEvents(
+      fromDate,
+      toDate,
+      limit,
+    );
+  }
 }
