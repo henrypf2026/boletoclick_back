@@ -28,6 +28,8 @@ import { EmailModule } from './email/email.module';
 import { CouponsModule } from './coupons/coupons.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { EventEmitterModule } from '@nestjs/event-emitter/dist/event-emitter.module';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -46,7 +48,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter/dist/event-emitter.mod
     TicketsModule,
     VenuesModule,
     MapsModule,
-    ChatbotModule,
     BankAccountsModule,
     FileUploadModule,
     TicketTypesModule,
@@ -61,9 +62,21 @@ import { EventEmitterModule } from '@nestjs/event-emitter/dist/event-emitter.mod
     FavoritesModule,
     StripeModule,
     ChatbotModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 10,
+      },
+    ]),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {
   constructor(
