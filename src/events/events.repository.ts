@@ -68,9 +68,12 @@ export class EventsRepository {
   async updateEvent(
     id: string,
     updateEventDto: UpdateEventDto,
+    producerId?: string,
   ): Promise<Event> {
+    const whereClause: any = producerId ? { id, producerId } : { id };
+
     const event = await this.ormEventsRepository.findOne({
-      where: { id },
+      where: whereClause,
       relations: { ticketTypes: true },
     });
 
@@ -102,8 +105,10 @@ export class EventsRepository {
     return await this.ormEventsRepository.save(event);
   }
 
-  async deactivateEvent(id: string): Promise<void> {
-    const result = await this.ormEventsRepository.update(id, {
+  async deactivateEvent(id: string, producerId?: string): Promise<void> {
+    const criteria: any = producerId ? { id, producerId } : id;
+
+    const result = await this.ormEventsRepository.update(criteria, {
       status: EventStatus.CANCELLED,
     });
 
@@ -114,7 +119,7 @@ export class EventsRepository {
     }
   }
 
-  async desactivateEvent(id: string): Promise<void> {
+  async desactivateEvent(id: string, producerId?: string): Promise<void> {
     // En tu EventService
     await this.ormEventsRepository.manager.transaction(
       async (transactionalEntityManager: EntityManager): Promise<void> => {
@@ -133,11 +138,19 @@ export class EventsRepository {
           )
           .execute();
 
-        await transactionalEntityManager.update(
+        const criteria: any = producerId ? { id: id, producerId } : { id: id };
+
+        const updateResult = await transactionalEntityManager.update(
           Event,
-          { id: id }, // 1. Condición: Buscar el evento por su ID
-          { status: EventStatus.CANCELLED }, // 2. Modificación: Cambiar el estado a CANCELLED
+          criteria, // Condición: Buscar el evento por su ID (y opcionalmente producerId)
+          { status: EventStatus.CANCELLED }, // Modificación: Cambiar el estado a CANCELLED
         );
+
+        if ((updateResult.affected ?? 0) === 0) {
+          throw new NotFoundException(
+            `Event with ID ${id} not found or already deactivated`,
+          );
+        }
 
         const subQuery = transactionalEntityManager
           .createQueryBuilder()

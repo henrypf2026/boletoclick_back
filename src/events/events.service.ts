@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { EventsRepository } from './events.repository';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -69,8 +73,15 @@ export class EventsService {
   async updateEvent(
     id: string,
     updateEventDto: UpdateEventDto,
+    userId: string,
   ): Promise<Event> {
-    return await this.eventsRepository.updateEvent(id, updateEventDto);
+    const event = await this.getEventById(id);
+
+    if (event.producerId !== userId) {
+      throw new ForbiddenException('You do not own this event');
+    }
+
+    return await this.eventsRepository.updateEvent(id, updateEventDto, userId);
   }
 
   async getAllEvents(): Promise<Event[]> {
@@ -85,8 +96,14 @@ export class EventsService {
     return await this.eventsRepository.getEventById(id);
   }
 
-  async desactivateEvent(id: string): Promise<void> {
-    await this.eventsRepository.desactivateEvent(id);
+  async desactivateEvent(id: string, userId: string): Promise<void> {
+    const event = await this.getEventById(id);
+
+    if (event.producerId !== userId) {
+      throw new ForbiddenException('You do not own this event');
+    }
+
+    await this.eventsRepository.desactivateEvent(id, userId);
   }
 
   async findUpcomingEvents(fromDate: Date, toDate: Date, limit: number) {
