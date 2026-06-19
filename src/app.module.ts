@@ -30,6 +30,7 @@ import { FavoritesModule } from './favorites/favorites.module';
 import { EventEmitterModule } from '@nestjs/event-emitter/dist/event-emitter.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './common/guards/roles.guard';
 
 @Module({
   imports: [
@@ -41,7 +42,6 @@ import { APP_GUARD } from '@nestjs/core';
         configService.get('typeorm')!,
     }),
     ScheduleModule.forRoot(),
-    EventEmitterModule.forRoot(),
     UsersModule,
     AuthModule,
     EventsModule,
@@ -60,7 +60,6 @@ import { APP_GUARD } from '@nestjs/core';
     EmailModule,
     CouponsModule,
     FavoritesModule,
-    StripeModule,
     ChatbotModule,
     ThrottlerModule.forRoot([
       {
@@ -75,6 +74,10 @@ import { APP_GUARD } from '@nestjs/core';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
   ],
 })
