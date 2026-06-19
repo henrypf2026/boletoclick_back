@@ -68,6 +68,45 @@ export class TicketLocksRepository {
     );
   }
 
+  async findByStripeSessionId(sessionId: string): Promise<TicketLock | null> {
+    return await this.dataSource.manager.findOne(TicketLock, {
+      where: { stripeSessionId: sessionId },
+    });
+  }
+
+  async releaseLockByStripeSessionId(sessionId: string): Promise<void> {
+    const lock = await this.dataSource.manager.findOne(TicketLock, {
+      where: { stripeSessionId: sessionId },
+    });
+
+    if (!lock) {
+      return;
+    }
+
+    return this.releaseLock(lock.id);
+  }
+
+  async confirmLockByStripeSessionId(sessionId: string): Promise<boolean> {
+    const lock = await this.dataSource.manager.findOne(TicketLock, {
+      where: {
+        stripeSessionId: sessionId,
+        status: TicketLockStatus.LOCKED,
+      },
+    });
+
+    if (!lock) {
+      return false;
+    }
+
+    await this.dataSource.manager.update(
+      TicketLock,
+      { id: lock.id },
+      { status: TicketLockStatus.COMPLETED },
+    );
+
+    return true;
+  }
+
   /**
    * 🟢 Libera las entradas retenidas de un candado expirado o cancelado y devuelve el stock
    */

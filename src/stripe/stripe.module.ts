@@ -7,12 +7,14 @@ import { StripeController } from './stripe.controller';
 import { Order } from '../orders/entities/order.entity';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 import { SupabaseModule } from '../supabase/supabase.module';
+import { TicketLocksModule } from '../ticket-locks/ticket-locks.module';
 
 @Module({
   imports: [
     ConfigModule,
     TypeOrmModule.forFeature([Order, TicketType]),
     SupabaseModule,
+    TicketLocksModule,
   ],
   controllers: [StripeController],
   providers: [

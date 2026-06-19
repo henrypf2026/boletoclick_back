@@ -41,6 +41,14 @@ export class TicketLocksService {
     await this.ticketLocksRepo.linkStripeSession(lockId, sessionId);
   }
 
+  async releaseLockByStripeSessionId(sessionId: string): Promise<void> {
+    return await this.ticketLocksRepo.releaseLockByStripeSessionId(sessionId);
+  }
+
+  async confirmLockByStripeSessionId(sessionId: string): Promise<boolean> {
+    return await this.ticketLocksRepo.confirmLockByStripeSessionId(sessionId);
+  }
+
   /**
    * 🟢 Libera manualmente un candado (por ejemplo, si el usuario cancela en el Front)
    */
@@ -92,6 +100,7 @@ export class TicketLocksService {
             `📢 Emitiendo orden de cancelación a Stripe para la sesión: ${lock.stripeSessionId}`,
           );
           this.eventEmitter.emit('stripe.expire-session', lock.stripeSessionId);
+          this.eventEmitter.emit('order.failed', lock.stripeSessionId);
         }
         // Procedemos a liberar el stock localmente de inmediato
         await this.ticketLocksRepo.releaseLock(lock.id);

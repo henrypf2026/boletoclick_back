@@ -61,6 +61,6 @@ export class TicketsService {
   }
 
   async countActiveTicketsByUser(userId: string): Promise<number> {
-    return await this.countActiveTicketsByUser(userId);
+    return await this.ticketsRepository.countActiveTicketsByUser(userId);
   }
 }

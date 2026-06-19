@@ -15,9 +15,10 @@ const config = {
 
   autoLoadEntities: true,
   logging: false,
-  synchronize: false,
+  synchronize: true,
 
-  ssl: environment.DB_HOST === 'localhost' ? false : { rejectUnauthorized: false },
+  ssl:
+    environment.DB_HOST === 'localhost' ? false : { rejectUnauthorized: false },
 };
 
 export const typeOrmConfig = registerAs('typeorm', () => config);
