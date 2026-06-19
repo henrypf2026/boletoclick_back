@@ -131,17 +131,6 @@ export class TicketsRepository {
           if (!ticketType)
             throw new BadRequestException('Ticket type no encontrado');
 
-          const newStock = ticketType.stock - ticketsData.length;
-
-          if (newStock < 0)
-            throw new BadRequestException(
-              `Solo se disponen de ${ticketType.stock} entradas`,
-            );
-
-          await txTicketTypeRepository.update(ticketTypeId, {
-            stock: newStock,
-          });
-
           const savedTickets = await txTicketRepository.save(ticketsData);
 
           return savedTickets;
