@@ -39,7 +39,6 @@ export class TicketsService {
     );
   }
 
-  // ADMIN — sin filtro de producer
   async findAllTickets(orderId?: string): Promise<Ticket[]> {
     return await this.ticketsRepository.findAllTickets(orderId);
   }
@@ -71,17 +70,18 @@ export class TicketsService {
     return await this.ticketsRepository.countActiveTicketsByUser(userId);
   }
 
-  // Lógica de escaneo — solo modifica allowEntrance y usedAt
   async scanTicket(qrCode: string): Promise<{ message: string; ticket: Ticket }> {
     const ticket = await this.ticketsRepository.findByQrCode(qrCode);
 
     if (!ticket) {
-      throw new NotFoundException(`Ticket con QR '${qrCode}' no encontrado`);
+      throw new NotFoundException(
+        `QR no reconocido — ticket no encontrado o posiblemente falsificado`,
+      );
     }
 
     if (!ticket.allowEntrance) {
       throw new BadRequestException(
-        `Ticket ya utilizado el ${ticket.usedAt?.toLocaleString('es-AR')}`,
+        `Ticket ya utilizado el ${ticket.usedAt?.toLocaleString('es-AR')} — posible uso duplicado`,
       );
     }
 
@@ -94,5 +94,20 @@ export class TicketsService {
       message: 'Acceso permitido — ticket validado correctamente',
       ticket: updated,
     };
+  }
+
+  async getEventStats(eventId: string): Promise<{
+    total: number;
+    arrived: number;
+    pending: number;
+    percentage: number;
+  }> {
+    const { total, arrived, pending } =
+      await this.ticketsRepository.getEventStats(eventId);
+
+    const percentage =
+      total === 0 ? 0 : Math.round((arrived / total) * 1000) / 10;
+
+    return { total, arrived, pending, percentage };
   }
 }
