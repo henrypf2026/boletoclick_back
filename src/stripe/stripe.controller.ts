@@ -37,7 +37,7 @@ export class StripeController {
   async createCheckoutSession(
     @Req() req: any,
     @Body() dto: CreateCheckoutSessionDto,
-  ): Promise<{ url: string }> {
+  ): Promise<{ url: string; expiresAt: Date; sessionId: string }> {
     // userId viene del JWT — el frontend no puede falsificarlo
     const userId = req.user?.id;
     if (!userId) throw new BadRequestException('Usuario no autenticado');
@@ -49,7 +49,11 @@ export class StripeController {
       couponId: dto.couponId,
       userId,
     });
-    return { url: session.url };
+    return {
+      url: session.url,
+      expiresAt: session.expiresAt,
+      sessionId: session.sessionId,
+    };
   }
 
   @UseGuards(SupabaseAuthGuard)

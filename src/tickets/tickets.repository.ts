@@ -76,18 +76,52 @@ export class TicketsRepository {
     });
   }
 
+  // ADMIN — todos los tickets sin filtro de producer
+  async findAllTickets(orderId?: string): Promise<Ticket[]> {
+    return await this.ormTicketRepository.find({
+      where: orderId ? { order: { id: orderId } } : {},
+      relations: {
+        ticketType: {
+          event: true,
+        },
+        order: {
+          user: true,
+        },
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
+
+  // Escaneo — busca por qrCode
+  async findByQrCode(qrCode: string): Promise<Ticket | null> {
+    return await this.ormTicketRepository.findOne({
+      where: { qrCode },
+      relations: {
+        ticketType: {
+          event: true,
+        },
+        order: true,
+      },
+    });
+  }
+
+  // Guardar cambios sobre un ticket existente (usado en escaneo)
+  async save(ticket: Ticket): Promise<Ticket> {
+    return await this.ormTicketRepository.save(ticket);
+  }
+
   async createBulkTickets(
     ticketsData: Partial<Ticket>[],
     ticketTypeId: string,
   ): Promise<Ticket[]> {
     return await this.dataSource.transaction(
       async (transactionalEntityManager) => {
-        // 3. OBTENER LOS REPOSITORIOS TRANSACCIONALES
-        // Esto hace que los repositorios usen el mismo canal y aislamiento de la transacción
         const txTicketTypeRepository =
-          transactionalEntityManager.getRepository(TicketType); // Alternativa directa por Entidad
+          transactionalEntityManager.getRepository(TicketType);
         const txTicketRepository =
-          transactionalEntityManager.getRepository(Ticket); // Alternativa directa por Entidad
+          transactionalEntityManager.getRepository(Ticket);
 
         try {
           const ticketType = await txTicketTypeRepository.findOneBy({
@@ -95,25 +129,12 @@ export class TicketsRepository {
           });
 
           if (!ticketType)
-            throw new BadRequestException('Ticke type no encontrado');
-
-          const newStock = ticketType.stock - ticketsData.length;
-
-          if (newStock < 0)
-            throw new BadRequestException(
-              `Solo se disponen de ${ticketType.stock} entradas`,
-            );
-
-          await txTicketTypeRepository.update(ticketTypeId, {
-            stock: newStock,
-          });
+            throw new BadRequestException('Ticket type no encontrado');
 
           const savedTickets = await txTicketRepository.save(ticketsData);
 
           return savedTickets;
         } catch (error: unknown) {
-          // Si ocurre CUALQUIER error, TypeORM hace el ROLLBACK automáticamente
-          // y deshace los cambios en la base de datos.
           const message =
             error instanceof Error ? error.message : String(error);
           throw new InternalServerErrorException(
@@ -122,22 +143,15 @@ export class TicketsRepository {
         }
       },
     );
-
-    // return await this.ormTicketRepository.save(ticketsData);
   }
 
   async countActiveTicketsByUser(userId: string): Promise<number> {
     return await this.ormTicketRepository
       .createQueryBuilder('ticket')
-      // 1. Unimos con 'orders' (alias 'o') para poder llegar al usuario
       .innerJoin('ticket.order', 'o')
-      // 2. Unimos con 'eventos' (alias 'e') para revisar la fecha del evento
       .innerJoin('ticket.evento', 'e')
-      // 3. Filtramos por el ID del usuario que está en la orden
       .where('o.userId = :userId', { userId })
-      // 4. Filtramos para que solo cuente eventos que aún no han sucedido
       .andWhere('e.fecha_ejecucion >= :hoy', { hoy: new Date() })
-      // Devuelve solo el número total de filas encontradas (muy rápido)
       .getCount();
   }
 }
