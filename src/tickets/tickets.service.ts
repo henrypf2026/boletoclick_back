@@ -2,41 +2,35 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { TicketsRepository } from './tickets.repository';
 import { Ticket } from './entities/ticket.entity';
 
 @Injectable()
 export class TicketsService {
-  constructor(private readonly ticketsRepository: TicketsRepository) {}
+  constructor(
+    private readonly ticketsRepository: TicketsRepository,
+    private readonly jwtService: JwtService,
+  ) {}
 
   async findTicketsByUser(userId: string): Promise<Ticket[]> {
     return await this.ticketsRepository.findTicketsByUser(userId);
   }
 
   async findTicketByIdAndUser(id: string, userId: string): Promise<Ticket> {
-    const ticket = await this.ticketsRepository.findTicketByIdAndUser(
-      id,
-      userId,
-    );
-
+    const ticket = await this.ticketsRepository.findTicketByIdAndUser(id, userId);
     if (!ticket) {
       throw new NotFoundException(
         `Ticket con ID '${id}' no encontrado o no tienes permisos para verlo.`,
       );
     }
-
     return ticket;
   }
 
-  async findAllTicketsByProducer(
-    producerId: string,
-    orderId?: string,
-  ): Promise<Ticket[]> {
-    return await this.ticketsRepository.findAllTicketsByProducer(
-      producerId,
-      orderId,
-    );
+  async findAllTicketsByProducer(producerId: string, orderId?: string): Promise<Ticket[]> {
+    return await this.ticketsRepository.findAllTicketsByProducer(producerId, orderId);
   }
 
   async findAllTickets(orderId?: string): Promise<Ticket[]> {
@@ -51,10 +45,15 @@ export class TicketsService {
     const ticketsToCreate: Partial<Ticket>[] = [];
 
     for (let i = 1; i <= createTicketsDto.quantity; i++) {
-      const qrPlaceholder = `CLICK-TICKET-${createTicketsDto.orderId}-${i}-${Math.floor(1000 + Math.random() * 9000)}`;
+      // ✅ QR firmado con JWT — no puede ser falsificado sin el JWT_SECRET
+      const qrCode = this.jwtService.sign({
+        orderId: createTicketsDto.orderId,
+        ticketTypeId: createTicketsDto.ticketTypeId,
+        index: i,
+      });
 
       ticketsToCreate.push({
-        qrCode: qrPlaceholder,
+        qrCode,
         orderId: createTicketsDto.orderId,
         ticketTypeId: createTicketsDto.ticketTypeId,
       });
@@ -71,11 +70,20 @@ export class TicketsService {
   }
 
   async scanTicket(qrCode: string): Promise<{ message: string; ticket: Ticket }> {
+    // ✅ Verificar firma JWT antes de tocar la BD
+    try {
+      this.jwtService.verify(qrCode);
+    } catch {
+      throw new UnauthorizedException(
+        `QR inválido — firma no verificable, posible falsificación`,
+      );
+    }
+
     const ticket = await this.ticketsRepository.findByQrCode(qrCode);
 
     if (!ticket) {
       throw new NotFoundException(
-        `QR no reconocido — ticket no encontrado o posiblemente falsificado`,
+        `QR no reconocido — ticket no encontrado`,
       );
     }
 
