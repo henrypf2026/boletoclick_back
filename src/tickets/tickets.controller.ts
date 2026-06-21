@@ -7,7 +7,6 @@ import {
   Req,
   Body,
   Post,
-  Patch,
 } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { Ticket } from './entities/ticket.entity';
@@ -31,6 +30,8 @@ import { ScanTicketDto } from './dto/scan-ticket.dto';
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
 
+  // ── Rutas literales primero ──────────────────────────────────────────
+
   @Get('me')
   @UseGuards(SupabaseAuthGuard)
   @ApiOperation({ summary: 'Obtener los tiquetes del usuario autenticado' })
@@ -43,6 +44,74 @@ export class TicketsController {
     const userId = req.user.id;
     return this.ticketsService.findTicketsByUser(userId);
   }
+
+  @Get('event/:eventId/stats')
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.SCANNER, Role.ADMIN, Role.PRODUCER)
+  @ApiOperation({
+    summary: 'Stats de asistencia de un evento — SCANNER, ADMIN, PRODUCER',
+  })
+  @ApiParam({ name: 'eventId', description: 'UUID del evento' })
+  @ApiResponse({
+    status: 200,
+    description: 'Total, llegados, pendientes y porcentaje de asistencia',
+    schema: {
+      example: { total: 120, arrived: 47, pending: 73, percentage: 39.2 },
+    },
+  })
+  getEventStats(
+    @Param('eventId') eventId: string,
+  ): Promise<{
+    total: number;
+    arrived: number;
+    pending: number;
+    percentage: number;
+  }> {
+    return this.ticketsService.getEventStats(eventId);
+  }
+
+  @Get()
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.PRODUCER, Role.ADMIN)
+  @ApiOperation({
+    summary: 'Listar tiquetes — PRODUCER ve los suyos, ADMIN ve todos',
+  })
+  findAllTickets(
+    @CurrentUser() user: { id: string; role: Role },
+    @Query('orderId') orderId?: string,
+  ): Promise<Ticket[]> {
+    if (user.role === Role.ADMIN) {
+      return this.ticketsService.findAllTickets(orderId);
+    }
+    return this.ticketsService.findAllTicketsByProducer(user.id, orderId);
+  }
+
+  @Post('scan')
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.SCANNER, Role.ADMIN)
+  @ApiOperation({ summary: 'Escanear un ticket para validar acceso al evento' })
+  @ApiResponse({ status: 200, description: 'Ticket válido — acceso permitido' })
+  @ApiResponse({ status: 400, description: 'Ticket ya usado o inválido' })
+  @ApiResponse({ status: 404, description: 'Ticket no encontrado' })
+  scanTicket(
+    @Body() dto: ScanTicketDto,
+  ): Promise<{ message: string; ticket: Ticket }> {
+    return this.ticketsService.scanTicket(dto.qrCode);
+  }
+
+  @Post()
+  createBulkTickets(
+    @Body()
+    createTicketsDto: {
+      orderId: string;
+      ticketTypeId: string;
+      quantity: string;
+    },
+  ) {
+    return this.ticketsService.createBulkTickets(createTicketsDto);
+  }
+
+  // ── Rutas con parámetro dinámico al final ───────────────────────────
 
   @Get(':id')
   @UseGuards(SupabaseAuthGuard)
@@ -62,49 +131,5 @@ export class TicketsController {
     @CurrentUser() user: { id: string },
   ): Promise<Ticket> {
     return this.ticketsService.findTicketByIdAndUser(id, user.id);
-  }
-
-  // ADMIN puede ver todos los tickets sin filtro de producer
-  @Get()
-  @UseGuards(SupabaseAuthGuard, RolesGuard)
-  @Roles(Role.PRODUCER, Role.ADMIN)
-  @ApiOperation({
-    summary:
-      'Listar tiquetes — PRODUCER ve los suyos, ADMIN ve todos',
-  })
-  findAllTickets(
-    @CurrentUser() user: { id: string; role: Role },
-    @Query('orderId') orderId?: string,
-  ): Promise<Ticket[]> {
-    if (user.role === Role.ADMIN) {
-      return this.ticketsService.findAllTickets(orderId);
-    }
-    return this.ticketsService.findAllTicketsByProducer(user.id, orderId);
-  }
-
-  // Escaneo de tickets — solo SCANNER y ADMIN
-  @Post('scan')
-  @UseGuards(SupabaseAuthGuard, RolesGuard)
-  @Roles(Role.SCANNER, Role.ADMIN)
-  @ApiOperation({
-    summary: 'Escanear un ticket para validar acceso al evento',
-  })
-  @ApiResponse({ status: 200, description: 'Ticket válido — acceso permitido' })
-  @ApiResponse({ status: 400, description: 'Ticket ya usado o inválido' })
-  @ApiResponse({ status: 404, description: 'Ticket no encontrado' })
-  scanTicket(@Body() dto: ScanTicketDto): Promise<{ message: string; ticket: Ticket }> {
-    return this.ticketsService.scanTicket(dto.qrCode);
-  }
-
-  @Post()
-  createBulkTickets(
-    @Body()
-    createTicketsDto: {
-      orderId: string;
-      ticketTypeId: string;
-      quantity: string;
-    },
-  ) {
-    return this.ticketsService.createBulkTickets(createTicketsDto);
   }
 }
