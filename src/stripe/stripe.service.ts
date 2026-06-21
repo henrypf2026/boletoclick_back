@@ -16,7 +16,11 @@ import { OrderStatus } from '../common/enums/order-status.enum';
 import { User } from '../users/entities/user.entity';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { TicketLocksService } from '../ticket-locks/ticket-locks.service';
+=======
+import { TicketsService } from '../tickets/tickets.service';
+>>>>>>> Stashed changes
 =======
 import { TicketsService } from '../tickets/tickets.service';
 >>>>>>> Stashed changes
@@ -34,7 +38,11 @@ export class StripeService {
     @InjectRepository(TicketType)
     private readonly ticketTypeRepo: Repository<TicketType>,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     private readonly ticketLocksService: TicketLocksService,
+=======
+    private readonly ticketService: TicketsService,
+>>>>>>> Stashed changes
 =======
     private readonly ticketService: TicketsService,
 >>>>>>> Stashed changes
@@ -152,6 +160,7 @@ export class StripeService {
           session.id,
         );
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         const lockConfirmed =
           await this.ticketLocksService.confirmLockByStripeSessionId(
             session.id,
@@ -164,6 +173,8 @@ export class StripeService {
           return;
         }
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
         this.eventEmitter.emit('order.confirmed', {
