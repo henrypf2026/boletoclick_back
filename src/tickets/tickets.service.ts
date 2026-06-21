@@ -54,13 +54,16 @@ export class TicketsService {
     const ticketsToCreate: Partial<Ticket>[] = [];
     const quantityNumber = Number(createTicketsDto.quantity);
 
-    for (let i = 1; i <= createTicketsDto.quantity; i++) {
+    for (let i = 1; i <= quantityNumber; i++) {
       // ✅ QR firmado con JWT — no puede ser falsificado sin el JWT_SECRET
       const qrCode = this.jwtService.sign({
         orderId: createTicketsDto.orderId,
         ticketTypeId: createTicketsDto.ticketTypeId,
         index: i,
-      });
+      },
+    {
+      secret: "boletoclick-secret-dev-2024"
+    });
 
       ticketsToCreate.push({
         qrCode,
