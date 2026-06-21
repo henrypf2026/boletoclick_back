@@ -59,8 +59,10 @@ export class StripeController {
   @UseGuards(SupabaseAuthGuard)
   @Get('verify/:sessionId')
   async verifySession(
-    @Param('sessionId') sessionId: string,
+    @Param('sessionId')
+    sessionId: string,
   ): Promise<{ valid: boolean }> {
+
     const valid = await this.stripeService.verifySession(sessionId);
     return { valid };
   }

@@ -102,7 +102,7 @@ export class TicketsController {
     createTicketsDto: {
       orderId: string;
       ticketTypeId: string;
-      quantity: number;
+      quantity: string;
     },
   ) {
     return this.ticketsService.createBulkTickets(createTicketsDto);

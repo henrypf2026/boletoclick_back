@@ -12,7 +12,7 @@ import { TicketLocksModule } from '../ticket-locks/ticket-locks.module';
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([Order, TicketType]),
+    TypeOrmModule.forFeature([Order, TicketType, Ticket]),
     SupabaseModule,
     TicketLocksModule,
   ],
@@ -28,6 +28,8 @@ import { TicketLocksModule } from '../ticket-locks/ticket-locks.module';
       inject: [ConfigService],
     },
     StripeService,
+    TicketsService,
+    TicketsRepository,
   ],
   exports: [StripeService],
 })

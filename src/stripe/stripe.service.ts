@@ -1,4 +1,10 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  BadGatewayException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -181,18 +187,33 @@ export class StripeService {
   async verifySession(sessionId: string): Promise<boolean> {
     const session = await this.stripe.checkout.sessions.retrieve(sessionId);
 
-    if (session.payment_status === 'paid') {
-      const order = await this.orderRepo.findOne({
-        where: { transactionId: sessionId },
-      });
-      if (order && order.status !== OrderStatus.PAID) {
-        order.status = OrderStatus.PAID;
-        await this.orderRepo.save(order);
-      }
-      return true;
+    const status = session.payment_status;
+    console.log({ status });
+
+    if (session.payment_status !== 'paid') {
+      return false;
     }
 
-    return false;
+    const { quantity, ticketTypeId } = session.metadata as {
+      quantity: string;
+      ticketTypeId: string;
+    };
+
+    const order = await this.orderRepo.findOne({
+      where: { transactionId: sessionId },
+    });
+    if (!order) throw new BadRequestException('Orden no encontrada');
+    if (order.status === OrderStatus.PAID)
+      throw new BadRequestException('Orden ya pagada');
+    order.status = OrderStatus.PAID;
+    await this.orderRepo.save(order);
+    await this.ticketService.createBulkTickets({
+      orderId: order.id,
+      ticketTypeId,
+      quantity,
+    });
+
+    return true;
   }
 
   constructWebhookEvent(rawBody: Buffer, signature: string): any {

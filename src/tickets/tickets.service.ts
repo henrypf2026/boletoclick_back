@@ -47,11 +47,14 @@ export class TicketsService {
   async createBulkTickets(createTicketsDto: {
     orderId: string;
     ticketTypeId: string;
-    quantity: number;
+    quantity: string;
   }): Promise<Ticket[]> {
     const ticketsToCreate: Partial<Ticket>[] = [];
+    const quantityNumber = Number(createTicketsDto.quantity);
 
-    for (let i = 1; i <= createTicketsDto.quantity; i++) {
+    for (let i = 1; i <= quantityNumber; i++) {
+      // 🚧 PLACEHOLDER TEMPORAL PARA EL QR
+      // 💸 CUANDO SE IMPLEMENTE: Aquí llamarás a la librería de QR (ej: qrcode)
       const qrPlaceholder = `CLICK-TICKET-${createTicketsDto.orderId}-${i}-${Math.floor(1000 + Math.random() * 9000)}`;
 
       ticketsToCreate.push({
