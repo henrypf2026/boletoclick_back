@@ -35,7 +35,11 @@ export class TicketsController {
   @Get('me')
   @UseGuards(SupabaseAuthGuard)
   @ApiOperation({ summary: 'Obtener los tiquetes del usuario autenticado' })
-  @ApiResponse({ status: 200, type: [Ticket], description: 'Lista de tiquetes del cliente actual' })
+  @ApiResponse({
+    status: 200,
+    type: [Ticket],
+    description: 'Lista de tiquetes del cliente actual',
+  })
   findMyTickets(@Req() req: any): Promise<Ticket[]> {
     const userId = req.user.id;
     return this.ticketsService.findTicketsByUser(userId);
@@ -44,23 +48,34 @@ export class TicketsController {
   @Get('event/:eventId/stats')
   @UseGuards(SupabaseAuthGuard, RolesGuard)
   @Roles(Role.SCANNER, Role.ADMIN, Role.PRODUCER)
-  @ApiOperation({ summary: 'Stats de asistencia de un evento — SCANNER, ADMIN, PRODUCER' })
+  @ApiOperation({
+    summary: 'Stats de asistencia de un evento — SCANNER, ADMIN, PRODUCER',
+  })
   @ApiParam({ name: 'eventId', description: 'UUID del evento' })
   @ApiResponse({
     status: 200,
     description: 'Total, llegados, pendientes y porcentaje de asistencia',
-    schema: { example: { total: 120, arrived: 47, pending: 73, percentage: 39.2 } },
+    schema: {
+      example: { total: 120, arrived: 47, pending: 73, percentage: 39.2 },
+    },
   })
   getEventStats(
     @Param('eventId') eventId: string,
-  ): Promise<{ total: number; arrived: number; pending: number; percentage: number }> {
+  ): Promise<{
+    total: number;
+    arrived: number;
+    pending: number;
+    percentage: number;
+  }> {
     return this.ticketsService.getEventStats(eventId);
   }
 
   @Get()
   @UseGuards(SupabaseAuthGuard, RolesGuard)
   @Roles(Role.PRODUCER, Role.ADMIN)
-  @ApiOperation({ summary: 'Listar tiquetes — PRODUCER ve los suyos, ADMIN ve todos' })
+  @ApiOperation({
+    summary: 'Listar tiquetes — PRODUCER ve los suyos, ADMIN ve todos',
+  })
   findAllTickets(
     @CurrentUser() user: { id: string; role: Role },
     @Query('orderId') orderId?: string,
@@ -78,13 +93,20 @@ export class TicketsController {
   @ApiResponse({ status: 200, description: 'Ticket válido — acceso permitido' })
   @ApiResponse({ status: 400, description: 'Ticket ya usado o inválido' })
   @ApiResponse({ status: 404, description: 'Ticket no encontrado' })
-  scanTicket(@Body() dto: ScanTicketDto): Promise<{ message: string; ticket: Ticket }> {
+  scanTicket(
+    @Body() dto: ScanTicketDto,
+  ): Promise<{ message: string; ticket: Ticket }> {
     return this.ticketsService.scanTicket(dto.qrCode);
   }
 
   @Post()
   createBulkTickets(
-    @Body() createTicketsDto: { orderId: string; ticketTypeId: string; quantity: number },
+    @Body()
+    createTicketsDto: {
+      orderId: string;
+      ticketTypeId: string;
+      quantity: string;
+    },
   ) {
     return this.ticketsService.createBulkTickets(createTicketsDto);
   }
@@ -94,8 +116,16 @@ export class TicketsController {
   @Get(':id')
   @UseGuards(SupabaseAuthGuard)
   @ApiOperation({ summary: 'Obtener el detalle de un tiquete específico' })
-  @ApiParam({ name: 'id', description: 'ID del tiquete (UUID v4)', required: true })
-  @ApiResponse({ status: 200, type: Ticket, description: 'Detalle del tiquete encontrado' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del tiquete (UUID v4)',
+    required: true,
+  })
+  @ApiResponse({
+    status: 200,
+    type: Ticket,
+    description: 'Detalle del tiquete encontrado',
+  })
   findTicketByIdAndUser(
     @Param('id') id: string,
     @CurrentUser() user: { id: string },

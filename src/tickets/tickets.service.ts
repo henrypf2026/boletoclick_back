@@ -20,7 +20,10 @@ export class TicketsService {
   }
 
   async findTicketByIdAndUser(id: string, userId: string): Promise<Ticket> {
-    const ticket = await this.ticketsRepository.findTicketByIdAndUser(id, userId);
+    const ticket = await this.ticketsRepository.findTicketByIdAndUser(
+      id,
+      userId,
+    );
     if (!ticket) {
       throw new NotFoundException(
         `Ticket con ID '${id}' no encontrado o no tienes permisos para verlo.`,
@@ -29,8 +32,14 @@ export class TicketsService {
     return ticket;
   }
 
-  async findAllTicketsByProducer(producerId: string, orderId?: string): Promise<Ticket[]> {
-    return await this.ticketsRepository.findAllTicketsByProducer(producerId, orderId);
+  async findAllTicketsByProducer(
+    producerId: string,
+    orderId?: string,
+  ): Promise<Ticket[]> {
+    return await this.ticketsRepository.findAllTicketsByProducer(
+      producerId,
+      orderId,
+    );
   }
 
   async findAllTickets(orderId?: string): Promise<Ticket[]> {
@@ -40,17 +49,21 @@ export class TicketsService {
   async createBulkTickets(createTicketsDto: {
     orderId: string;
     ticketTypeId: string;
-    quantity: number;
+    quantity: string;
   }): Promise<Ticket[]> {
     const ticketsToCreate: Partial<Ticket>[] = [];
+    const quantityNumber = Number(createTicketsDto.quantity);
 
-    for (let i = 1; i <= createTicketsDto.quantity; i++) {
+    for (let i = 1; i <= quantityNumber; i++) {
       // ✅ QR firmado con JWT — no puede ser falsificado sin el JWT_SECRET
       const qrCode = this.jwtService.sign({
         orderId: createTicketsDto.orderId,
         ticketTypeId: createTicketsDto.ticketTypeId,
         index: i,
-      });
+      },
+    {
+      secret: "boletoclick-secret-dev-2024"
+    });
 
       ticketsToCreate.push({
         qrCode,
@@ -69,7 +82,9 @@ export class TicketsService {
     return await this.ticketsRepository.countActiveTicketsByUser(userId);
   }
 
-  async scanTicket(qrCode: string): Promise<{ message: string; ticket: Ticket }> {
+  async scanTicket(
+    qrCode: string,
+  ): Promise<{ message: string; ticket: Ticket }> {
     // ✅ Verificar firma JWT antes de tocar la BD
     try {
       this.jwtService.verify(qrCode);
@@ -82,9 +97,7 @@ export class TicketsService {
     const ticket = await this.ticketsRepository.findByQrCode(qrCode);
 
     if (!ticket) {
-      throw new NotFoundException(
-        `QR no reconocido — ticket no encontrado`,
-      );
+      throw new NotFoundException(`QR no reconocido — ticket no encontrado`);
     }
 
     if (!ticket.allowEntrance) {

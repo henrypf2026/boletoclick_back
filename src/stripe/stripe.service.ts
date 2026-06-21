@@ -1,4 +1,9 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,6 +15,7 @@ import { OrderStatus } from '../common/enums/order-status.enum';
 import { User } from '../users/entities/user.entity';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 import { TicketLocksService } from '../ticket-locks/ticket-locks.service';
+import { TicketsService } from '../tickets/tickets.service';
 
 type StripeClient = InstanceType<typeof Stripe>;
 
@@ -24,6 +30,7 @@ export class StripeService {
     @InjectRepository(TicketType)
     private readonly ticketTypeRepo: Repository<TicketType>,
     private readonly ticketLocksService: TicketLocksService,
+    private readonly ticketService: TicketsService,
   ) {}
 
   async createPaymentIntent(amount: number, currency = 'usd'): Promise<any> {
@@ -40,16 +47,17 @@ export class StripeService {
       relations: { event: true },
     });
     if (!ticketType) {
-  throw new NotFoundException(`TicketType ${dto.ticketTypeId} no encontrado`);
-}
+      throw new NotFoundException(
+        `TicketType ${dto.ticketTypeId} no encontrado`,
+      );
+    }
 
-// ✅ Bloquear compra si el evento ya ocurrió
-if (new Date(ticketType.event.eventDate) < new Date()) {
-  throw new BadRequestException(
-    `El evento "${ticketType.event.title}" ya finalizó y no acepta compras`,
-  );
-}
-    
+    // ✅ Bloquear compra si el evento ya ocurrió
+    if (new Date(ticketType.event.eventDate) < new Date()) {
+      throw new BadRequestException(
+        `El evento "${ticketType.event.title}" ya finalizó y no acepta compras`,
+      );
+    }
 
     // ✅ Total calculado desde la DB — el frontend no puede manipular el precio
     const unitPrice = Number(ticketType.price);
@@ -187,18 +195,33 @@ if (new Date(ticketType.event.eventDate) < new Date()) {
   async verifySession(sessionId: string): Promise<boolean> {
     const session = await this.stripe.checkout.sessions.retrieve(sessionId);
 
-    if (session.payment_status === 'paid') {
-      const order = await this.orderRepo.findOne({
-        where: { transactionId: sessionId },
-      });
-      if (order && order.status !== OrderStatus.PAID) {
-        order.status = OrderStatus.PAID;
-        await this.orderRepo.save(order);
-      }
-      return true;
+    const status = session.payment_status;
+    console.log({ status });
+
+    if (session.payment_status !== 'paid') {
+      return false;
     }
 
-    return false;
+    const { quantity, ticketTypeId } = session.metadata as {
+      quantity: string;
+      ticketTypeId: string;
+    };
+
+    const order = await this.orderRepo.findOne({
+      where: { transactionId: sessionId },
+    });
+    if (!order) throw new BadRequestException('Orden no encontrada');
+    if (order.status === OrderStatus.PAID)
+      throw new BadRequestException('Orden ya pagada');
+    order.status = OrderStatus.PAID;
+    await this.orderRepo.save(order);
+    await this.ticketService.createBulkTickets({
+      orderId: order.id,
+      ticketTypeId,
+      quantity,
+    });
+
+    return true;
   }
 
   constructWebhookEvent(rawBody: Buffer, signature: string): any {
