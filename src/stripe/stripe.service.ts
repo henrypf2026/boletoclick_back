@@ -15,7 +15,11 @@ import { Order } from '../orders/entities/order.entity';
 import { OrderStatus } from '../common/enums/order-status.enum';
 import { User } from '../users/entities/user.entity';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
+<<<<<<< Updated upstream
 import { TicketLocksService } from '../ticket-locks/ticket-locks.service';
+=======
+import { TicketsService } from '../tickets/tickets.service';
+>>>>>>> Stashed changes
 
 type StripeClient = InstanceType<typeof Stripe>;
 
@@ -29,7 +33,11 @@ export class StripeService {
     private readonly orderRepo: Repository<Order>,
     @InjectRepository(TicketType)
     private readonly ticketTypeRepo: Repository<TicketType>,
+<<<<<<< Updated upstream
     private readonly ticketLocksService: TicketLocksService,
+=======
+    private readonly ticketService: TicketsService,
+>>>>>>> Stashed changes
   ) {}
 
   async createPaymentIntent(amount: number, currency = 'usd'): Promise<any> {
@@ -143,6 +151,7 @@ export class StripeService {
           '🔔 Webhook recibido: checkout.session.completed',
           session.id,
         );
+<<<<<<< Updated upstream
         const lockConfirmed =
           await this.ticketLocksService.confirmLockByStripeSessionId(
             session.id,
@@ -155,6 +164,8 @@ export class StripeService {
           return;
         }
 
+=======
+>>>>>>> Stashed changes
         this.eventEmitter.emit('order.confirmed', {
           sessionId: session.id,
           metadata: session.metadata,

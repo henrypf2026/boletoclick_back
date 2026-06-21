@@ -7,7 +7,13 @@ import { StripeController } from './stripe.controller';
 import { Order } from '../orders/entities/order.entity';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 import { SupabaseModule } from '../supabase/supabase.module';
+<<<<<<< Updated upstream
 import { TicketLocksModule } from '../ticket-locks/ticket-locks.module';
+=======
+import { TicketsService } from '../tickets/tickets.service';
+import { Ticket } from '../tickets/entities/ticket.entity';
+import { TicketsRepository } from '../tickets/tickets.repository';
+>>>>>>> Stashed changes
 
 @Module({
   imports: [
