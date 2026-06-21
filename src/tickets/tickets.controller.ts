@@ -7,7 +7,6 @@ import {
   Req,
   Body,
   Post,
-  Patch,
 } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { Ticket } from './entities/ticket.entity';
@@ -31,47 +30,37 @@ import { ScanTicketDto } from './dto/scan-ticket.dto';
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
 
+  // ── Rutas literales primero ──────────────────────────────────────────
+
   @Get('me')
   @UseGuards(SupabaseAuthGuard)
   @ApiOperation({ summary: 'Obtener los tiquetes del usuario autenticado' })
-  @ApiResponse({
-    status: 200,
-    type: [Ticket],
-    description: 'Lista de tiquetes del cliente actual',
-  })
+  @ApiResponse({ status: 200, type: [Ticket], description: 'Lista de tiquetes del cliente actual' })
   findMyTickets(@Req() req: any): Promise<Ticket[]> {
     const userId = req.user.id;
     return this.ticketsService.findTicketsByUser(userId);
   }
 
-  @Get(':id')
-  @UseGuards(SupabaseAuthGuard)
-  @ApiOperation({ summary: 'Obtener el detalle de un tiquete específico' })
-  @ApiParam({
-    name: 'id',
-    description: 'ID del tiquete (UUID v4)',
-    required: true,
-  })
+  @Get('event/:eventId/stats')
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.SCANNER, Role.ADMIN, Role.PRODUCER)
+  @ApiOperation({ summary: 'Stats de asistencia de un evento — SCANNER, ADMIN, PRODUCER' })
+  @ApiParam({ name: 'eventId', description: 'UUID del evento' })
   @ApiResponse({
     status: 200,
-    type: Ticket,
-    description: 'Detalle del tiquete encontrado',
+    description: 'Total, llegados, pendientes y porcentaje de asistencia',
+    schema: { example: { total: 120, arrived: 47, pending: 73, percentage: 39.2 } },
   })
-  findTicketByIdAndUser(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ): Promise<Ticket> {
-    return this.ticketsService.findTicketByIdAndUser(id, user.id);
+  getEventStats(
+    @Param('eventId') eventId: string,
+  ): Promise<{ total: number; arrived: number; pending: number; percentage: number }> {
+    return this.ticketsService.getEventStats(eventId);
   }
 
-  // ADMIN puede ver todos los tickets sin filtro de producer
   @Get()
   @UseGuards(SupabaseAuthGuard, RolesGuard)
   @Roles(Role.PRODUCER, Role.ADMIN)
-  @ApiOperation({
-    summary:
-      'Listar tiquetes — PRODUCER ve los suyos, ADMIN ve todos',
-  })
+  @ApiOperation({ summary: 'Listar tiquetes — PRODUCER ve los suyos, ADMIN ve todos' })
   findAllTickets(
     @CurrentUser() user: { id: string; role: Role },
     @Query('orderId') orderId?: string,
@@ -82,13 +71,10 @@ export class TicketsController {
     return this.ticketsService.findAllTicketsByProducer(user.id, orderId);
   }
 
-  // Escaneo de tickets — solo SCANNER y ADMIN
   @Post('scan')
   @UseGuards(SupabaseAuthGuard, RolesGuard)
   @Roles(Role.SCANNER, Role.ADMIN)
-  @ApiOperation({
-    summary: 'Escanear un ticket para validar acceso al evento',
-  })
+  @ApiOperation({ summary: 'Escanear un ticket para validar acceso al evento' })
   @ApiResponse({ status: 200, description: 'Ticket válido — acceso permitido' })
   @ApiResponse({ status: 400, description: 'Ticket ya usado o inválido' })
   @ApiResponse({ status: 404, description: 'Ticket no encontrado' })
@@ -98,13 +84,22 @@ export class TicketsController {
 
   @Post()
   createBulkTickets(
-    @Body()
-    createTicketsDto: {
-      orderId: string;
-      ticketTypeId: string;
-      quantity: number;
-    },
+    @Body() createTicketsDto: { orderId: string; ticketTypeId: string; quantity: number },
   ) {
     return this.ticketsService.createBulkTickets(createTicketsDto);
+  }
+
+  // ── Rutas con parámetro dinámico al final ───────────────────────────
+
+  @Get(':id')
+  @UseGuards(SupabaseAuthGuard)
+  @ApiOperation({ summary: 'Obtener el detalle de un tiquete específico' })
+  @ApiParam({ name: 'id', description: 'ID del tiquete (UUID v4)', required: true })
+  @ApiResponse({ status: 200, type: Ticket, description: 'Detalle del tiquete encontrado' })
+  findTicketByIdAndUser(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: string },
+  ): Promise<Ticket> {
+    return this.ticketsService.findTicketByIdAndUser(id, user.id);
   }
 }

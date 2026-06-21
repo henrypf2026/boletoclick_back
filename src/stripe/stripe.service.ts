@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -40,10 +40,16 @@ export class StripeService {
       relations: { event: true },
     });
     if (!ticketType) {
-      throw new NotFoundException(
-        `TicketType ${dto.ticketTypeId} no encontrado`,
-      );
-    }
+  throw new NotFoundException(`TicketType ${dto.ticketTypeId} no encontrado`);
+}
+
+// ✅ Bloquear compra si el evento ya ocurrió
+if (new Date(ticketType.event.eventDate) < new Date()) {
+  throw new BadRequestException(
+    `El evento "${ticketType.event.title}" ya finalizó y no acepta compras`,
+  );
+}
+    
 
     // ✅ Total calculado desde la DB — el frontend no puede manipular el precio
     const unitPrice = Number(ticketType.price);
