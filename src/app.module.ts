@@ -31,7 +31,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter/dist/event-emitter.mod
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { TicketLocksModule } from './ticket-locks/ticket-locks.module';
-import { RolesGuard } from './common/guards/roles.guard';
 
 @Module({
   imports: [
@@ -76,10 +75,6 @@ import { RolesGuard } from './common/guards/roles.guard';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
     },
   ],
 })
