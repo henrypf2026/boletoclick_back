@@ -36,24 +36,21 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger solo disponible fuera de producción
-  if (process.env.NODE_ENV !== 'production') {
-    const config = new DocumentBuilder()
-      .setTitle('BoletoClick API')
-      .setDescription('API de la plataforma de tickets')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .build();
+  const config = new DocumentBuilder()
+    .setTitle('BoletoClick API')
+    .setDescription('API de la plataforma de tickets')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
 
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document, {
-      swaggerOptions: {
-        withCredentials: true,
-      },
-    });
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document, {
+    swaggerOptions: {
+      withCredentials: true,
+    },
+  });
 
-    console.log(`📄 Swagger disponible en /api`);
-  }
+  console.log(`📄 Swagger disponible en /api`);
 
   const PORT = process.env.PORT ?? 3001;
   await app.listen(PORT);
