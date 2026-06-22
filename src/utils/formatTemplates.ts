@@ -12,6 +12,11 @@ const welcomeTemplate = fs.readFileSync(
   'utf-8',
 );
 
+const cancelTemplate = fs.readFileSync(
+  path.join(process.cwd(), 'src/email/templates/cancelacion_template.html'),
+  'utf-8',
+);
+
 function formatWelcomeTemplate(userName: string) {
   const html = welcomeTemplate.replace('{userName}', userName);
   return html;
@@ -20,6 +25,23 @@ function formatWelcomeTemplate(userName: string) {
 function formatNewsletterTemplate(userName: string, eventsInfo: string) {
   let html = newsletterTemplate.replace('{userName}', userName);
   html = html.replace('{newsletterContent}', eventsInfo);
+  return html;
+}
+
+function formatCancelTemplate(
+  userName: string,
+  eventName: string,
+  orderId: string,
+  eventDate: string,
+  venue: string,
+  totalAmount: string,
+) {
+  let html = cancelTemplate.replace('{userName}', userName);
+  html = html.replace('{eventName}', eventName);
+  html = html.replace('{orderId}', orderId);
+  html = html.replace('{eventDate}', eventDate);
+  html = html.replace('{venue}', venue);
+  html = html.replace('{totalAmount}', totalAmount);
   return html;
 }
 
@@ -39,4 +61,9 @@ function buildEventCard(event: Event): string {
   `;
 }
 
-export { formatWelcomeTemplate, formatNewsletterTemplate, buildEventCard };
+export {
+  formatWelcomeTemplate,
+  formatNewsletterTemplate,
+  buildEventCard,
+  formatCancelTemplate,
+};
