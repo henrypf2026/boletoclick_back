@@ -12,6 +12,11 @@ const welcomeTemplate = fs.readFileSync(
   'utf-8',
 );
 
+const purchaseTemplate = fs.readFileSync(
+  path.join(process.cwd(), 'src/email/templates/compra_template.html'),
+  'utf-8',
+);
+
 function formatWelcomeTemplate(userName: string) {
   const html = welcomeTemplate.replace('{userName}', userName);
   return html;
@@ -20,6 +25,18 @@ function formatWelcomeTemplate(userName: string) {
 function formatNewsletterTemplate(userName: string, eventsInfo: string) {
   let html = newsletterTemplate.replace('{userName}', userName);
   html = html.replace('{newsletterContent}', eventsInfo);
+  return html;
+}
+
+function formatPurchaseTemplate(purchaseInfo) {
+  const { userName, eventName, eventDate, venueName, quantity } = purchaseInfo;
+  const html = purchaseTemplate
+    .replace('{userName}', userName)
+    .replace('{eventName}', eventName)
+    .replace('{eventDate}', eventDate)
+    .replace('{venue}', venueName)
+    .replace('{ticketQuantity}', quantity);
+
   return html;
 }
 
@@ -39,4 +56,9 @@ function buildEventCard(event: Event): string {
   `;
 }
 
-export { formatWelcomeTemplate, formatNewsletterTemplate, buildEventCard };
+export {
+  formatWelcomeTemplate,
+  formatNewsletterTemplate,
+  buildEventCard,
+  formatPurchaseTemplate,
+};

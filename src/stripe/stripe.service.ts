@@ -16,6 +16,7 @@ import { User } from '../users/entities/user.entity';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 import { TicketLocksService } from '../ticket-locks/ticket-locks.service';
 import { TicketsService } from '../tickets/tickets.service';
+import { EmailService } from '../email/email.service';
 
 type StripeClient = InstanceType<typeof Stripe>;
 
@@ -31,6 +32,7 @@ export class StripeService {
     private readonly ticketTypeRepo: Repository<TicketType>,
     private readonly ticketLocksService: TicketLocksService,
     private readonly ticketService: TicketsService,
+    private readonly emailService: EmailService,
   ) {}
 
   async createPaymentIntent(amount: number, currency = 'usd'): Promise<any> {
@@ -167,6 +169,7 @@ export class StripeService {
           sessionId: session.id,
           metadata: session.metadata,
         });
+
         console.log('📤 Evento order.confirmed emitido');
         break;
       case 'checkout.session.expired':
@@ -213,6 +216,7 @@ export class StripeService {
     if (!order) throw new BadRequestException('Orden no encontrada');
     if (order.status === OrderStatus.PAID)
       throw new BadRequestException('Orden ya pagada');
+
     order.status = OrderStatus.PAID;
     await this.orderRepo.save(order);
     await this.ticketService.createBulkTickets({
@@ -220,6 +224,8 @@ export class StripeService {
       ticketTypeId,
       quantity,
     });
+
+    await this.emailService.sendPurchaseEmail(session.metadata);
 
     return true;
   }

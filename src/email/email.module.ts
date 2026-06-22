@@ -4,9 +4,10 @@ import { EmailController } from './email.controller';
 import { EmailCron } from './email.cron';
 import { UsersModule } from '../users/users.module';
 import { EventsModule } from '../events/events.module';
+import { VenuesModule } from '../venues/venues.module';
 
 @Module({
-  imports: [UsersModule, EventsModule],
+  imports: [UsersModule, EventsModule, VenuesModule],
   controllers: [EmailController],
   providers: [EmailService, EmailCron],
   exports: [EmailService],

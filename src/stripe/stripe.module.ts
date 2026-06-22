@@ -12,6 +12,7 @@ import { TicketsService } from '../tickets/tickets.service';
 import { Ticket } from '../tickets/entities/ticket.entity';
 import { TicketsRepository } from '../tickets/tickets.repository';
 import { JwtModule } from '@nestjs/jwt';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { JwtModule } from '@nestjs/jwt';
     TypeOrmModule.forFeature([Order, TicketType, Ticket, TicketsRepository]),
     SupabaseModule,
     TicketLocksModule,
+    EmailModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

@@ -59,9 +59,7 @@ export class TicketsController {
       example: { total: 120, arrived: 47, pending: 73, percentage: 39.2 },
     },
   })
-  getEventStats(
-    @Param('eventId') eventId: string,
-  ): Promise<{
+  getEventStats(@Param('eventId') eventId: string): Promise<{
     total: number;
     arrived: number;
     pending: number;

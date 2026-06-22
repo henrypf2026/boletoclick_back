@@ -5,12 +5,14 @@ import {
   buildEventCard,
   formatNewsletterTemplate,
   formatWelcomeTemplate,
+  formatPurchaseTemplate,
 } from '../utils/formatTemplates';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
 import { EventsService } from '../events/events.service';
 import { Event } from '../events/entities/event.entity';
 import { Console } from 'console';
+import { VenuesService } from '../venues/venues.service';
 
 @Injectable()
 export class EmailService {
@@ -19,6 +21,7 @@ export class EmailService {
   constructor(
     private readonly userService: UsersService,
     private readonly eventsService: EventsService,
+    private readonly venuesService: VenuesService,
   ) {
     this.brevo = new BrevoClient({
       apiKey: environment.BREVO_API_KEY!,
@@ -71,8 +74,23 @@ export class EmailService {
       const subject = 'Newsletter Boleto Click';
       await this.sendEmail(user.email, subject, html);
     }
-    console.log('EMsils enviados');
   }
 
-  async sendPurchaseEmail(userData: User, purchaseData) {}
+  async sendPurchaseEmail(purchaseData) {
+    const user = await this.userService.findUserById(purchaseData.userId);
+    const event = await this.eventsService.getEventById(purchaseData.eventId);
+    const venue = await this.venuesService.findVenueById(event.venueId);
+
+    const html = formatPurchaseTemplate({
+      userName: user.name,
+      eventName: event.title,
+      eventDate: event.eventDate,
+      venueName: venue.name,
+      quantity: purchaseData.quantity,
+    });
+
+    const subject = 'Gracias por tu compra en Boleto Click';
+    await this.sendEmail(user.email, subject, html);
+    return;
+  }
 }
