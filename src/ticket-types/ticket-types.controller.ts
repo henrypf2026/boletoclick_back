@@ -1,7 +1,11 @@
-import { Controller, Get, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Param, Delete, UseGuards } from '@nestjs/common';
 import { TicketTypesService } from './ticket-types.service';
 import { TicketType } from './entities/ticket-type.entity';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiResponse, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { SupabaseAuthGuard } from '../common/guards/supabase-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/enums/role.enum';
 
 @ApiTags('Ticket Types')
 @Controller('ticket-types')
@@ -32,10 +36,15 @@ export class TicketTypesController {
     return this.ticketTypesService.getTicketTypeById(id);
   }
 
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.PRODUCER)
   @Delete(':id')
-  @ApiOperation({ summary: 'Desactivar un tipo de ticket' })
+  @ApiOperation({ summary: 'Desactivar un tipo de ticket (ADMIN o PRODUCER)' })
   @ApiParam({ name: 'id', description: 'UUID del ticket type' })
   @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Rol insuficiente' })
   deactivate(@Param('id') id: string): Promise<void> {
     return this.ticketTypesService.deactivateTicketType(id);
   }

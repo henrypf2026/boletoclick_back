@@ -1,14 +1,21 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import Stripe from 'stripe';
 import type { CreateCheckoutSessionDto } from './dto/create-checkout-session.dto';
 import { Order } from '../orders/entities/order.entity';
 import { OrderStatus } from '../common/enums/order-status.enum';
 import { User } from '../users/entities/user.entity';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
+import { TicketLocksService } from '../ticket-locks/ticket-locks.service';
+import { TicketsService } from '../tickets/tickets.service';
 
 type StripeClient = InstanceType<typeof Stripe>;
 
@@ -22,6 +29,8 @@ export class StripeService {
     private readonly orderRepo: Repository<Order>,
     @InjectRepository(TicketType)
     private readonly ticketTypeRepo: Repository<TicketType>,
+    private readonly ticketLocksService: TicketLocksService,
+    private readonly ticketService: TicketsService,
   ) {}
 
   async createPaymentIntent(amount: number, currency = 'usd'): Promise<any> {
@@ -38,7 +47,16 @@ export class StripeService {
       relations: { event: true },
     });
     if (!ticketType) {
-      throw new NotFoundException(`TicketType ${dto.ticketTypeId} no encontrado`);
+      throw new NotFoundException(
+        `TicketType ${dto.ticketTypeId} no encontrado`,
+      );
+    }
+
+    // ✅ Bloquear compra si el evento ya ocurrió
+    if (new Date(ticketType.event.eventDate) < new Date()) {
+      throw new BadRequestException(
+        `El evento "${ticketType.event.title}" ya finalizó y no acepta compras`,
+      );
     }
 
     // ✅ Total calculado desde la DB — el frontend no puede manipular el precio
@@ -59,55 +77,92 @@ export class StripeService {
       minute: '2-digit',
     });
 
-    const session = await this.stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'payment',
-      line_items: [
-        {
-          quantity: dto.quantity,
-          price_data: {
-            currency: 'usd',
-            // ✅ unit_amount calculado desde ticketType.price, no desde dto.total
-            unit_amount: Math.round(unitPrice * 100),
-            product_data: {
-              name: event.title,
-              description: `${date} ${time}`,
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const lock = await this.ticketLocksService.reserveTickets(
+      dto.ticketTypeId,
+      dto.userId,
+      dto.quantity,
+      expiresAt,
+    );
+
+    let session: any;
+    try {
+      session = await this.stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        mode: 'payment',
+        line_items: [
+          {
+            quantity: dto.quantity,
+            price_data: {
+              currency: 'usd',
+              unit_amount: Math.round(unitPrice * 100),
+              product_data: {
+                name: event.title,
+                description: `${date} ${time}`,
+              },
             },
           },
+        ],
+        metadata: {
+          userId: dto.userId,
+          eventId: event.id,
+          ticketTypeId: dto.ticketTypeId,
+          quantity: dto.quantity.toString(),
         },
-      ],
-      metadata: {
-        // ✅ userId viene del JWT (inyectado por el controller), no del body
-        userId: dto.userId,
-        eventId: event.id,
-        ticketTypeId: dto.ticketTypeId,
-        quantity: dto.quantity.toString(),
-      },
-      success_url: `${frontendUrl}/payment-result?status=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${frontendUrl}/eventos/${event.id}?canceled=true`,
-    });
+        success_url: `${frontendUrl}/payment-result?status=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${frontendUrl}/eventos/${event.id}?canceled=true`,
+      });
 
-    const order = this.orderRepo.create({
-      total,
-      producerSubtotal,
-      platformFee,
-      status: OrderStatus.PENDING,
-      transactionId: session.id,
-      user: { id: dto.userId } as User,
-    });
-    await this.orderRepo.save(order);
+      await this.ticketLocksService.linkStripeSession(lock.id, session.id);
 
-    return session;
+      const order = this.orderRepo.create({
+        total,
+        producerSubtotal,
+        platformFee,
+        status: OrderStatus.PENDING,
+        transactionId: session.id,
+        user: { id: dto.userId } as User,
+      });
+      await this.orderRepo.save(order);
+    } catch (error) {
+      await this.ticketLocksService.releaseLock(lock.id);
+      throw error;
+    }
+
+    return {
+      url: session.url,
+      expiresAt,
+      sessionId: session.id,
+    };
   }
 
   async handleWebhookEvent(rawBody: Buffer, signature: string): Promise<void> {
     const secret = this.config.getOrThrow<string>('STRIPE_WEBHOOK_SECRET');
-    const event = this.stripe.webhooks.constructEvent(rawBody, signature, secret);
+    const event = this.stripe.webhooks.constructEvent(
+      rawBody,
+      signature,
+      secret,
+    );
     const session = event.data.object as any;
 
     switch (event.type) {
       case 'checkout.session.completed':
-        console.log('🔔 Webhook recibido: checkout.session.completed', session.id);
+        console.log(
+          '🔔 Webhook recibido: checkout.session.completed',
+          session.id,
+        );
+        const lockConfirmed =
+          await this.ticketLocksService.confirmLockByStripeSessionId(
+            session.id,
+          );
+
+        if (!lockConfirmed) {
+          console.warn(
+            `⚠️ No se pudo confirmar el ticket lock para la sesión Stripe ${session.id}`,
+          );
+          return;
+        }
+
         this.eventEmitter.emit('order.confirmed', {
           sessionId: session.id,
           metadata: session.metadata,
@@ -115,6 +170,7 @@ export class StripeService {
         console.log('📤 Evento order.confirmed emitido');
         break;
       case 'checkout.session.expired':
+        await this.ticketLocksService.releaseLockByStripeSessionId(session.id);
         this.eventEmitter.emit('order.failed', session.id);
         break;
       case 'charge.refunded':
@@ -123,21 +179,49 @@ export class StripeService {
     }
   }
 
+  @OnEvent('stripe.expire-session')
+  async expireStripeSession(sessionId: string): Promise<void> {
+    try {
+      await this.stripe.checkout.sessions.expire(sessionId);
+      console.log(`✅ Stripe session ${sessionId} expirada correctamente`);
+    } catch (error: unknown) {
+      console.warn(
+        `⚠️ No se pudo expirar la sesión Stripe ${sessionId}:`,
+        error instanceof Error ? error.message : error,
+      );
+    }
+  }
+
   async verifySession(sessionId: string): Promise<boolean> {
     const session = await this.stripe.checkout.sessions.retrieve(sessionId);
 
-    if (session.payment_status === 'paid') {
-      const order = await this.orderRepo.findOne({
-        where: { transactionId: sessionId },
-      });
-      if (order && order.status !== OrderStatus.PAID) {
-        order.status = OrderStatus.PAID;
-        await this.orderRepo.save(order);
-      }
-      return true;
+    const status = session.payment_status;
+    console.log({ status });
+
+    if (session.payment_status !== 'paid') {
+      return false;
     }
 
-    return false;
+    const { quantity, ticketTypeId } = session.metadata as {
+      quantity: string;
+      ticketTypeId: string;
+    };
+
+    const order = await this.orderRepo.findOne({
+      where: { transactionId: sessionId },
+    });
+    if (!order) throw new BadRequestException('Orden no encontrada');
+    if (order.status === OrderStatus.PAID)
+      throw new BadRequestException('Orden ya pagada');
+    order.status = OrderStatus.PAID;
+    await this.orderRepo.save(order);
+    await this.ticketService.createBulkTickets({
+      orderId: order.id,
+      ticketTypeId,
+      quantity,
+    });
+
+    return true;
   }
 
   constructWebhookEvent(rawBody: Buffer, signature: string): any {

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, EntityManager, Between } from 'typeorm';
+import { Repository, EntityManager, Between, Not } from 'typeorm';
 import { Event } from './entities/event.entity';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
@@ -33,13 +33,16 @@ export class EventsRepository {
         ticketTypes: true,
         coupons: true,
       },
+      where: {
+        status: Not(EventStatus.DRAFT), // Excluye los eventos en borrador
+      },
       order: { createdAt: 'DESC' },
     });
   }
 
   async getEventById(id: string): Promise<Event> {
     const foundEvent = await this.ormEventsRepository.findOne({
-      where: { id },
+      where: { id, status: Not(EventStatus.DRAFT) },
       relations: {
         ticketTypes: true,
         venue: { municipality: { province: true } },

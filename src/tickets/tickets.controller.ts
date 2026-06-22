@@ -22,12 +22,15 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { ScanTicketDto } from './dto/scan-ticket.dto';
 
 @ApiTags('Tickets')
 @ApiBearerAuth()
 @Controller('tickets')
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
+
+  // ── Rutas literales primero ──────────────────────────────────────────
 
   @Get('me')
   @UseGuards(SupabaseAuthGuard)
@@ -41,6 +44,74 @@ export class TicketsController {
     const userId = req.user.id;
     return this.ticketsService.findTicketsByUser(userId);
   }
+
+  @Get('event/:eventId/stats')
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.SCANNER, Role.ADMIN, Role.PRODUCER)
+  @ApiOperation({
+    summary: 'Stats de asistencia de un evento — SCANNER, ADMIN, PRODUCER',
+  })
+  @ApiParam({ name: 'eventId', description: 'UUID del evento' })
+  @ApiResponse({
+    status: 200,
+    description: 'Total, llegados, pendientes y porcentaje de asistencia',
+    schema: {
+      example: { total: 120, arrived: 47, pending: 73, percentage: 39.2 },
+    },
+  })
+  getEventStats(
+    @Param('eventId') eventId: string,
+  ): Promise<{
+    total: number;
+    arrived: number;
+    pending: number;
+    percentage: number;
+  }> {
+    return this.ticketsService.getEventStats(eventId);
+  }
+
+  @Get()
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.PRODUCER, Role.ADMIN)
+  @ApiOperation({
+    summary: 'Listar tiquetes — PRODUCER ve los suyos, ADMIN ve todos',
+  })
+  findAllTickets(
+    @CurrentUser() user: { id: string; role: Role },
+    @Query('orderId') orderId?: string,
+  ): Promise<Ticket[]> {
+    if (user.role === Role.ADMIN) {
+      return this.ticketsService.findAllTickets(orderId);
+    }
+    return this.ticketsService.findAllTicketsByProducer(user.id, orderId);
+  }
+
+  @Post('scan')
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.SCANNER, Role.ADMIN)
+  @ApiOperation({ summary: 'Escanear un ticket para validar acceso al evento' })
+  @ApiResponse({ status: 200, description: 'Ticket válido — acceso permitido' })
+  @ApiResponse({ status: 400, description: 'Ticket ya usado o inválido' })
+  @ApiResponse({ status: 404, description: 'Ticket no encontrado' })
+  scanTicket(
+    @Body() dto: ScanTicketDto,
+  ): Promise<{ message: string; ticket: Ticket }> {
+    return this.ticketsService.scanTicket(dto.qrCode);
+  }
+
+  @Post()
+  createBulkTickets(
+    @Body()
+    createTicketsDto: {
+      orderId: string;
+      ticketTypeId: string;
+      quantity: string;
+    },
+  ) {
+    return this.ticketsService.createBulkTickets(createTicketsDto);
+  }
+
+  // ── Rutas con parámetro dinámico al final ───────────────────────────
 
   @Get(':id')
   @UseGuards(SupabaseAuthGuard)
@@ -60,31 +131,5 @@ export class TicketsController {
     @CurrentUser() user: { id: string },
   ): Promise<Ticket> {
     return this.ticketsService.findTicketByIdAndUser(id, user.id);
-  }
-
-  @Get()
-  @UseGuards(SupabaseAuthGuard, RolesGuard)
-  @Roles(Role.PRODUCER)
-  @ApiOperation({
-    summary: 'Listar los tiquetes de los eventos del productor autenticado',
-  })
-  findAllTickets(
-    @CurrentUser() user: { id: string }, // 🔥 Capturamos al productor de forma segura
-    @Query('orderId') orderId?: string,
-  ): Promise<Ticket[]> {
-    // 🔥 Le pasamos su ID al servicio para bloquear el acceso al resto del universo
-    return this.ticketsService.findAllTicketsByProducer(user.id, orderId);
-  }
-
-  @Post()
-  createBulkTickets(
-    @Body()
-    createTicketsDto: {
-      orderId: string;
-      ticketTypeId: string;
-      quantity: number;
-    },
-  ) {
-    return this.ticketsService.createBulkTickets(createTicketsDto);
   }
 }
