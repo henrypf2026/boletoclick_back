@@ -1,20 +1,24 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Get, UseGuards, Res } from '@nestjs/common';
+
+import { Response } from 'express';
+
 import { AuthService } from './auth.service';
 import { RegisterDto } from '../users/dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { UseGuards, Get } from '@nestjs/common';
+import { ForgotPasswordDto } from './dto/forgotpassword.dto';
+
 import { SupabaseAuthGuard } from '../common/guards/supabase-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
+
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { ForgotPasswordDto } from './dto/forgotpassword.dto';
 
 @ApiTags('Autenticación')
 @Controller('auth')
@@ -43,16 +47,15 @@ export class AuthController {
   })
   @ApiResponse({
     status: 200,
-    description:
-      'Inicio de sesión exitoso. Devuelve el token de acceso y la sesión del usuario.',
+    description: 'Inicio de sesión exitoso.',
   })
   @ApiResponse({
     status: 401,
     description:
       'No autorizado (Unauthorized). Correo electrónico o contraseña inválidos.',
   })
-  login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
+    return this.authService.login(loginDto, res);
   }
 
   @ApiBearerAuth()
@@ -95,6 +98,18 @@ export class AuthController {
   })
   forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     return this.authService.forgotPassword(forgotPasswordDto.email);
+  }
+
+  @Post('logout')
+  @ApiOperation({
+    summary: 'Cerrar sesión',
+  })
+  logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('access_token');
+
+    return {
+      message: 'Sesión cerrada correctamente',
+    };
   }
 
   //---- Compañeros de equipo pueden probar estas rutas para verificar los roles y permisos :) ---//
