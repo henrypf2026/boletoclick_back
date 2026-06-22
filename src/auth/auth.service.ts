@@ -3,6 +3,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { SupabaseService } from '../supabase/supabase.service';
 import { RegisterDto } from '../users/dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -25,7 +26,6 @@ export class AuthService {
   async register(userData: RegisterDto) {
     const supabase = this.supabaseService.getClient();
 
-    //prueba
     const { data, error } = await supabase.auth.signUp({
       email: userData.email,
       password: userData.password,
@@ -42,16 +42,15 @@ export class AuthService {
         'No se pudo registrar el usuario en el sistema de autenticación.',
       );
     }
+
     const { password, role, ...profileData } = userData;
 
-    // Bloquear creación de usuarios ADMIN desde este endpoint público
     if (role === Role.ADMIN) {
       throw new BadRequestException(
         'No está permitido crear usuarios ADMIN desde este endpoint.',
       );
     }
 
-    // Solo permitir producer o user; por defecto asignar USER
     const assignedRole = role === Role.PRODUCER ? Role.PRODUCER : Role.USER;
 
     const savedUserProfile = await this.usersService.upsertProfile(
@@ -72,7 +71,7 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto, res: Response) {
     const supabase = this.supabaseService.getClient();
 
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -86,15 +85,26 @@ export class AuthService {
       );
     }
 
+    const token = data.session?.access_token;
+
+    if (!token) {
+      throw new UnauthorizedException('No se pudo generar la sesión.');
+    }
+
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      signed: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 1000 * 60 * 60 * 24,
+    });
+
     return {
       message: 'Inicio de sesión correcto',
       user: data.user,
-      session: data.session,
-      access_token: data.session?.access_token,
     };
   }
 
-  //modificacion
   async forgotPassword(email: string) {
     const supabase = this.supabaseService.getClient();
 
