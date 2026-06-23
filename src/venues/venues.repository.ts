@@ -9,6 +9,7 @@ import { ILike, Repository } from 'typeorm';
 import { Venue } from './entities/venue.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventStatus } from '../common/enums/event-status.enum';
+import { Municipality } from '../municipalities/entities/municipality.entity';
 
 @Injectable()
 export class VenuesRepository {
@@ -52,6 +53,19 @@ export class VenuesRepository {
   async createVenue(createVenueDto: CreateVenueDto): Promise<Venue> {
     const { municipalityId, ...venueData } = createVenueDto;
 
+    const municipality = await this.ormVenueRepository.manager.findOne(
+      Municipality,
+      {
+        where: { id: municipalityId },
+      },
+    );
+
+    if (!municipality) {
+      throw new NotFoundException(
+        `El municipio/ciudad con ID ${municipalityId} no existe.`,
+      );
+    }
+
     const existingVenue = await this.ormVenueRepository.findOne({
       where: {
         name: ILike(createVenueDto.name.trim()),
@@ -67,7 +81,7 @@ export class VenuesRepository {
 
     const venue = this.ormVenueRepository.create({
       ...venueData,
-      municipality: { id: municipalityId },
+      municipality,
     });
 
     const savedVenue = await this.ormVenueRepository.save(venue);
@@ -100,7 +114,18 @@ export class VenuesRepository {
     Object.assign(venue, venueData);
 
     if (municipalityId) {
-      venue.municipality = { id: municipalityId } as any;
+      const municipality = await this.ormVenueRepository.manager.findOne(
+        Municipality,
+        {
+          where: { id: municipalityId },
+        },
+      );
+      if (!municipality) {
+        throw new NotFoundException(
+          `El municipio/ciudad con ID ${municipalityId} no existe.`,
+        );
+      }
+      venue.municipality = municipality;
     }
 
     await this.ormVenueRepository.save(venue);
