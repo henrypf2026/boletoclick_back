@@ -52,12 +52,22 @@ export class StripeService {
       );
     }
 
-    // ✅ Bloquear compra si el evento ya ocurrió
-    if (new Date(ticketType.event.eventDate) < new Date()) {
-      throw new BadRequestException(
-        `El evento "${ticketType.event.title}" ya finalizó y no acepta compras`,
-      );
-    }
+   const now = new Date();
+const eventStart = new Date(ticketType.event.eventDate);
+const twoHoursBefore = new Date(eventStart.getTime() - 2 * 60 * 60 * 1000);
+const oneDayAfter = new Date(eventStart.getTime() + 24 * 60 * 60 * 1000);
+
+if (now > oneDayAfter) {
+  throw new BadRequestException(
+    `Este evento ya finalizó`,
+  );
+}
+
+if (now >= twoHoursBefore) {
+  throw new BadRequestException(
+    `La compra de entradas cierra 2 horas antes del evento`,
+  );
+}
 
     // ✅ Total calculado desde la DB — el frontend no puede manipular el precio
     const unitPrice = Number(ticketType.price);
