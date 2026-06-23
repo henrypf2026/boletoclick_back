@@ -211,7 +211,7 @@ SOPORTE
 
 Correo electrónico:
 
-[soporte@boletoclick.com](mailto:soporte@boletoclick.com)
+soporte@boletoclick.com
 
 Teléfono:
 
