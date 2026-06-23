@@ -105,6 +105,29 @@ export class AuthService {
     };
   }
 
+  async setSession(accessToken: string, res: Response) {
+    const supabase = this.supabaseService.getClient();
+
+    const { data, error } = await supabase.auth.getUser(accessToken);
+
+    if (error || !data.user) {
+      throw new UnauthorizedException('Token inválido o expirado.');
+    }
+
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      signed: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 1000 * 60 * 60 * 24,
+    });
+
+    return {
+      ok: true,
+      user: data.user,
+    };
+  }
+
   async forgotPassword(email: string) {
     const supabase = this.supabaseService.getClient();
 

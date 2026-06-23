@@ -1,8 +1,9 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Param, UseGuards } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -28,5 +29,25 @@ export class OrdersController {
   })
   findMyOrders(@CurrentUser() user: { id: string }): Promise<Order[]> {
     return this.ordersService.findMyOrders(user.id);
+  }
+
+  @Patch(':id/cancel')
+  @ApiOperation({
+    summary: 'Cancelar una orden de compra del usuario autenticado',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Identificador de la orden a cancelar',
+    type: 'string',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Orden cancelada exitosamente',
+  })
+  cancelOrder(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: string },
+  ): Promise<{ message: string }> {
+    return this.ordersService.cancelOrder(id, user.id);
   }
 }

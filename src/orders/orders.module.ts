@@ -7,12 +7,14 @@ import { Ticket } from '../tickets/entities/ticket.entity';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { UsersModule } from '../users/users.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Order, Ticket, TicketType]),
     SupabaseModule,
     UsersModule,
+    EmailModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService],

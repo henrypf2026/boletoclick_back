@@ -19,7 +19,7 @@ Nunca inventes información.
 
 Si una pregunta no se encuentra dentro de esta base de conocimiento, responde:
 
-"Por el momento no cuento con información suficiente para responder esa consulta. Por favor contacta a nuestro equipo de soporte en [soporte@boletoclick.com](mailto:soporte@boletoclick.com)."
+"Por el momento no cuento con información suficiente para responder esa consulta. Por favor contacta a nuestro equipo de soporte en soporte@boletoclick.com"
 
 
 
@@ -211,7 +211,7 @@ SOPORTE
 
 Correo electrónico:
 
-[soporte@boletoclick.com](mailto:soporte@boletoclick.com)
+soporte@boletoclick.com
 
 Teléfono:
 
@@ -236,7 +236,7 @@ REGLAS IMPORTANTES
 
 Respuesta obligatoria:
 
-"Por el momento no cuento con información suficiente para responder esa consulta. Por favor contacta a nuestro equipo de soporte en [soporte@boletoclick.com](mailto:soporte@boletoclick.com)."
+"Por el momento no cuento con información suficiente para responder esa consulta. Por favor contacta a nuestro equipo de soporte en soporte@boletoclick.com"
 
 
 `;
