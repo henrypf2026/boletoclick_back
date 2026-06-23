@@ -8,6 +8,7 @@ import { UpdateVenueDto } from './dto/update-venue.dto';
 import { ILike, Repository } from 'typeorm';
 import { Venue } from './entities/venue.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { EventStatus } from '../common/enums/event-status.enum';
 
 @Injectable()
 export class VenuesRepository {
@@ -17,11 +18,20 @@ export class VenuesRepository {
   ) {}
 
   async findAllVenues(): Promise<Venue[]> {
-    return await this.ormVenueRepository.find({
-      relations: {
-        municipality: true, // 🔥 Trae la info del municipio para los listados del Front
-      },
-    });
+    return await this.ormVenueRepository
+      .createQueryBuilder('venue')
+      .leftJoinAndSelect('venue.municipality', 'municipality')
+      .leftJoinAndSelect(
+        'venue.events',
+        'event',
+        'event.status = :status AND event.eventDate > :now',
+        {
+          status: EventStatus.ACTIVE,
+          now: new Date().toISOString(),
+        },
+      )
+      .orderBy('event.eventDate', 'ASC')
+      .getMany();
   }
 
   async findVenueById(id: string): Promise<Venue> {

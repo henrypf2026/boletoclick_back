@@ -111,7 +111,6 @@ export class TicketsRepository {
   async save(ticket: Ticket): Promise<Ticket> {
     return await this.ormTicketRepository.save(ticket);
   }
-// Agregar después del método save()
 
 async getEventStats(eventId: string): Promise<{
   total: number;
