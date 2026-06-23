@@ -23,6 +23,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ScanTicketDto } from './dto/scan-ticket.dto';
+import { createTicketsDto } from './dto/createTicketsDto';
 
 @ApiTags('Tickets')
 @ApiBearerAuth()
@@ -59,9 +60,7 @@ export class TicketsController {
       example: { total: 120, arrived: 47, pending: 73, percentage: 39.2 },
     },
   })
-  getEventStats(
-    @Param('eventId') eventId: string,
-  ): Promise<{
+  getEventStats(@Param('eventId') eventId: string): Promise<{
     total: number;
     arrived: number;
     pending: number;
@@ -100,13 +99,12 @@ export class TicketsController {
   }
 
   @Post()
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.PRODUCER, Role.PRODUCER)
+  @ApiOperation({ summary: 'Generacíon de tickets' })
   createBulkTickets(
     @Body()
-    createTicketsDto: {
-      orderId: string;
-      ticketTypeId: string;
-      quantity: string;
-    },
+    createTicketsDto: createTicketsDto,
   ) {
     return this.ticketsService.createBulkTickets(createTicketsDto);
   }
