@@ -18,10 +18,13 @@ async function bootstrap() {
 
   app.use('/payments/webhook', (req: any, res: any, next: any) => {
     let data = '';
+
     req.setEncoding('utf8');
+
     req.on('data', (chunk: string) => {
       data += chunk;
     });
+
     req.on('end', () => {
       req.rawBody = Buffer.from(data);
       next();
@@ -36,27 +39,25 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger solo disponible fuera de producción
-  if (process.env.NODE_ENV !== 'production') {
-    const config = new DocumentBuilder()
-      .setTitle('BoletoClick API')
-      .setDescription('API de la plataforma de tickets')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .build();
+  // Swagger disponible también en producción
+  const config = new DocumentBuilder()
+    .setTitle('BoletoClick API')
+    .setDescription('API de la plataforma de tickets')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
 
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document, {
-      swaggerOptions: {
-        withCredentials: true,
-      },
-    });
+  const document = SwaggerModule.createDocument(app, config);
 
-    console.log(`📄 Swagger disponible en /api`);
-  }
+  SwaggerModule.setup('api', app, document);
+
+  console.log(`📄 Swagger disponible en /api`);
 
   const PORT = process.env.PORT ?? 3001;
+
   await app.listen(PORT);
+
   console.log(`🚀 Server listening on port ${PORT}`);
 }
+
 bootstrap();
