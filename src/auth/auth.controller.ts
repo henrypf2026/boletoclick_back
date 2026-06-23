@@ -12,6 +12,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
+import { SetSessionDto } from './dto/set-session.dto';
 
 import {
   ApiBearerAuth,
@@ -56,6 +57,25 @@ export class AuthController {
   })
   login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
     return this.authService.login(loginDto, res);
+  }
+
+  @Post('set-session')
+  @ApiOperation({
+    summary: 'Crear cookie de sesión a partir de un access token de OAuth',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Sesión creada correctamente desde OAuth.',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Token inválido o expirado.',
+  })
+  setSession(
+    @Body() setSessionDto: SetSessionDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.setSession(setSessionDto.access_token, res);
   }
 
   @ApiBearerAuth()
