@@ -101,19 +101,22 @@ export class EventsService {
   }
 
   async getAllEvents(): Promise<(Event & { isSoldOut: boolean })[]> {
-  const events = await this.eventsRepository.getAllEvents();
-  return events.map((e) => this.enrichWithSoldOut(e));
-}
+    const events = await this.eventsRepository.getAllEvents();
+    return events.map((e) => this.enrichWithSoldOut(e));
+  }
 
-  async getEventsByProducerId(producerId: string): Promise<(Event & { isSoldOut: boolean })[]> {
-  const events = await this.eventsRepository.getEventsByProducerId(producerId);
-  return events.map((e) => this.enrichWithSoldOut(e));
-}
+  async getEventsByProducerId(
+    producerId: string,
+  ): Promise<(Event & { isSoldOut: boolean })[]> {
+    const events =
+      await this.eventsRepository.getEventsByProducerId(producerId);
+    return events.map((e) => this.enrichWithSoldOut(e));
+  }
 
   async getEventById(id: string): Promise<Event & { isSoldOut: boolean }> {
-  const event = await this.eventsRepository.getEventById(id);
-  return this.enrichWithSoldOut(event);
-}
+    const event = await this.eventsRepository.getEventById(id);
+    return this.enrichWithSoldOut(event);
+  }
 
   async desactivateEvent(id: string, userId: string): Promise<void> {
     const event = await this.getEventById(id);
@@ -136,10 +139,26 @@ export class EventsService {
   }
 
   private enrichWithSoldOut(event: Event): Event & { isSoldOut: boolean } {
-  const isSoldOut =
-    event.ticketTypes.length > 0 &&
-    event.ticketTypes.every((tt) => tt.stock === 0);
+    const isSoldOut =
+      event.ticketTypes.length > 0 &&
+      event.ticketTypes.every((tt) => tt.stock === 0);
 
-  return { ...event, isSoldOut };
-}
+    return { ...event, isSoldOut };
+  }
+
+  async getActiveEventsForChatbot(): Promise<Event[]> {
+    return await this.eventsRepository.getActiveEventsForChatbot();
+  }
+
+  async searchActiveEventsForChatbot(search: string): Promise<Event[]> {
+    return await this.eventsRepository.searchActiveEventsForChatbot(search);
+  }
+
+  async searchActiveEventsByLocationForChatbot(
+    location: string,
+  ): Promise<Event[]> {
+    return await this.eventsRepository.searchActiveEventsByLocationForChatbot(
+      location,
+    );
+  }
 }
