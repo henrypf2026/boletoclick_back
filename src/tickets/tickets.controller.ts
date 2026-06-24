@@ -102,6 +102,12 @@ export class TicketsController {
   @UseGuards(SupabaseAuthGuard, RolesGuard)
   @Roles(Role.PRODUCER, Role.PRODUCER)
   @ApiOperation({ summary: 'Generacíon de tickets' })
+  @ApiResponse({
+    status: 201,
+    description: 'Ticket generados',
+    type: Ticket,
+    isArray: true,
+  })
   createBulkTickets(
     @Body()
     createTicketsDto: createTicketsDto,
