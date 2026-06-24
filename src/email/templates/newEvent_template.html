@@ -1,0 +1,139 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Evento Creado</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background: #0f172a;
+      font-family: Arial, sans-serif;
+    "
+  >
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center" style="padding: 40px 20px">
+          <table
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            style="background: #ffffff; border-radius: 16px; overflow: hidden"
+          >
+            <!-- HEADER -->
+            <tr>
+              <td
+                align="center"
+                style="
+                  padding: 30px;
+                  background: linear-gradient(135deg, #10b981, #3b82f6);
+                "
+              >
+                <img
+                  src="https://res.cloudinary.com/ddsubvh5v/image/upload/v1781399631/boletockick_ztfz0v.jpg"
+                  width="120"
+                />
+                <h1 style="color: white; margin: 0">🎉 Evento Creado</h1>
+              </td>
+            </tr>
+
+            <!-- BODY -->
+            <tr>
+              <td style="padding: 40px">
+                <p style="font-size: 18px; color: #111827">
+                  Hola <strong>{userName}</strong>,
+                </p>
+
+                <p style="color: #4b5563; line-height: 1.7">
+                  Te confirmamos que tu evento ha sido creado exitosamente en la
+                  plataforma. Ya puedes comenzar a gestionarlo desde tu panel.
+                </p>
+
+                <!-- EVENT DETAILS -->
+                <table
+                  width="100%"
+                  style="
+                    margin-top: 25px;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 10px;
+                    overflow: hidden;
+                  "
+                >
+                  <tr>
+                    <td colspan="2" style="background: #f9fafb; padding: 15px">
+                      <strong>{eventName}</strong>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding: 12px">📅 Fecha</td>
+                    <td style="padding: 12px">{eventDate}</td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding: 12px">📍 Lugar</td>
+                    <td style="padding: 12px">{venue}</td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding: 12px">🎭 Categoría</td>
+                    <td style="padding: 12px">{category}</td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding: 12px">🆔 ID del evento</td>
+                    <td style="padding: 12px">{eventId}</td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding: 12px">🎫 Total Tickets</td>
+                    <td style="padding: 12px">{totalTickets}</td>
+                  </tr>
+                </table>
+
+                <!-- CTA -->
+                <div style="text-align: center; margin-top: 35px">
+                  <a
+                    href="https://boletoclick-front.vercel.app/mis-eventos"
+                    style="
+                      background: linear-gradient(135deg, #10b981, #3b82f6);
+                      color: white;
+                      text-decoration: none;
+                      padding: 14px 28px;
+                      border-radius: 8px;
+                      font-weight: bold;
+                      display: inline-block;
+                    "
+                  >
+                    Gestionar mi evento
+                  </a>
+                </div>
+
+                <p style="margin-top: 30px; color: #6b7280; font-size: 14px">
+                  Desde tu panel podrás editar información, ver estadísticas y
+                  administrar asistentes.
+                </p>
+              </td>
+            </tr>
+
+            <!-- FOOTER -->
+            <tr>
+              <td
+                style="
+                  padding: 20px;
+                  text-align: center;
+                  background: #f3f4f6;
+                  color: #6b7280;
+                  font-size: 12px;
+                "
+              >
+                Gracias por usar Boletoclick 🚀
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

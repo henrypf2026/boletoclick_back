@@ -7,13 +7,16 @@ import {
   formatWelcomeTemplate,
   formatPurchaseTemplate,
   formatCancelTemplate,
+  buildQRImage,
+  formatEventNameForQRName,
+  formatNewEventTemplate,
 } from '../utils/formatTemplates';
 import { UsersService } from '../users/users.service';
-import { User } from '../users/entities/user.entity';
 import { EventsService } from '../events/events.service';
 import { Event } from '../events/entities/event.entity';
-import { Console } from 'console';
 import { VenuesService } from '../venues/venues.service';
+import { Ticket } from '../tickets/entities/ticket.entity';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class EmailService {
@@ -29,7 +32,15 @@ export class EmailService {
     });
   }
 
-  async sendEmail(to: string, subject: string, html: string): Promise<unknown> {
+  async sendEmail(
+    to: string,
+    subject: string,
+    html: string,
+    attachments?: {
+      name: string;
+      content: string;
+    }[],
+  ): Promise<unknown> {
     try {
       return await this.brevo.transactionalEmails.sendTransacEmail({
         sender: {
@@ -39,6 +50,7 @@ export class EmailService {
         to: [{ email: to }],
         subject,
         htmlContent: html,
+        ...(attachments?.length ? { attachment: attachments } : {}),
       });
     } catch (error) {
       console.log(`No se pudo enviar email a ${to}. Error ${error}`);
@@ -77,7 +89,7 @@ export class EmailService {
     }
   }
 
-  async sendPurchaseEmail(purchaseData) {
+  async sendPurchaseEmail(purchaseData, tickets: Ticket[]) {
     const user = await this.userService.findUserById(purchaseData.userId);
     const event = await this.eventsService.getEventById(purchaseData.eventId);
     const venue = await this.venuesService.findVenueById(event.venueId);
@@ -90,8 +102,18 @@ export class EmailService {
       quantity: purchaseData.quantity,
     });
 
+    const attachments = await Promise.all(
+      tickets.map(async (ticket, index) => {
+        const qrBuffer = await buildQRImage(ticket.qrCode);
+
+        return {
+          name: `${formatEventNameForQRName(event.title)}-ticket-${index + 1}.png`,
+          content: qrBuffer.toString('base64'),
+        };
+      }),
+    );
     const subject = 'Gracias por tu compra en Boleto Click';
-    await this.sendEmail(user.email, subject, html);
+    await this.sendEmail(user.email, subject, html, attachments);
     return;
   }
 
@@ -114,5 +136,15 @@ export class EmailService {
     );
     const subject = `Cancelación de tu orden #${orderId} - BoletoClick`;
     return this.sendEmail(userEmail, subject, html);
+  }
+
+  async sendNewEventEmail(
+    producer: User,
+    eventInfo: Event,
+    totalStock: number,
+  ) {
+    const html = formatNewEventTemplate(producer.name, eventInfo, totalStock);
+    const subject = `Nuevo evento creado: ${eventInfo.title} - BoletoClick`;
+    return this.sendEmail(producer.email, subject, html);
   }
 }

@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Event } from '../events/entities/event.entity';
+import * as QRCode from 'qrcode';
 
 const newsletterTemplate = fs.readFileSync(
   path.join(process.cwd(), 'src/email/templates/newsletter_template.html'),
@@ -19,6 +20,11 @@ const purchaseTemplate = fs.readFileSync(
 
 const cancelTemplate = fs.readFileSync(
   path.join(process.cwd(), 'src/email/templates/cancelacion_template.html'),
+  'utf-8',
+);
+
+const newEventTemplate = fs.readFileSync(
+  path.join(process.cwd(), 'src/email/templates/newEvent_template.html'),
   'utf-8',
 );
 
@@ -78,9 +84,42 @@ function buildEventCard(event: Event): string {
   `;
 }
 
+async function buildQRImage(encryptedQR: string) {
+  const qrBuffer = await QRCode.toBuffer(encryptedQR);
+  return qrBuffer;
+}
+
+function formatEventNameForQRName(eventName: string) {
+  return eventName
+    .normalize('NFD') // Separa acentos
+    .replace(/[\u0300-\u036f]/g, '') // remueve acentos
+    .replace(/\s+/g, '') // elimina espacios
+    .toLocaleLowerCase()
+    .slice(0, 8); // Se limitara a 8 caracteres para evitar nombres largos
+}
+
+function formatNewEventTemplate(
+  userName: string,
+  eventInfo: Event,
+  totalStock: number,
+) {
+  return newEventTemplate
+    .replace('{userName}', userName)
+    .replace('{eventName}', eventInfo.title)
+    .replace('{eventDate}', eventInfo.eventDate)
+    .replace('{category}', eventInfo.category.name)
+    .replace('{venue}', eventInfo.venue.name)
+    .replace('{eventId}', eventInfo.id)
+    .replace('{totalTickets}', String(totalStock));
+}
+
 export {
   formatWelcomeTemplate,
   formatNewsletterTemplate,
   buildEventCard,
   formatPurchaseTemplate,
+  formatCancelTemplate,
+  buildQRImage,
+  formatEventNameForQRName,
+  formatNewEventTemplate,
 };

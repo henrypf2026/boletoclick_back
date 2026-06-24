@@ -17,6 +17,7 @@ import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 import { TicketLocksService } from '../ticket-locks/ticket-locks.service';
 import { TicketsService } from '../tickets/tickets.service';
 import { EmailService } from '../email/email.service';
+import { Ticket } from '../tickets/entities/ticket.entity';
 
 type StripeClient = InstanceType<typeof Stripe>;
 
@@ -54,22 +55,20 @@ export class StripeService {
       );
     }
 
-   const now = new Date();
-const eventStart = new Date(ticketType.event.eventDate);
-const twoHoursBefore = new Date(eventStart.getTime() - 2 * 60 * 60 * 1000);
-const oneDayAfter = new Date(eventStart.getTime() + 24 * 60 * 60 * 1000);
+    const now = new Date();
+    const eventStart = new Date(ticketType.event.eventDate);
+    const twoHoursBefore = new Date(eventStart.getTime() - 2 * 60 * 60 * 1000);
+    const oneDayAfter = new Date(eventStart.getTime() + 24 * 60 * 60 * 1000);
 
-if (now > oneDayAfter) {
-  throw new BadRequestException(
-    `Este evento ya finalizó`,
-  );
-}
+    if (now > oneDayAfter) {
+      throw new BadRequestException(`Este evento ya finalizó`);
+    }
 
-if (now >= twoHoursBefore) {
-  throw new BadRequestException(
-    `La compra de entradas cierra 2 horas antes del evento`,
-  );
-}
+    if (now >= twoHoursBefore) {
+      throw new BadRequestException(
+        `La compra de entradas cierra 2 horas antes del evento`,
+      );
+    }
 
     // ✅ Total calculado desde la DB — el frontend no puede manipular el precio
     const unitPrice = Number(ticketType.price);
@@ -229,13 +228,13 @@ if (now >= twoHoursBefore) {
 
     order.status = OrderStatus.PAID;
     await this.orderRepo.save(order);
-    await this.ticketService.createBulkTickets({
+    const myTickets: Ticket[] = await this.ticketService.createBulkTickets({
       orderId: order.id,
       ticketTypeId,
       quantity,
     });
 
-    await this.emailService.sendPurchaseEmail(session.metadata);
+    await this.emailService.sendPurchaseEmail(session.metadata, myTickets);
 
     return true;
   }

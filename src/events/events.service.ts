@@ -11,6 +11,9 @@ import { Event } from './entities/event.entity';
 import { TicketTypesService } from '../ticket-types/ticket-types.service';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { VenuesService } from '../venues/venues.service';
+import { EmailService } from '../email/email.service';
+import { UsersService } from '../users/users.service';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class EventsService {
@@ -19,6 +22,8 @@ export class EventsService {
     private readonly eventsRepository: EventsRepository,
     private readonly ticketTypesService: TicketTypesService,
     private readonly venuesService: VenuesService,
+    private readonly emailService: EmailService,
+    private readonly userService: UsersService,
   ) {}
 
   async createEvent(
@@ -69,6 +74,13 @@ export class EventsService {
           );
 
         savedEvent.ticketTypes = savedTickets;
+        const producer = await this.userService.findUserById(producerId);
+
+        await this.emailService.sendNewEventEmail(
+          producer,
+          savedEvent,
+          totalStock,
+        );
       }
 
       await queryRunner.commitTransaction();
@@ -101,19 +113,22 @@ export class EventsService {
   }
 
   async getAllEvents(): Promise<(Event & { isSoldOut: boolean })[]> {
-  const events = await this.eventsRepository.getAllEvents();
-  return events.map((e) => this.enrichWithSoldOut(e));
-}
+    const events = await this.eventsRepository.getAllEvents();
+    return events.map((e) => this.enrichWithSoldOut(e));
+  }
 
-  async getEventsByProducerId(producerId: string): Promise<(Event & { isSoldOut: boolean })[]> {
-  const events = await this.eventsRepository.getEventsByProducerId(producerId);
-  return events.map((e) => this.enrichWithSoldOut(e));
-}
+  async getEventsByProducerId(
+    producerId: string,
+  ): Promise<(Event & { isSoldOut: boolean })[]> {
+    const events =
+      await this.eventsRepository.getEventsByProducerId(producerId);
+    return events.map((e) => this.enrichWithSoldOut(e));
+  }
 
   async getEventById(id: string): Promise<Event & { isSoldOut: boolean }> {
-  const event = await this.eventsRepository.getEventById(id);
-  return this.enrichWithSoldOut(event);
-}
+    const event = await this.eventsRepository.getEventById(id);
+    return this.enrichWithSoldOut(event);
+  }
 
   async desactivateEvent(id: string, userId: string): Promise<void> {
     const event = await this.getEventById(id);
@@ -136,10 +151,10 @@ export class EventsService {
   }
 
   private enrichWithSoldOut(event: Event): Event & { isSoldOut: boolean } {
-  const isSoldOut =
-    event.ticketTypes.length > 0 &&
-    event.ticketTypes.every((tt) => tt.stock === 0);
+    const isSoldOut =
+      event.ticketTypes.length > 0 &&
+      event.ticketTypes.every((tt) => tt.stock === 0);
 
-  return { ...event, isSoldOut };
-}
+    return { ...event, isSoldOut };
+  }
 }
