@@ -15,6 +15,9 @@ import { OrderStatus } from '../common/enums/order-status.enum';
 import { User } from '../users/entities/user.entity';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 import { TicketLocksService } from '../ticket-locks/ticket-locks.service';
+import { TicketsService } from '../tickets/tickets.service';
+import { EmailService } from '../email/email.service';
+import { Ticket } from '../tickets/entities/ticket.entity';
 
 type StripeClient = InstanceType<typeof Stripe>;
 
@@ -29,7 +32,9 @@ export class StripeService {
     @InjectRepository(TicketType)
     private readonly ticketTypeRepo: Repository<TicketType>,
     private readonly ticketLocksService: TicketLocksService,
-  ) { }
+    private readonly ticketService: TicketsService,
+    private readonly emailService: EmailService,
+  ) {}
 
   async createPaymentIntent(amount: number, currency = 'usd'): Promise<any> {
     return this.stripe.paymentIntents.create({ amount, currency });
@@ -56,11 +61,14 @@ export class StripeService {
     const oneDayAfter = new Date(eventStart.getTime() + 24 * 60 * 60 * 1000);
 
     if (now > oneDayAfter) {
-      throw new BadRequestException(
-        `Este evento ya finalizó`,
-      );
+      throw new BadRequestException(`Este evento ya finalizó`);
     }
 
+    if (now >= twoHoursBefore) {
+      throw new BadRequestException(
+        `La compra de entradas cierra 2 horas antes del evento`,
+      );
+    }
     if (now >= twoHoursBefore) {
       throw new BadRequestException(
         `La compra de entradas cierra 2 horas antes del evento`,
@@ -175,6 +183,7 @@ export class StripeService {
           sessionId: session.id,
           metadata: session.metadata,
         });
+
         console.log('📤 Evento order.confirmed emitido');
         break;
       case 'checkout.session.expired':
@@ -207,7 +216,6 @@ export class StripeService {
     console.log({ status });
 
     if (session.payment_status !== 'paid') {
-
       return { valid: false };
     }
 
@@ -216,7 +224,23 @@ export class StripeService {
     });
 
     if (!order) throw new BadRequestException('Orden no encontrada');
+    if (order.status === OrderStatus.PAID)
+      throw new BadRequestException('Orden ya pagada');
 
+    order.status = OrderStatus.PAID;
+    await this.orderRepo.save(order);
+
+    if (!session.metadata) {
+      throw new BadRequestException('Missing session metadata');
+    }
+
+    const myTickets: Ticket[] = await this.ticketService.createBulkTickets({
+      orderId: order.id,
+      ticketTypeId: session.metadata.ticketTypeId,
+      quantity: session.metadata.quantity,
+    });
+
+    await this.emailService.sendPurchaseEmail(session.metadata, myTickets);
 
     return { valid: order.status === OrderStatus.PAID };
   }
