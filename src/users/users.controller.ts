@@ -9,7 +9,8 @@ import {
   Patch,
   Body,
   Delete,
-  Req,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
@@ -98,6 +99,44 @@ export class UsersController {
     }
 
     return this.usersService.updateUserInfo(id, newUserData);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Eliminar un usuario (soft delete)',
+    description:
+      'El propio usuario puede eliminar su cuenta, o un administrador puede eliminar cualquier cuenta.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Usuario eliminado correctamente.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'No tenés permiso para eliminar esta cuenta.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Usuario no encontrado.',
+  })
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.USER, Role.PRODUCER, Role.SCANNER)
+  @HttpCode(HttpStatus.OK)
+  @Delete(':id')
+  async deleteUser(
+    @Param('id') id: string,
+    @CurrentUser() currentUser,
+  ): Promise<{ message: string }> {
+    const isAdmin = currentUser.role === Role.ADMIN;
+    const isOwner = currentUser.id === id;
+
+    if (!isAdmin && !isOwner) {
+      throw new ForbiddenException(
+        'No tenés permiso para eliminar esta cuenta',
+      );
+    }
+
+    return this.usersService.deleteUser(id);
   }
 
 }
