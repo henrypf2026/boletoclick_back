@@ -157,4 +157,20 @@ export class EventsService {
 
     return { ...event, isSoldOut };
   }
+
+  async getActiveEventsForChatbot(): Promise<Event[]> {
+    return await this.eventsRepository.getActiveEventsForChatbot();
+  }
+
+  async searchActiveEventsForChatbot(search: string): Promise<Event[]> {
+    return await this.eventsRepository.searchActiveEventsForChatbot(search);
+  }
+
+  async searchActiveEventsByLocationForChatbot(
+    location: string,
+  ): Promise<Event[]> {
+    return await this.eventsRepository.searchActiveEventsByLocationForChatbot(
+      location,
+    );
+  }
 }

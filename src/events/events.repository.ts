@@ -13,7 +13,7 @@ export class EventsRepository {
   constructor(
     @InjectRepository(Event)
     private readonly ormEventsRepository: Repository<Event>,
-  ) {}
+  ) { }
 
   async createEvent(
     eventData: Partial<Event>,
@@ -64,7 +64,7 @@ export class EventsRepository {
         producer: { id: producerId },
       },
       order: { createdAt: 'DESC' },
-      relations: { ticketTypes: true },
+      relations: { ticketTypes: true, category: true, venue: true },
     });
   }
 
@@ -194,5 +194,72 @@ export class EventsRepository {
       },
       take: limit,
     });
+  }
+
+  async getActiveEventsForChatbot(): Promise<Event[]> {
+    return await this.ormEventsRepository.find({
+      where: {
+        status: EventStatus.ACTIVE,
+      },
+      relations: {
+        venue: { municipality: { province: true } },
+        category: true,
+        ticketTypes: true,
+      },
+      order: {
+        eventDate: 'ASC',
+      },
+      take: 10,
+    });
+  }
+
+  async searchActiveEventsForChatbot(search: string): Promise<Event[]> {
+    return await this.ormEventsRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.venue', 'venue')
+      .leftJoinAndSelect('venue.municipality', 'municipality')
+      .leftJoinAndSelect('municipality.province', 'province')
+      .leftJoinAndSelect('event.category', 'category')
+      .leftJoinAndSelect('event.ticketTypes', 'ticketTypes')
+      .where('event.status = :status', { status: EventStatus.ACTIVE })
+      .andWhere(
+        `(
+        LOWER(event.title) LIKE LOWER(:search)
+        OR LOWER(event.description) LIKE LOWER(:search)
+        OR LOWER(venue.name) LIKE LOWER(:search)
+        OR LOWER(venue.address) LIKE LOWER(:search)
+        OR LOWER(municipality.name) LIKE LOWER(:search)
+        OR LOWER(province.name) LIKE LOWER(:search)
+      )`,
+        { search: `%${search}%` },
+      )
+      .orderBy('event.eventDate', 'ASC')
+      .take(10)
+      .getMany();
+  }
+
+  async searchActiveEventsByLocationForChatbot(
+    location: string,
+  ): Promise<Event[]> {
+    return await this.ormEventsRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.venue', 'venue')
+      .leftJoinAndSelect('venue.municipality', 'municipality')
+      .leftJoinAndSelect('municipality.province', 'province')
+      .leftJoinAndSelect('event.category', 'category')
+      .leftJoinAndSelect('event.ticketTypes', 'ticketTypes')
+      .where('event.status = :status', { status: EventStatus.ACTIVE })
+      .andWhere(
+        `(
+        LOWER(venue.name) LIKE LOWER(:location)
+        OR LOWER(venue.address) LIKE LOWER(:location)
+        OR LOWER(municipality.name) LIKE LOWER(:location)
+        OR LOWER(province.name) LIKE LOWER(:location)
+      )`,
+        { location: `%${location}%` },
+      )
+      .orderBy('event.eventDate', 'ASC')
+      .take(10)
+      .getMany();
   }
 }

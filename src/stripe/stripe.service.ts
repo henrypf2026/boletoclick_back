@@ -61,9 +61,16 @@ export class StripeService {
     const oneDayAfter = new Date(eventStart.getTime() + 24 * 60 * 60 * 1000);
 
     if (now > oneDayAfter) {
-      throw new BadRequestException(`Este evento ya finalizó`);
+      throw new BadRequestException(
+        `Este evento ya finalizó`,
+      );
     }
 
+    if (now >= twoHoursBefore) {
+      throw new BadRequestException(
+        `La compra de entradas cierra 2 horas antes del evento`,
+      );
+    }
     if (now >= twoHoursBefore) {
       throw new BadRequestException(
         `La compra de entradas cierra 2 horas antes del evento`,
@@ -204,24 +211,21 @@ export class StripeService {
     }
   }
 
-  async verifySession(sessionId: string): Promise<boolean> {
+  async verifySession(sessionId: string): Promise<{ valid: boolean }> {
     const session = await this.stripe.checkout.sessions.retrieve(sessionId);
 
     const status = session.payment_status;
     console.log({ status });
 
     if (session.payment_status !== 'paid') {
-      return false;
-    }
 
-    const { quantity, ticketTypeId } = session.metadata as {
-      quantity: string;
-      ticketTypeId: string;
-    };
+      return { valid: false };
+    }
 
     const order = await this.orderRepo.findOne({
       where: { transactionId: sessionId },
     });
+
     if (!order) throw new BadRequestException('Orden no encontrada');
     if (order.status === OrderStatus.PAID)
       throw new BadRequestException('Orden ya pagada');
