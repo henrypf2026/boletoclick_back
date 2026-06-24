@@ -3,6 +3,8 @@ import {
   InternalServerErrorException,
   ForbiddenException,
   BadRequestException,
+  forwardRef,
+  Inject,
 } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { EventsRepository } from './events.repository';
@@ -11,6 +13,8 @@ import { Event } from './entities/event.entity';
 import { TicketTypesService } from '../ticket-types/ticket-types.service';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { VenuesService } from '../venues/venues.service';
+import { EmailService } from '../email/email.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class EventsService {
@@ -19,6 +23,9 @@ export class EventsService {
     private readonly eventsRepository: EventsRepository,
     private readonly ticketTypesService: TicketTypesService,
     private readonly venuesService: VenuesService,
+    @Inject(forwardRef(() => EmailService))
+    private readonly emailService: EmailService,
+    private readonly userService: UsersService,
   ) {}
 
   async createEvent(
@@ -69,6 +76,13 @@ export class EventsService {
           );
 
         savedEvent.ticketTypes = savedTickets;
+        const producer = await this.userService.findUserById(producerId);
+
+        await this.emailService.sendNewEventEmail(
+          producer,
+          savedEvent,
+          totalStock,
+        );
       }
 
       await queryRunner.commitTransaction();
