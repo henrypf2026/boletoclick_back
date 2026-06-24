@@ -13,7 +13,7 @@ export class EventsRepository {
   constructor(
     @InjectRepository(Event)
     private readonly ormEventsRepository: Repository<Event>,
-  ) {}
+  ) { }
 
   async createEvent(
     eventData: Partial<Event>,
@@ -64,7 +64,7 @@ export class EventsRepository {
         producer: { id: producerId },
       },
       order: { createdAt: 'DESC' },
-      relations: { ticketTypes: true },
+      relations: { ticketTypes: true, category: true, venue: true },
     });
   }
 

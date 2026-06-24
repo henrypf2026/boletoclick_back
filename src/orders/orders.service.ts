@@ -13,19 +13,17 @@ import { Ticket } from '../tickets/entities/ticket.entity';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 import { randomBytes } from 'crypto';
 import { EmailService } from '../email/email.service';
+import { TicketsService } from '../tickets/tickets.service';
 
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepo: Repository<Order>,
-    @InjectRepository(Ticket)
-    private readonly ticketRepo: Repository<Ticket>,
-    @InjectRepository(TicketType)
-    private readonly ticketTypeRepo: Repository<TicketType>,
     private readonly dataSource: DataSource,
     private readonly emailService: EmailService,
-  ) {}
+    private readonly ticketsService: TicketsService,
+  ) { }
 
   @OnEvent('order.confirmed')
   async confirmOrder(payload: {
@@ -33,39 +31,50 @@ export class OrdersService {
     metadata: Record<string, string>;
   }): Promise<void> {
     console.log('📥 order.confirmed recibido', payload.sessionId);
+
     const order = await this.orderRepo.findOne({
       where: { transactionId: payload.sessionId },
     });
+
     if (!order) {
       console.warn(`⚠️ Orden con sessionId ${payload.sessionId} no encontrada`);
       return;
     }
 
-    order.status = OrderStatus.PAID;
-    await this.orderRepo.save(order);
+    if (order.status === OrderStatus.PAID) {
+      console.log(`ℹ️ Orden ${order.id} ya estaba PAID — se omite creación de tickets`);
+      return;
+    }
 
-    const quantity = parseInt(payload.metadata?.quantity ?? '1');
-    const ticketType = await this.ticketTypeRepo.findOne({
-      where: { id: payload.metadata?.ticketTypeId },
-    });
+    // 3. 🔥 ACTUALIZACIÓN ATÓMICA: Modificamos el estado SOLO si sigue en PENDING.
+    // PostgreSQL resuelve esto de forma segura en un único paso atómico.
+    const updateResult = await this.orderRepo.update(
+      { id: order.id, status: OrderStatus.PENDING }, // Condición estricta
+      { status: OrderStatus.PAID }                    // Cambio deseado
+    );
 
-    if (ticketType) {
-      const tickets = Array.from({ length: quantity }, () =>
-        this.ticketRepo.create({
-          qrCode: randomBytes(16).toString('hex'),
-          allowEntrance: true,
-          order: { id: order.id } as Order,
-          ticketType: { id: ticketType.id } as TicketType,
-        }),
-      );
-      await this.ticketRepo.save(tickets);
-      console.log(
-        `✅ Orden ${order.id} confirmada — ${quantity} ticket(s) generados`,
-      );
-    } else {
-      console.log(
-        `✅ Orden ${order.id} confirmada — sin ticketType en metadata`,
-      );
+    // Si affected es 0, significa que otro proceso paralelo ganó la carrera y cambió el estado primero
+    if (updateResult.affected === 0) {
+      console.log(`ℹ️ Concurrencia evitada: La orden ${order.id} ya fue procesada por otro hilo.`);
+      return; ``
+    }
+
+    // 4. Al haber ganado la actualización, este hilo es el único autorizado para crear las boletas
+    const quantity = payload.metadata?.quantity ?? '1';
+    const ticketTypeId = payload.metadata?.ticketTypeId;
+
+    if (ticketTypeId) {
+      // Delegamos de forma segura la creación de los JWT firmados
+      await this.ticketsService.createBulkTickets({
+        orderId: order.id,
+        ticketTypeId,
+        quantity,
+      });
+
+      console.log(`✅ Orden ${order.id} confirmada — tickets JWT generados exitosamente`);
+
+      // 📧 Espacio ideal para activar el envío de email de éxito en el futuro
+      // await this.emailService.sendOrderConfirmation(order.id);
     }
   }
 
