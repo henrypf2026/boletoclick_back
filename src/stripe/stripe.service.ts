@@ -231,8 +231,8 @@ export class StripeService {
     await this.orderRepo.save(order);
     const myTickets: Ticket[] = await this.ticketService.createBulkTickets({
       orderId: order.id,
-      ticketTypeId,
-      quantity,
+      ticketTypeId: session.metadata.ticketTypeId,
+      quantity: session.metadata.quantity,
     });
 
     await this.emailService.sendPurchaseEmail(session.metadata, myTickets);
