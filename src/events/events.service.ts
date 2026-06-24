@@ -3,6 +3,8 @@ import {
   InternalServerErrorException,
   ForbiddenException,
   BadRequestException,
+  forwardRef,
+  Inject,
 } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { EventsRepository } from './events.repository';
@@ -21,6 +23,7 @@ export class EventsService {
     private readonly eventsRepository: EventsRepository,
     private readonly ticketTypesService: TicketTypesService,
     private readonly venuesService: VenuesService,
+    @Inject(forwardRef(() => EmailService))
     private readonly emailService: EmailService,
     private readonly userService: UsersService,
   ) {}

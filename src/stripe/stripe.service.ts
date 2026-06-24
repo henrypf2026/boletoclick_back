@@ -229,6 +229,11 @@ export class StripeService {
 
     order.status = OrderStatus.PAID;
     await this.orderRepo.save(order);
+
+    if (!session.metadata) {
+      throw new BadRequestException('Missing session metadata');
+    }
+
     const myTickets: Ticket[] = await this.ticketService.createBulkTickets({
       orderId: order.id,
       ticketTypeId: session.metadata.ticketTypeId,

@@ -10,6 +10,7 @@ import { SupabaseModule } from '../supabase/supabase.module';
 import { TicketLocksModule } from '../ticket-locks/ticket-locks.module';
 import { JwtModule } from '@nestjs/jwt';
 import { EmailModule } from '../email/email.module';
+import { TicketsModule } from '../tickets/tickets.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { EmailModule } from '../email/email.module';
     SupabaseModule,
     TicketLocksModule,
     EmailModule,
+    TicketsModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -42,4 +44,4 @@ import { EmailModule } from '../email/email.module';
   ],
   exports: [StripeService],
 })
-export class StripeModule { }
+export class StripeModule {}
