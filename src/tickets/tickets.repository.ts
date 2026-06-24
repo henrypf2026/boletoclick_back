@@ -112,24 +112,24 @@ export class TicketsRepository {
     return await this.ormTicketRepository.save(ticket);
   }
 
-async getEventStats(eventId: string): Promise<{
-  total: number;
-  arrived: number;
-  pending: number;
-}> {
-  const total = await this.ormTicketRepository.count({
-    where: { ticketType: { eventId } },
-  });
+  async getEventStats(eventId: string): Promise<{
+    total: number;
+    arrived: number;
+    pending: number;
+  }> {
+    const total = await this.ormTicketRepository.count({
+      where: { ticketType: { eventId } },
+    });
 
-  const arrived = await this.ormTicketRepository.count({
-    where: {
-      ticketType: { eventId },
-      allowEntrance: false, // ya escaneados
-    },
-  });
+    const arrived = await this.ormTicketRepository.count({
+      where: {
+        ticketType: { eventId },
+        allowEntrance: false, // ya escaneados
+      },
+    });
 
-  return { total, arrived, pending: total - arrived };
-}
+    return { total, arrived, pending: total - arrived };
+  }
   async createBulkTickets(
     ticketsData: Partial<Ticket>[],
     ticketTypeId: string,
@@ -161,7 +161,6 @@ async getEventStats(eventId: string): Promise<{
         }
       },
     );
-    
   }
 
   async countActiveTicketsByUser(userId: string): Promise<number> {
