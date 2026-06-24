@@ -76,13 +76,13 @@ export class EventsService {
           );
 
         savedEvent.ticketTypes = savedTickets;
-        const producer = await this.userService.findUserById(producerId);
+        /* const producer = await this.userService.findUserById(producerId);
 
         await this.emailService.sendNewEventEmail(
           producer,
           savedEvent,
           totalStock,
-        );
+        );*/
       }
 
       await queryRunner.commitTransaction();
