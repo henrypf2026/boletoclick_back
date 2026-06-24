@@ -7,7 +7,7 @@ import { EventsModule } from '../events/events.module';
 import { VenuesModule } from '../venues/venues.module';
 
 @Module({
-  imports: [UsersModule, EventsModule, VenuesModule],
+  imports: [UsersModule, EventsModule, VenuesModule, EventsModule],
   controllers: [EmailController],
   providers: [EmailService, EmailCron],
   exports: [EmailService],

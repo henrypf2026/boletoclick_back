@@ -13,7 +13,6 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { VenuesService } from '../venues/venues.service';
 import { EmailService } from '../email/email.service';
 import { UsersService } from '../users/users.service';
-import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class EventsService {

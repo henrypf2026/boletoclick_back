@@ -61,9 +61,7 @@ export class StripeService {
     const oneDayAfter = new Date(eventStart.getTime() + 24 * 60 * 60 * 1000);
 
     if (now > oneDayAfter) {
-      throw new BadRequestException(
-        `Este evento ya finalizó`,
-      );
+      throw new BadRequestException(`Este evento ya finalizó`);
     }
 
     if (now >= twoHoursBefore) {
@@ -218,7 +216,6 @@ export class StripeService {
     console.log({ status });
 
     if (session.payment_status !== 'paid') {
-
       return { valid: false };
     }
 
@@ -240,7 +237,7 @@ export class StripeService {
 
     await this.emailService.sendPurchaseEmail(session.metadata, myTickets);
 
-    return true;
+    return { valid: order.status === OrderStatus.PAID };
   }
 
   constructWebhookEvent(rawBody: Buffer, signature: string): any {
