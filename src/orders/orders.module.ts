@@ -8,16 +8,18 @@ import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { UsersModule } from '../users/users.module';
 import { EmailModule } from '../email/email.module';
+import { TicketsModule } from '../tickets/tickets.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, Ticket, TicketType]),
+    TypeOrmModule.forFeature([Order]),
     SupabaseModule,
     UsersModule,
     EmailModule,
+    TicketsModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService],
   exports: [OrdersService],
 })
-export class OrdersModule {}
+export class OrdersModule { }
