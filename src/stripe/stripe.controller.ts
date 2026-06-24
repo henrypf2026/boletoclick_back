@@ -19,7 +19,7 @@ import { SupabaseAuthGuard } from '../common/guards/supabase-auth.guard';
 
 @Controller('payments')
 export class StripeController {
-  constructor(private readonly stripeService: StripeService) {}
+  constructor(private readonly stripeService: StripeService) { }
 
   @Post('create-payment-intent')
   async createPaymentIntent(
@@ -63,8 +63,7 @@ export class StripeController {
     sessionId: string,
   ): Promise<{ valid: boolean }> {
 
-    const valid = await this.stripeService.verifySession(sessionId);
-    return { valid };
+    return await this.stripeService.verifySession(sessionId);
   }
 
   // Sin guard — Stripe no manda JWT.

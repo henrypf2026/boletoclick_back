@@ -8,15 +8,12 @@ import { Order } from '../orders/entities/order.entity';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { TicketLocksModule } from '../ticket-locks/ticket-locks.module';
-import { TicketsService } from '../tickets/tickets.service';
-import { Ticket } from '../tickets/entities/ticket.entity';
-import { TicketsRepository } from '../tickets/tickets.repository';
 import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([Order, TicketType, Ticket, TicketsRepository]),
+    TypeOrmModule.forFeature([Order, TicketType]),
     SupabaseModule,
     TicketLocksModule,
     JwtModule.registerAsync({
@@ -40,9 +37,7 @@ import { JwtModule } from '@nestjs/jwt';
       inject: [ConfigService],
     },
     StripeService,
-    TicketsService,
-    TicketsRepository,
   ],
   exports: [StripeService],
 })
-export class StripeModule {}
+export class StripeModule { }
