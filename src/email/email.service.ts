@@ -6,6 +6,7 @@ import {
   formatNewsletterTemplate,
   formatWelcomeTemplate,
   formatPurchaseTemplate,
+  formatCancelTemplate,
 } from '../utils/formatTemplates';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
@@ -92,5 +93,26 @@ export class EmailService {
     const subject = 'Gracias por tu compra en Boleto Click';
     await this.sendEmail(user.email, subject, html);
     return;
+  }
+
+  async sendOrderCancellationEmail(
+    userEmail: string,
+    userName: string,
+    eventName: string,
+    orderId: string,
+    eventDate: string,
+    venue: string,
+    totalAmount: number,
+  ) {
+    const html = formatCancelTemplate(
+      userName,
+      eventName,
+      orderId,
+      eventDate,
+      venue,
+      totalAmount.toFixed(2),
+    );
+    const subject = `Cancelación de tu orden #${orderId} - BoletoClick`;
+    return this.sendEmail(userEmail, subject, html);
   }
 }

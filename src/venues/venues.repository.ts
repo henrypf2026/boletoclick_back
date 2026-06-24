@@ -8,6 +8,8 @@ import { UpdateVenueDto } from './dto/update-venue.dto';
 import { ILike, Repository } from 'typeorm';
 import { Venue } from './entities/venue.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { EventStatus } from '../common/enums/event-status.enum';
+import { Municipality } from '../municipalities/entities/municipality.entity';
 
 @Injectable()
 export class VenuesRepository {
@@ -17,11 +19,20 @@ export class VenuesRepository {
   ) {}
 
   async findAllVenues(): Promise<Venue[]> {
-    return await this.ormVenueRepository.find({
-      relations: {
-        municipality: true, // 🔥 Trae la info del municipio para los listados del Front
-      },
-    });
+    return await this.ormVenueRepository
+      .createQueryBuilder('venue')
+      .leftJoinAndSelect('venue.municipality', 'municipality')
+      .leftJoinAndSelect(
+        'venue.events',
+        'event',
+        'event.status = :status AND event.eventDate > :now',
+        {
+          status: EventStatus.ACTIVE,
+          now: new Date().toISOString(),
+        },
+      )
+      .orderBy('event.eventDate', 'ASC')
+      .getMany();
   }
 
   async findVenueById(id: string): Promise<Venue> {
@@ -42,6 +53,19 @@ export class VenuesRepository {
   async createVenue(createVenueDto: CreateVenueDto): Promise<Venue> {
     const { municipalityId, ...venueData } = createVenueDto;
 
+    const municipality = await this.ormVenueRepository.manager.findOne(
+      Municipality,
+      {
+        where: { id: municipalityId },
+      },
+    );
+
+    if (!municipality) {
+      throw new NotFoundException(
+        `El municipio/ciudad con ID ${municipalityId} no existe.`,
+      );
+    }
+
     const existingVenue = await this.ormVenueRepository.findOne({
       where: {
         name: ILike(createVenueDto.name.trim()),
@@ -57,7 +81,7 @@ export class VenuesRepository {
 
     const venue = this.ormVenueRepository.create({
       ...venueData,
-      municipality: { id: municipalityId },
+      municipality,
     });
 
     const savedVenue = await this.ormVenueRepository.save(venue);
@@ -90,7 +114,18 @@ export class VenuesRepository {
     Object.assign(venue, venueData);
 
     if (municipalityId) {
-      venue.municipality = { id: municipalityId } as any;
+      const municipality = await this.ormVenueRepository.manager.findOne(
+        Municipality,
+        {
+          where: { id: municipalityId },
+        },
+      );
+      if (!municipality) {
+        throw new NotFoundException(
+          `El municipio/ciudad con ID ${municipalityId} no existe.`,
+        );
+      }
+      venue.municipality = municipality;
     }
 
     await this.ormVenueRepository.save(venue);

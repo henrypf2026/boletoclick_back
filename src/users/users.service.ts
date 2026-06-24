@@ -49,6 +49,14 @@ export class UsersService {
     return await this.usersRepo.save(user);
   }
 
+  // ─── Borrar usuario (Soft Delete) ─────────────────────────────
+
+  async deleteUser(userId: string): Promise<{ message: string }> {
+    const user = await this.findUserById(userId);
+    await this.usersRepo.softRemove(user);
+    return { message: `Usuario con id:${userId} eliminado correctamente` };
+  }
+
   async getUsersToNotify(): Promise<User[]> {
     const users = await this.usersRepo.find({
       where: { allowNewsletter: true, deletedAt: IsNull() },

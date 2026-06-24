@@ -2,6 +2,7 @@ import {
   Injectable,
   InternalServerErrorException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { EventsRepository } from './events.repository';
@@ -9,6 +10,7 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { Event } from './entities/event.entity';
 import { TicketTypesService } from '../ticket-types/ticket-types.service';
 import { UpdateEventDto } from './dto/update-event.dto';
+import { VenuesService } from '../venues/venues.service';
 
 @Injectable()
 export class EventsService {
@@ -16,9 +18,9 @@ export class EventsService {
     private readonly dataSource: DataSource,
     private readonly eventsRepository: EventsRepository,
     private readonly ticketTypesService: TicketTypesService,
+    private readonly venuesService: VenuesService,
   ) {}
 
-  //revisar este método: cómo va a ser la lógica? se puede crear un evento sin crear sus localidades y dejarlas para después? o va a ser obligatorio que las cree el producer en ese momento?
   async createEvent(
     producerId: string,
     eventData: CreateEventDto,
@@ -32,6 +34,18 @@ export class EventsService {
     try {
       const { ticketTypes, poster, ...eventDetails } = eventData;
       console.log({ eventDetails });
+      const totalStock = (ticketTypes || []).reduce(
+        (sum, t) => sum + Number((t as any).stock || 0),
+        0,
+      );
+
+      const venue = await this.venuesService.findVenueById(eventData.venueId);
+
+      if (totalStock > venue.capacity) {
+        throw new BadRequestException(
+          `La suma de stock (${totalStock}) excede la capacidad del venue (${venue.capacity}).`,
+        );
+      }
 
       const savedEvent = await this.eventsRepository.createEvent(
         {
@@ -63,7 +77,7 @@ export class EventsService {
       await queryRunner.rollbackTransaction();
       const message = error instanceof Error ? error.message : String(error);
       throw new InternalServerErrorException(
-        `Failed to create event and tickets transactionally: ${message}`,
+        `Falla al crear el evento y las localidades a través de una transacción: ${message}`,
       );
     } finally {
       await queryRunner.release();
@@ -78,29 +92,36 @@ export class EventsService {
     const event = await this.getEventById(id);
 
     if (event.producerId !== userId) {
-      throw new ForbiddenException('You do not own this event');
+      throw new ForbiddenException(
+        'No tienes autorización para editar este evento',
+      );
     }
 
     return await this.eventsRepository.updateEvent(id, updateEventDto, userId);
   }
 
-  async getAllEvents(): Promise<Event[]> {
-    return await this.eventsRepository.getAllEvents();
-  }
+  async getAllEvents(): Promise<(Event & { isSoldOut: boolean })[]> {
+  const events = await this.eventsRepository.getAllEvents();
+  return events.map((e) => this.enrichWithSoldOut(e));
+}
 
-  async getEventsByProducerId(producerId: string): Promise<Event[]> {
-    return await this.eventsRepository.getEventsByProducerId(producerId);
-  }
+  async getEventsByProducerId(producerId: string): Promise<(Event & { isSoldOut: boolean })[]> {
+  const events = await this.eventsRepository.getEventsByProducerId(producerId);
+  return events.map((e) => this.enrichWithSoldOut(e));
+}
 
-  async getEventById(id: string): Promise<Event> {
-    return await this.eventsRepository.getEventById(id);
-  }
+  async getEventById(id: string): Promise<Event & { isSoldOut: boolean }> {
+  const event = await this.eventsRepository.getEventById(id);
+  return this.enrichWithSoldOut(event);
+}
 
   async desactivateEvent(id: string, userId: string): Promise<void> {
     const event = await this.getEventById(id);
 
     if (event.producerId !== userId) {
-      throw new ForbiddenException('You do not own this event');
+      throw new ForbiddenException(
+        'No tienes autorización para editar este evento',
+      );
     }
 
     await this.eventsRepository.desactivateEvent(id, userId);
@@ -113,4 +134,12 @@ export class EventsService {
       limit,
     );
   }
+
+  private enrichWithSoldOut(event: Event): Event & { isSoldOut: boolean } {
+  const isSoldOut =
+    event.ticketTypes.length > 0 &&
+    event.ticketTypes.every((tt) => tt.stock === 0);
+
+  return { ...event, isSoldOut };
+}
 }
