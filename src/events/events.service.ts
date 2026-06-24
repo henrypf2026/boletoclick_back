@@ -100,16 +100,22 @@ export class EventsService {
     return await this.eventsRepository.updateEvent(id, updateEventDto, userId);
   }
 
-  async getAllEvents(): Promise<Event[]> {
-    return await this.eventsRepository.getAllEvents();
+  async getAllEvents(): Promise<(Event & { isSoldOut: boolean })[]> {
+    const events = await this.eventsRepository.getAllEvents();
+    return events.map((e) => this.enrichWithSoldOut(e));
   }
 
-  async getEventsByProducerId(producerId: string): Promise<Event[]> {
-    return await this.eventsRepository.getEventsByProducerId(producerId);
+  async getEventsByProducerId(
+    producerId: string,
+  ): Promise<(Event & { isSoldOut: boolean })[]> {
+    const events =
+      await this.eventsRepository.getEventsByProducerId(producerId);
+    return events.map((e) => this.enrichWithSoldOut(e));
   }
 
-  async getEventById(id: string): Promise<Event> {
-    return await this.eventsRepository.getEventById(id);
+  async getEventById(id: string): Promise<Event & { isSoldOut: boolean }> {
+    const event = await this.eventsRepository.getEventById(id);
+    return this.enrichWithSoldOut(event);
   }
 
   async desactivateEvent(id: string, userId: string): Promise<void> {
@@ -129,6 +135,30 @@ export class EventsService {
       fromDate,
       toDate,
       limit,
+    );
+  }
+
+  private enrichWithSoldOut(event: Event): Event & { isSoldOut: boolean } {
+    const isSoldOut =
+      event.ticketTypes.length > 0 &&
+      event.ticketTypes.every((tt) => tt.stock === 0);
+
+    return { ...event, isSoldOut };
+  }
+
+  async getActiveEventsForChatbot(): Promise<Event[]> {
+    return await this.eventsRepository.getActiveEventsForChatbot();
+  }
+
+  async searchActiveEventsForChatbot(search: string): Promise<Event[]> {
+    return await this.eventsRepository.searchActiveEventsForChatbot(search);
+  }
+
+  async searchActiveEventsByLocationForChatbot(
+    location: string,
+  ): Promise<Event[]> {
+    return await this.eventsRepository.searchActiveEventsByLocationForChatbot(
+      location,
     );
   }
 }

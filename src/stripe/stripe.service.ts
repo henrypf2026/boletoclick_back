@@ -15,7 +15,6 @@ import { OrderStatus } from '../common/enums/order-status.enum';
 import { User } from '../users/entities/user.entity';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 import { TicketLocksService } from '../ticket-locks/ticket-locks.service';
-import { TicketsService } from '../tickets/tickets.service';
 
 type StripeClient = InstanceType<typeof Stripe>;
 
@@ -30,8 +29,7 @@ export class StripeService {
     @InjectRepository(TicketType)
     private readonly ticketTypeRepo: Repository<TicketType>,
     private readonly ticketLocksService: TicketLocksService,
-    private readonly ticketService: TicketsService,
-  ) {}
+  ) { }
 
   async createPaymentIntent(amount: number, currency = 'usd'): Promise<any> {
     return this.stripe.paymentIntents.create({ amount, currency });
@@ -52,10 +50,20 @@ export class StripeService {
       );
     }
 
-    // ✅ Bloquear compra si el evento ya ocurrió
-    if (new Date(ticketType.event.eventDate) < new Date()) {
+    const now = new Date();
+    const eventStart = new Date(ticketType.event.eventDate);
+    const twoHoursBefore = new Date(eventStart.getTime() - 2 * 60 * 60 * 1000);
+    const oneDayAfter = new Date(eventStart.getTime() + 24 * 60 * 60 * 1000);
+
+    if (now > oneDayAfter) {
       throw new BadRequestException(
-        `El evento "${ticketType.event.title}" ya finalizó y no acepta compras`,
+        `Este evento ya finalizó`,
+      );
+    }
+
+    if (now >= twoHoursBefore) {
+      throw new BadRequestException(
+        `La compra de entradas cierra 2 horas antes del evento`,
       );
     }
 
@@ -192,36 +200,25 @@ export class StripeService {
     }
   }
 
-  async verifySession(sessionId: string): Promise<boolean> {
+  async verifySession(sessionId: string): Promise<{ valid: boolean }> {
     const session = await this.stripe.checkout.sessions.retrieve(sessionId);
 
     const status = session.payment_status;
     console.log({ status });
 
     if (session.payment_status !== 'paid') {
-      return false;
-    }
 
-    const { quantity, ticketTypeId } = session.metadata as {
-      quantity: string;
-      ticketTypeId: string;
-    };
+      return { valid: false };
+    }
 
     const order = await this.orderRepo.findOne({
       where: { transactionId: sessionId },
     });
-    if (!order) throw new BadRequestException('Orden no encontrada');
-    if (order.status === OrderStatus.PAID)
-      throw new BadRequestException('Orden ya pagada');
-    order.status = OrderStatus.PAID;
-    await this.orderRepo.save(order);
-    await this.ticketService.createBulkTickets({
-      orderId: order.id,
-      ticketTypeId,
-      quantity,
-    });
 
-    return true;
+    if (!order) throw new BadRequestException('Orden no encontrada');
+
+
+    return { valid: order.status === OrderStatus.PAID };
   }
 
   constructWebhookEvent(rawBody: Buffer, signature: string): any {
