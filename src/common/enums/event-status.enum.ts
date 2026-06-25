@@ -1,6 +1,5 @@
 export enum EventStatus {
   DRAFT = 'DRAFT',
-  ACTIVE = 'ACTIVE', // 🛠️ Legado: ya no se usa en la lógica activa. Unificado bajo APPROVED.
   SOLDOUT = 'SOLDOUT',
   CANCELLED = 'CANCELLED',
   INACTIVE = 'INACTIVE',

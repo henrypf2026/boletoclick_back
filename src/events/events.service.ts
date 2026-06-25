@@ -5,7 +5,6 @@ import {
   BadRequestException,
   forwardRef,
   Inject,
-  NotFoundException,
 } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { EventsRepository } from './events.repository';
@@ -28,7 +27,7 @@ export class EventsService {
     @Inject(forwardRef(() => EmailService))
     private readonly emailService: EmailService,
     private readonly userService: UsersService,
-  ) {}
+  ) { }
 
   async createEvent(
     producerId: string,
