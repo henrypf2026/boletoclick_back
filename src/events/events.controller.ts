@@ -22,6 +22,7 @@ import {
   ApiConsumes,
   ApiParam,
   ApiBearerAuth,
+  ApiBody,
 } from '@nestjs/swagger';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -43,7 +44,7 @@ export class EventsController {
   constructor(
     private readonly eventsService: EventsService,
     private readonly fileUploadService: FileUploadService,
-  ) {}
+  ) { }
 
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard, RolesGuard)
@@ -61,6 +62,7 @@ export class EventsController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden. Producers only.' })
   @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: CreateEventDto })
   @UseInterceptors(FileInterceptor('poster'))
   async createEvent(
     @CurrentUser() user: UserPayload,
@@ -81,7 +83,7 @@ export class EventsController {
     )
     poster: Express.Multer.File,
   ): Promise<Event> {
-    const posterUrl = 'https://ejemplo.com/';
+    const posterUrl = await this.fileUploadService.uploadEventImage(poster);
 
     return await this.eventsService.createEvent(user.id, eventData, posterUrl);
   }
