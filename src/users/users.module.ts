@@ -5,10 +5,11 @@ import { User } from './entities/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersRepository } from './users.repository';
 import { SupabaseModule } from '../supabase/supabase.module';
+import { AdminActionsController } from './admin-actions.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User]), SupabaseModule],
-  controllers: [UsersController],
+  controllers: [UsersController, AdminActionsController],
   providers: [UsersService, UsersRepository],
   exports: [UsersService],
 })
