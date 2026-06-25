@@ -18,6 +18,7 @@ import { TicketLocksService } from '../ticket-locks/ticket-locks.service';
 import { TicketsService } from '../tickets/tickets.service';
 import { EmailService } from '../email/email.service';
 import { Ticket } from '../tickets/entities/ticket.entity';
+import { CouponsService } from '../coupons/coupons.service';
 
 type StripeClient = InstanceType<typeof Stripe>;
 
@@ -34,7 +35,8 @@ export class StripeService {
     private readonly ticketLocksService: TicketLocksService,
     private readonly ticketService: TicketsService,
     private readonly emailService: EmailService,
-  ) {}
+    private readonly couponsService: CouponsService
+  ) { }
 
   async createPaymentIntent(amount: number, currency = 'usd'): Promise<any> {
     return this.stripe.paymentIntents.create({ amount, currency });
@@ -77,9 +79,21 @@ export class StripeService {
 
     // ✅ Total calculado desde la DB — el frontend no puede manipular el precio
     const unitPrice = Number(ticketType.price);
-    const total = Math.round(unitPrice * dto.quantity * 100) / 100;
-    const platformFee = Math.round(total * 0.05 * 100) / 100;
-    const producerSubtotal = Math.round((total - platformFee) * 100) / 100;
+    const originalTotal = Math.round(unitPrice * dto.quantity * 100) / 100;
+    let finalTotal = originalTotal;
+
+    if (dto.couponId) {
+      const coupon = await this.couponsService.getCouponById(dto.couponId);
+      // Nota: Asegúrate de importar DiscountType o usar el string correspondiente de tu enums
+      if (coupon.discountType === 'PERCENTAGE') {
+        finalTotal = originalTotal * (1 - coupon.discountValue / 100);
+      } else {
+        finalTotal = Math.max(0, originalTotal - coupon.discountValue);
+      }
+      finalTotal = Math.round(finalTotal * 100) / 100;
+    }
+    const platformFee = Math.round(finalTotal * 0.05 * 100) / 100;
+    const producerSubtotal = Math.round((finalTotal - platformFee) * 100) / 100;
 
     const event = ticketType.event;
     const eventDate = new Date(event.eventDate);
@@ -108,12 +122,12 @@ export class StripeService {
         mode: 'payment',
         line_items: [
           {
-            quantity: dto.quantity,
+            quantity: 1,
             price_data: {
               currency: 'usd',
-              unit_amount: Math.round(unitPrice * 100),
+              unit_amount: Math.round(finalTotal * 100),
               product_data: {
-                name: event.title,
+                name: `${event.title} (x${dto.quantity})`,
                 description: `${date} ${time}`,
               },
             },
@@ -132,12 +146,13 @@ export class StripeService {
       await this.ticketLocksService.linkStripeSession(lock.id, session.id);
 
       const order = this.orderRepo.create({
-        total,
+        total: finalTotal,
         producerSubtotal,
         platformFee,
         status: OrderStatus.PENDING,
         transactionId: session.id,
         user: { id: dto.userId } as User,
+        ...(dto.couponId && { coupon: { id: dto.couponId } }),
       });
       await this.orderRepo.save(order);
     } catch (error) {
