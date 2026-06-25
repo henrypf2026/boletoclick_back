@@ -17,6 +17,7 @@ import { Event } from '../events/entities/event.entity';
 import { VenuesService } from '../venues/venues.service';
 import { Ticket } from '../tickets/entities/ticket.entity';
 import { User } from '../users/entities/user.entity';
+import { Role } from '../common/enums/role.enum';
 
 @Injectable()
 export class EmailService {
@@ -57,8 +58,12 @@ export class EmailService {
     }
   }
 
-  async sendWelcomeEmail(userName: string, to: string): Promise<unknown> {
-    const html = formatWelcomeTemplate(userName);
+  async sendWelcomeEmail(
+    userName: string,
+    to: string,
+    role: Role,
+  ): Promise<unknown> {
+    const html = formatWelcomeTemplate(userName, role);
     const subject = 'Bienvenido a Boleto Click';
 
     return this.sendEmail(to, subject, html);
@@ -143,6 +148,8 @@ export class EmailService {
     eventInfo: Event,
     totalStock: number,
   ) {
+    console.log(producer);
+    console.log(eventInfo);
     const html = formatNewEventTemplate(producer.name, eventInfo, totalStock);
     const subject = `Nuevo evento creado: ${eventInfo.title} - BoletoClick`;
     return this.sendEmail(producer.email, subject, html);
