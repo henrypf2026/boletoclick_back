@@ -17,6 +17,7 @@ import { Event } from '../events/entities/event.entity';
 import { VenuesService } from '../venues/venues.service';
 import { Ticket } from '../tickets/entities/ticket.entity';
 import { User } from '../users/entities/user.entity';
+import { Role } from '../common/enums/role.enum';
 
 @Injectable()
 export class EmailService {
@@ -57,15 +58,18 @@ export class EmailService {
     }
   }
 
-  async sendWelcomeEmail(userName: string, to: string): Promise<unknown> {
-    const html = formatWelcomeTemplate(userName);
+  async sendWelcomeEmail(
+    userName: string,
+    to: string,
+    role: Role,
+  ): Promise<unknown> {
+    const html = formatWelcomeTemplate(userName, role);
     const subject = 'Bienvenido a Boleto Click';
 
     return this.sendEmail(to, subject, html);
   }
 
   async sendNewsLetterEmail() {
-    console.log('sendNewsLetterEmail');
     const now = new Date();
     const endDate = new Date();
     endDate.setDate(
@@ -76,7 +80,6 @@ export class EmailService {
       endDate,
       3 /* Los siguientes 3 eventos */,
     );
-    console.log('sendNewsLetterEmail, total de evebtos = ' + events.length);
     const eventsHTML: string = events
       .map((eve: Event) => buildEventCard(eve))
       .join('');

@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { Event } from '../events/entities/event.entity';
 import QRCode from 'qrcode';
+import { Role } from '../common/enums/role.enum';
 
 const newsletterTemplate = fs.readFileSync(
   path.join(process.cwd(), 'src/email/templates/newsletter_template.html'),
@@ -28,8 +29,20 @@ const newEventTemplate = fs.readFileSync(
   'utf-8',
 );
 
-function formatWelcomeTemplate(userName: string) {
-  const html = welcomeTemplate.replace('{userName}', userName);
+const welcomeTextUser =
+  'Gracias por registrarte en Boletoclick. Ya puedes descubrir eventos, comprar boletos y administrar tus compras desde tu cuenta.';
+
+const welcomeTextProducer =
+  'Gracias por unirte a Boletoclick. El espacio ideal para tus eventos ya está listo. Inicia sesión ahora para publicar tu primer evento y empezar a vender tus boletos.';
+
+function formatWelcomeTemplate(userName: string, role: Role) {
+  const html = welcomeTemplate
+    .replace('{userName}', userName)
+    .replace(
+      '{WelcomeText}',
+      role == Role.USER ? welcomeTextUser : welcomeTextProducer,
+    );
+
   return html;
 }
 

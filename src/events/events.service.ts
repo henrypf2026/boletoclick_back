@@ -27,7 +27,7 @@ export class EventsService {
     @Inject(forwardRef(() => EmailService))
     private readonly emailService: EmailService,
     private readonly userService: UsersService,
-  ) { }
+  ) {}
 
   async createEvent(
     producerId: string,
@@ -38,11 +38,11 @@ export class EventsService {
 
     await queryRunner.connect();
     await queryRunner.startTransaction();
-
+    let newEvent: Event | null = null;
+    let totalStock = 0;
     try {
       const { ticketTypes, poster, status, ...eventDetails } = eventData;
-      console.log({ eventDetails });
-      const totalStock = (ticketTypes || []).reduce(
+      totalStock = (ticketTypes || []).reduce(
         (sum, t) => sum + Number((t as any).stock || 0),
         0,
       );
@@ -82,25 +82,31 @@ export class EventsService {
           );
 
         savedEvent.ticketTypes = savedTickets;
-        /* const producer = await this.userService.findUserById(producerId);
-
-        await this.emailService.sendNewEventEmail(
-          producer,
-          savedEvent,
-          totalStock,
-        );*/
+        newEvent = savedEvent;
       }
 
       await queryRunner.commitTransaction();
       return savedEvent;
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      newEvent = null;
       const message = error instanceof Error ? error.message : String(error);
       throw new InternalServerErrorException(
         `Falla al crear el evento y las localidades a través de una transacción: ${message}`,
       );
     } finally {
       await queryRunner.release();
+      if (newEvent != null) {
+        const producer = await this.userService.findUserById(producerId);
+        const eventUpdated = await this.eventsRepository.getEventById(
+          newEvent.id,
+        );
+        await this.emailService.sendNewEventEmail(
+          producer,
+          eventUpdated,
+          totalStock,
+        );
+      }
     }
   }
 
