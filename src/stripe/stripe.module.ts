@@ -11,6 +11,7 @@ import { TicketLocksModule } from '../ticket-locks/ticket-locks.module';
 import { JwtModule } from '@nestjs/jwt';
 import { EmailModule } from '../email/email.module';
 import { TicketsModule } from '../tickets/tickets.module';
+import { CouponsModule } from '../coupons/coupons.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TicketsModule } from '../tickets/tickets.module';
     TicketLocksModule,
     EmailModule,
     TicketsModule,
+    CouponsModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -44,4 +46,4 @@ import { TicketsModule } from '../tickets/tickets.module';
   ],
   exports: [StripeService],
 })
-export class StripeModule {}
+export class StripeModule { }
