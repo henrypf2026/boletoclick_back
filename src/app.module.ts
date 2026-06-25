@@ -61,12 +61,18 @@ import { TicketLocksModule } from './ticket-locks/ticket-locks.module';
     CouponsModule,
     FavoritesModule,
     ChatbotModule,
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60000,
-        limit: 10,
-      },
-    ]),
+   ThrottlerModule.forRoot([
+  {
+    name: 'short',
+    ttl: 1000,    // 1 segundo
+    limit: 20,    // 20 requests/segundo (protege contra burst)
+  },
+  {
+    name: 'medium',
+    ttl: 60000,   // 1 minuto
+    limit: 200,   // 200 requests/minuto (suficiente para uso normal)
+  },
+]),
     TicketLocksModule,
   ],
   controllers: [AppController],
