@@ -37,9 +37,11 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UserPayload } from '../common/interfaces/user-payload.interface';
 import { FileUploadService } from '../file-upload/file-upload.service';
 import { UpdateEventDto } from './dto/update-event.dto';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @ApiTags('events')
 @Controller('events')
+ @SkipThrottle()
 export class EventsController {
   constructor(
     private readonly eventsService: EventsService,
