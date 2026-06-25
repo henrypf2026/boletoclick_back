@@ -70,7 +70,6 @@ export class EmailService {
   }
 
   async sendNewsLetterEmail() {
-    console.log('sendNewsLetterEmail');
     const now = new Date();
     const endDate = new Date();
     endDate.setDate(
@@ -81,7 +80,6 @@ export class EmailService {
       endDate,
       3 /* Los siguientes 3 eventos */,
     );
-    console.log('sendNewsLetterEmail, total de evebtos = ' + events.length);
     const eventsHTML: string = events
       .map((eve: Event) => buildEventCard(eve))
       .join('');
@@ -148,8 +146,6 @@ export class EmailService {
     eventInfo: Event,
     totalStock: number,
   ) {
-    console.log(producer);
-    console.log(eventInfo);
     const html = formatNewEventTemplate(producer.name, eventInfo, totalStock);
     const subject = `Nuevo evento creado: ${eventInfo.title} - BoletoClick`;
     return this.sendEmail(producer.email, subject, html);
