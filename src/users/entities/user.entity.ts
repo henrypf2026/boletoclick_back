@@ -52,6 +52,30 @@ export class User {
   @Column({ type: 'varchar', length: 255, nullable: true })
   businessName!: string | null;
 
+  // =========================================================================
+  // CONTROL DE ESTADO / PENALIZACIONES (Agregado para Panel de Admin)
+  // =========================================================================
+
+  @ApiProperty({ default: 'ACTIVO', description: 'Estado de la cuenta' })
+  @Column({ type: 'varchar', default: 'ACTIVO' })
+  estado!: string; // 'ACTIVO' | 'SUSPENDIDO'
+
+  @ApiPropertyOptional({ description: 'Causa de la suspensión de la cuenta' })
+  @Column({ type: 'varchar', nullable: true })
+  motivoSuspension!: string | null;
+
+  @ApiPropertyOptional({ description: 'Modalidad de la sanción' })
+  @Column({ type: 'varchar', nullable: true })
+  tipoSuspension!: string | null; // 'TEMPORAL' | 'PERMANENTE'
+
+  @ApiPropertyOptional({
+    description: 'Fecha límite de la suspensión temporal',
+  })
+  @Column({ type: 'timestamp', nullable: true })
+  suspendidoHasta!: Date | null;
+
+  // =========================================================================
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
 

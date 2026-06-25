@@ -23,9 +23,11 @@ import { SupabaseAuthGuard } from '../common/guards/supabase-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @ApiTags('Venues')
 @ApiBearerAuth()
+@SkipThrottle() // 👈 acá va, a nivel de clase
 @Controller('venues')
 export class VenuesController {
   constructor(private readonly venuesService: VenuesService) {}

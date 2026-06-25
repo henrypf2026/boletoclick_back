@@ -29,17 +29,48 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
+    // 🔍 DEBUG TEMPORAL - borrar estas líneas cuando se resuelva el problema
+    console.log('========================================');
+    console.log('🔍 DEBUG - user de Supabase (request.user):', user);
+    console.log('🔍 DEBUG - user.id:', user?.id);
+    console.log(
+      '🔍 DEBUG - requiredRoles esperados por la ruta:',
+      requiredRoles,
+    );
+
     if (!user) {
+      console.log('🔍 DEBUG - FALLO: request.user es null/undefined');
       throw new ForbiddenException('Login required');
     }
 
     const userDb = await this.usersService.findUserById(user.id);
 
+    console.log('🔍 DEBUG - userDb encontrado en la tabla users:', userDb);
+    console.log(
+      '🔍 DEBUG - userDb.role:',
+      userDb?.role,
+      '| tipo:',
+      typeof userDb?.role,
+    );
+
     if (!userDb) {
+      console.log('🔍 DEBUG - FALLO: no se encontró fila en users con ese id');
       throw new ForbiddenException('Login required');
     }
 
     const userRole = userDb.role;
+
+    console.log(
+      '🔍 DEBUG - comparando:',
+      JSON.stringify(userRole),
+      'contra',
+      JSON.stringify(requiredRoles),
+    );
+    console.log(
+      '🔍 DEBUG - resultado includes():',
+      requiredRoles.includes(userRole),
+    );
+    console.log('========================================');
 
     if (!requiredRoles.includes(userRole)) {
       throw new ForbiddenException(

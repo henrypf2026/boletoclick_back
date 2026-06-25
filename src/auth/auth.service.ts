@@ -61,7 +61,11 @@ export class AuthService {
       },
     );
 
-    await this.emailService.sendWelcomeEmail(userData.name, userData.email);
+    await this.emailService.sendWelcomeEmail(
+      userData.name,
+      userData.email,
+      assignedRole,
+    );
 
     return {
       message: 'Usuario registrado exitosamente.',

@@ -73,36 +73,50 @@ export class TicketLocksService {
   async handleReleaseExpiredLocks(): Promise<void> {
     const ahora = new Date();
 
-    // 1. Buscar todos los candados vencidos que sigan reteniendo stock
+    // 1. Buscar todos los candados vencidos que sigan en estado LOCKED
     const expiredLocks = await this.dataSource.manager.find(TicketLock, {
       where: {
         status: TicketLockStatus.LOCKED,
-        expiresAt: LessThan(ahora), // 👈 Filtra: expiresAt < ahora
+        expiresAt: LessThan(ahora),
       },
     });
 
     if (expiredLocks.length === 0) {
-      return; // Si no hay nada que limpiar, salimos rápido para no saturar el log
+      return;
     }
 
     this.logger.warn(
-      `⏱️ Cron Job: Se encontraron ${expiredLocks.length} bloqueos de tiquetes expirados. Iniciando liberación...`,
+      `⏱️ Cron Job: Se encontraron ${expiredLocks.length} bloqueos de tiquetes expirados. Iniciando verificación...`,
     );
 
-    // 2. Procesar la liberación de cada candado de forma aislada
-    // Lo hacemos en un bucle para que cada uno corra en su propia transacción y devuelva su stock de forma segura
     for (const lock of expiredLocks) {
       try {
-        // 🎯 SI EL CANDADO TIENE UNA SESIÓN DE STRIPE ASOCIADA:
-        // Le avisamos a StripeService por medio de un evento para que cancele la sesión en los servidores de Stripe
         if (lock.stripeSessionId) {
+          // 🔍 VALIDACIÓN DE SEGURIDAD CRÍTICA:
+          // Buscamos la orden asociada en la base de datos para ver si ya fue pagada
+          const order = await this.dataSource.manager.findOne('Order', {
+            where: { transactionId: lock.stripeSessionId },
+          } as any);
+
+          // Si la orden ya está pagada (debido al Webhook o verifySession),
+          // confirmamos el candado local en vez de destruirlo y saltamos al siguiente.
+          if (order && (order as any).status === 'PAID') {
+            await this.ticketLocksRepo.confirmLock(lock.id);
+            this.logger.log(
+              `ℹ️ El candado ${lock.id} pertenecía a una orden ya PAGADA. Se consolidó localmente de forma segura.`,
+            );
+            continue;
+          }
+
+          // 🚨 Si la orden NO está pagada, procedemos a expirar de forma segura
           this.logger.log(
             `📢 Emitiendo orden de cancelación a Stripe para la sesión: ${lock.stripeSessionId}`,
           );
           this.eventEmitter.emit('stripe.expire-session', lock.stripeSessionId);
           this.eventEmitter.emit('order.failed', lock.stripeSessionId);
         }
-        // Procedemos a liberar el stock localmente de inmediato
+
+        // Procedemos a liberar el stock localmente si realmente era una compra abandonada
         await this.ticketLocksRepo.releaseLock(lock.id);
         this.logger.log(
           `✅ Bloqueo ${lock.id} expirado correctamente. Stock devuelto.`,
