@@ -42,7 +42,6 @@ export class EventsService {
     let totalStock = 0;
     try {
       const { ticketTypes, poster, status, ...eventDetails } = eventData;
-      console.log({ eventDetails });
       totalStock = (ticketTypes || []).reduce(
         (sum, t) => sum + Number((t as any).stock || 0),
         0,
@@ -98,7 +97,6 @@ export class EventsService {
     } finally {
       await queryRunner.release();
       if (newEvent != null) {
-        console.log(newEvent);
         const producer = await this.userService.findUserById(producerId);
         const eventUpdated = await this.eventsRepository.getEventById(
           newEvent.id,
