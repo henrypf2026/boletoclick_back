@@ -13,7 +13,7 @@ export class EventsRepository {
   constructor(
     @InjectRepository(Event)
     private readonly ormEventsRepository: Repository<Event>,
-  ) { }
+  ) {}
 
   async createEvent(
     eventData: Partial<Event>,
@@ -25,6 +25,7 @@ export class EventsRepository {
     return await manager.save(Event, newEvent);
   }
 
+  // Modificado: El público en general ahora solo ve eventos aprobados
   async getAllEvents(): Promise<Event[]> {
     return await this.ormEventsRepository.find({
       relations: {
@@ -34,15 +35,54 @@ export class EventsRepository {
         coupons: true,
       },
       where: {
-        status: Not(EventStatus.DRAFT), // Excluye los eventos en borrador
+        status: EventStatus.APPROVED, // Cambiado de Not(DRAFT) a APPROVED
       },
       order: { createdAt: 'DESC' },
     });
   }
 
+  // Para el panel de Admin. Trae TODOS los eventos sin filtrar por status
+  // (APPROVED, REJECTED, etc.), a diferencia de getAllEvents() que es para
+  // el catálogo público y solo trae APPROVED.
+  async getAllEventsForAdmin(): Promise<Event[]> {
+    return await this.ormEventsRepository.find({
+      relations: {
+        venue: { municipality: { province: true } },
+        category: true,
+        ticketTypes: true,
+        coupons: true,
+        producer: true,
+      },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  // Legado: ya no se usa en el flujo principal (la moderación previa se
+  // eliminó, los eventos se publican como APPROVED directamente al crear).
+  // Se deja por si en el futuro se reactiva algún caso de revisión manual.
+  async getPendingEvents(): Promise<Event[]> {
+    return await this.ormEventsRepository.find({
+      relations: {
+        venue: { municipality: { province: true } },
+        category: true,
+        ticketTypes: true,
+        coupons: true,
+      },
+      where: {
+        status: EventStatus.PENDING,
+      },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  // Nuevo: Permite guardar o persistir cualquier cambio directo en el evento (como el status)
+  async saveEvent(event: Event): Promise<Event> {
+    return await this.ormEventsRepository.save(event);
+  }
+
   async getEventById(id: string): Promise<Event> {
     const foundEvent = await this.ormEventsRepository.findOne({
-      where: { id, status: Not(EventStatus.DRAFT) },
+      where: { id },
       relations: {
         ticketTypes: true,
         venue: { municipality: { province: true } },
@@ -123,16 +163,12 @@ export class EventsRepository {
   }
 
   async desactivateEvent(id: string, producerId?: string): Promise<void> {
-    // En tu EventService
     await this.ormEventsRepository.manager.transaction(
       async (transactionalEntityManager: EntityManager): Promise<void> => {
-        // 1. Cambiar el estado 'permite' a false en la tabla Tickets buscando por el ID del evento
         await transactionalEntityManager
           .createQueryBuilder()
-          .update('tickets') // Nombre exacto de tu tabla o la clase Entidad Ticket
-          // Reemplaza 'permite' por el nombre exacto de tu columna en la base de datos (ej: permite_entrada)
+          .update('tickets')
           .set({ allowEntrance: false })
-          // Filtramos usando una subconsulta para hallar los tickets vinculados a los ticketTypes del evento
           .where(
             `ticketTypeId IN (
               SELECT id FROM ticket_types WHERE "eventId" = :id
@@ -145,8 +181,8 @@ export class EventsRepository {
 
         const updateResult = await transactionalEntityManager.update(
           Event,
-          criteria, // Condición: Buscar el evento por su ID (y opcionalmente producerId)
-          { status: EventStatus.CANCELLED }, // Modificación: Cambiar el estado a CANCELLED
+          criteria,
+          { status: EventStatus.CANCELLED },
         );
 
         if ((updateResult.affected ?? 0) === 0) {
@@ -160,15 +196,14 @@ export class EventsRepository {
           .select('ticketType.id')
           .from(TicketType, 'ticketType')
           .where('ticketType.eventId = :eventId')
-          .getQuery(); // Esto genera el texto SQL interno: (SELECT id FROM ticket_types WHERE eventId = ...)
+          .getQuery();
 
-        // 2. Ejecutamos el UPDATE masivo inyectando la subconsulta en el WHERE
         await transactionalEntityManager
           .createQueryBuilder()
           .update(Ticket)
           .set({ allowEntrance: false })
-          .where(`ticketTypeId IN (${subQuery})`) // Inyectamos de forma segura la subconsulta estructurada
-          .setParameter('eventId', id) // El parámetro se mapea correctamente aquí
+          .where(`ticketTypeId IN (${subQuery})`)
+          .setParameter('eventId', id)
           .execute();
       },
     );
@@ -178,6 +213,7 @@ export class EventsRepository {
     return await this.ormEventsRepository.find({
       where: {
         eventDate: Between(fromDate.toISOString(), toDate.toISOString()),
+        status: EventStatus.APPROVED, // Asegura que solo se sugieran eventos aprobados
       },
       relations: {
         venue: {
@@ -196,10 +232,14 @@ export class EventsRepository {
     });
   }
 
+  // 🛠️ CAMBIO: status: EventStatus.ACTIVE -> EventStatus.APPROVED
+  // Unificamos: ya no existen dos colas paralelas para "evento visible".
+  // APPROVED es ahora el único estado que significa "publicado al público",
+  // y se asigna automáticamente al crear (ver events.service.ts).
   async getActiveEventsForChatbot(): Promise<Event[]> {
     return await this.ormEventsRepository.find({
       where: {
-        status: EventStatus.ACTIVE,
+        status: EventStatus.APPROVED,
       },
       relations: {
         venue: { municipality: { province: true } },
@@ -221,7 +261,7 @@ export class EventsRepository {
       .leftJoinAndSelect('municipality.province', 'province')
       .leftJoinAndSelect('event.category', 'category')
       .leftJoinAndSelect('event.ticketTypes', 'ticketTypes')
-      .where('event.status = :status', { status: EventStatus.ACTIVE })
+      .where('event.status = :status', { status: EventStatus.APPROVED })
       .andWhere(
         `(
         LOWER(event.title) LIKE LOWER(:search)
@@ -248,7 +288,7 @@ export class EventsRepository {
       .leftJoinAndSelect('municipality.province', 'province')
       .leftJoinAndSelect('event.category', 'category')
       .leftJoinAndSelect('event.ticketTypes', 'ticketTypes')
-      .where('event.status = :status', { status: EventStatus.ACTIVE })
+      .where('event.status = :status', { status: EventStatus.APPROVED })
       .andWhere(
         `(
         LOWER(venue.name) LIKE LOWER(:location)

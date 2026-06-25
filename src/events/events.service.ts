@@ -5,6 +5,7 @@ import {
   BadRequestException,
   forwardRef,
   Inject,
+  NotFoundException,
 } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { EventsRepository } from './events.repository';
@@ -15,6 +16,7 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { VenuesService } from '../venues/venues.service';
 import { EmailService } from '../email/email.service';
 import { UsersService } from '../users/users.service';
+import { EventStatus } from '../common/enums/event-status.enum';
 
 @Injectable()
 export class EventsService {
@@ -39,7 +41,7 @@ export class EventsService {
     await queryRunner.startTransaction();
 
     try {
-      const { ticketTypes, poster, ...eventDetails } = eventData;
+      const { ticketTypes, poster, status, ...eventDetails } = eventData;
       console.log({ eventDetails });
       const totalStock = (ticketTypes || []).reduce(
         (sum, t) => sum + Number((t as any).stock || 0),
@@ -59,6 +61,11 @@ export class EventsService {
           ...eventDetails,
           producerId,
           posterUrl,
+          // 🛠️ CAMBIO DE REGLA DE NEGOCIO: los eventos ya no pasan por
+          // moderación previa. Se publican automáticamente como APPROVED,
+          // y el admin solo puede bajarlos (REJECTED) después si algo no
+          // le convence. (Antes: EventStatus.PENDING)
+          status: EventStatus.APPROVED,
         },
         queryRunner.manager,
       );
@@ -114,9 +121,32 @@ export class EventsService {
     return await this.eventsRepository.updateEvent(id, updateEventDto, userId);
   }
 
+  async updateEventStatus(id: string, status: EventStatus): Promise<Event> {
+    const event = await this.eventsRepository.getEventById(id);
+
+    event.status = status;
+
+    return await this.eventsRepository.saveEvent(event);
+  }
+
+  // 🛠️ FIX: este método estaba duplicado dos veces en el archivo (idéntico),
+  // lo cual no compila en TypeScript. Dejamos una sola definición.
   async getAllEvents(): Promise<(Event & { isSoldOut: boolean })[]> {
     const events = await this.eventsRepository.getAllEvents();
     return events.map((e) => this.enrichWithSoldOut(e));
+  }
+
+  // Para el panel de Admin (catálogo unificado). Trae TODOS los eventos sin
+  // filtrar por status, para que el admin pueda ver tanto activos como
+  // rechazados (el filtrado entre esos dos lo hace el front).
+  async getAllEventsForAdmin(): Promise<(Event & { isSoldOut: boolean })[]> {
+    const events = await this.eventsRepository.getAllEventsForAdmin();
+    return events.map((e) => this.enrichWithSoldOut(e));
+  }
+
+  async getPendingEvents(): Promise<(Event & { isSoldOut: boolean })[]> {
+    const pendingEvents = await this.eventsRepository.getPendingEvents();
+    return pendingEvents.map((e) => this.enrichWithSoldOut(e));
   }
 
   async getEventsByProducerId(

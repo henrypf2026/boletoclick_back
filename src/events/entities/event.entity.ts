@@ -69,7 +69,7 @@ export class Event {
 
   @ManyToOne('Venue', 'events', { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'venueId' })
-  venue!: Venue; // Cambiar 'any' por 'Venue' cuando importes la entidad
+  venue!: Venue;
 
   @ManyToOne('Category', 'events', { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'categoryId' })

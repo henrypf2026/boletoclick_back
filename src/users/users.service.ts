@@ -64,4 +64,7 @@ export class UsersService {
     console.log('users to notify coount = ' + users.length);
     return users;
   }
+  async findAllUsers(): Promise<User[]> {
+    return await this.usersRepo.find();
+  }
 }

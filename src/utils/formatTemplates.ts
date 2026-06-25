@@ -1,7 +1,7 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import fs from 'fs';
+import path from 'path';
 import { Event } from '../events/entities/event.entity';
-import * as QRCode from 'qrcode';
+import QRCode from 'qrcode';
 
 const newsletterTemplate = fs.readFileSync(
   path.join(process.cwd(), 'src/email/templates/newsletter_template.html'),
