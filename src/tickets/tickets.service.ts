@@ -3,10 +3,14 @@ import {
   NotFoundException,
   BadRequestException,
   UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { TicketsRepository } from './tickets.repository';
 import { Ticket } from './entities/ticket.entity';
+import { Role } from '../common/enums/role.enum';
+
+const QR_SECRET = process.env.JWT_SECRET || 'boletoclick-secret-dev-2024';
 
 @Injectable()
 export class TicketsService {
@@ -55,7 +59,6 @@ export class TicketsService {
     const quantityNumber = Number(createTicketsDto.quantity);
 
     for (let i = 1; i <= quantityNumber; i++) {
-      // ✅ QR firmado con JWT — no puede ser falsificado sin el JWT_SECRET
       const qrCode = this.jwtService.sign(
         {
           orderId: createTicketsDto.orderId,
@@ -63,7 +66,7 @@ export class TicketsService {
           index: i,
         },
         {
-          secret: 'boletoclick-secret-dev-2024',
+          secret: QR_SECRET, // 👈 mismo secret que en verify
         },
       );
 
@@ -86,10 +89,11 @@ export class TicketsService {
 
   async scanTicket(
     qrCode: string,
+    user?: { id: string; role: Role },
+    eventId?: string,
   ): Promise<{ message: string; ticket: Ticket }> {
-    // ✅ Verificar firma JWT antes de tocar la BD
     try {
-      this.jwtService.verify(qrCode);
+      this.jwtService.verify(qrCode, { secret: QR_SECRET }); // 👈 mismo secret
     } catch {
       throw new UnauthorizedException(
         `QR inválido — firma no verificable, posible falsificación`,
@@ -102,9 +106,29 @@ export class TicketsService {
       throw new NotFoundException(`QR no reconocido — ticket no encontrado`);
     }
 
-    if (!ticket.allowEntrance) {
+    const ticketEventId = ticket.ticketType?.eventId;
+
+    if (eventId && ticketEventId && ticketEventId !== eventId) {
       throw new BadRequestException(
-        `Ticket ya utilizado el ${ticket.usedAt?.toLocaleString('es-AR')} — posible uso duplicado`,
+        'Este ticket no pertenece al evento seleccionado.',
+      );
+    }
+
+    if (user?.role === Role.PRODUCER) {
+      const producerId = ticket.ticketType?.event?.producerId;
+      if (!producerId || producerId !== user.id) {
+        throw new ForbiddenException(
+          'No tenés permiso para escanear boletos de este evento.',
+        );
+      }
+    }
+
+    if (!ticket.allowEntrance) {
+      const usedAt = ticket.usedAt?.toLocaleString('es-AR');
+      throw new BadRequestException(
+        usedAt
+          ? `Este boleto ya fue escaneado el ${usedAt}. No se puede repetir la lectura.`
+          : 'Este boleto ya fue escaneado. No se puede repetir la lectura.',
       );
     }
 
