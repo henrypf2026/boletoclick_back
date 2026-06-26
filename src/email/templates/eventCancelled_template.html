@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Orden Cancelada</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background: #0f172a;
+      font-family: Arial, sans-serif;
+    "
+  >
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center" style="padding: 40px 20px">
+          <table
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            style="background: #ffffff; border-radius: 16px; overflow: hidden"
+          >
+            <tr>
+              <td
+                align="center"
+                style="
+                  padding: 30px;
+                  background: linear-gradient(135deg, #ef4444, #f97316);
+                "
+              >
+                <img
+                  src="https://res.cloudinary.com/ddsubvh5v/image/upload/v1781399631/boletockick_ztfz0v.jpg"
+                />
+                <h1 style="color: white; margin: 0">❌ Evento Cancelado</h1>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 40px">
+                <p style="font-size: 18px; color: #111827">
+                  Hola <strong>{userName}</strong>,
+                </p>
+
+                <p style="color: #4b5563; line-height: 1.7">
+                  Se le notifica que el evento ha sido cancelado. Los boletos
+                  asociados ya no son válidos para el ingreso al evento.
+                </p>
+                <p style="color: #4b5563; line-height: 1.7">
+                  Un socio se pondra en contacto con usted dentro de las
+                  siguientes 48 horas para seguir los pasos para el reembolso.
+                </p>
+
+                <table
+                  width="100%"
+                  style="
+                    margin-top: 25px;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 10px;
+                    overflow: hidden;
+                  "
+                >
+                  <tr>
+                    <td colspan="2" style="background: #f9fafb; padding: 15px">
+                      <strong>{eventName}</strong>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding: 12px">📅 Fecha del Evento</td>
+                    <td style="padding: 12px">{eventDate}</td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding: 12px">📍 Lugar</td>
+                    <td style="padding: 12px">{venue}</td>
+                  </tr>
+                </table>
+
+                <p style="color: #4b5563; line-height: 1.7; margin-top: 25px">
+                  Si crees que esto es un error o necesitas ayuda, por favor
+                  ponte en contacto con nuestro equipo de soporte.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style="
+                  padding: 20px;
+                  text-align: center;
+                  background: #f3f4f6;
+                  color: #6b7280;
+                "
+              >
+                Gracias por usar Boletoclick.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
