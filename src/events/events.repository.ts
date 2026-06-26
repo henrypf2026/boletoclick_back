@@ -13,7 +13,7 @@ export class EventsRepository {
   constructor(
     @InjectRepository(Event)
     private readonly ormEventsRepository: Repository<Event>,
-  ) {}
+  ) { }
 
   async createEvent(
     eventData: Partial<Event>,
@@ -148,19 +148,19 @@ export class EventsRepository {
     return await this.ormEventsRepository.save(event);
   }
 
-  async deactivateEvent(id: string, producerId?: string): Promise<void> {
-    const criteria: any = producerId ? { id, producerId } : id;
+  // async deactivateEvent(id: string, producerId?: string): Promise<void> {
+  //   const criteria: any = producerId ? { id, producerId } : id;
 
-    const result = await this.ormEventsRepository.update(criteria, {
-      status: EventStatus.CANCELLED,
-    });
+  //   const result = await this.ormEventsRepository.update(criteria, {
+  //     status: EventStatus.CANCELLED,
+  //   });
 
-    if ((result.affected ?? 0) === 0) {
-      throw new NotFoundException(
-        `Event with ID ${id} not found or already deactivated`,
-      );
-    }
-  }
+  //   if ((result.affected ?? 0) === 0) {
+  //     throw new NotFoundException(
+  //       `Event with ID ${id} not found or already deactivated`,
+  //     );
+  //   }
+  // }
 
   async desactivateEvent(id: string, producerId?: string): Promise<void> {
     await this.ormEventsRepository.manager.transaction(
@@ -204,6 +204,22 @@ export class EventsRepository {
           .set({ allowEntrance: false })
           .where(`ticketTypeId IN (${subQuery})`)
           .setParameter('eventId', id)
+          .execute();
+
+        // 🛠️ NUEVO CAMBIO: Cancelar las órdenes asociadas al evento
+        await transactionalEntityManager
+          .createQueryBuilder()
+          .update('orders')
+          .set({ status: 'CANCELLED' })
+          .where(
+            `id IN (
+              SELECT "orderId" FROM tickets
+              WHERE "ticketTypeId" IN (
+                SELECT id FROM ticket_types WHERE "eventId" = :eventId
+              )
+            )`,
+            { eventId: id },
+          )
           .execute();
       },
     );

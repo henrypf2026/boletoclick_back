@@ -73,8 +73,8 @@ export class RegisterDto {
   @ApiPropertyOptional({
     description:
       'Rol asignado al usuario. Si no se envía, por defecto será USER.',
-    enum: Role,
-    default: Role.USER,
+    // enum: Role,
+    // default: Role.USER,
   })
   @IsOptional()
   @IsEnum(Role)
