@@ -106,6 +106,8 @@ export class AuthService {
     return {
       message: 'Inicio de sesión correcto',
       user: data.user,
+      accessToken: token,
+      refreshToken: data.session?.refresh_token,
     };
   }
 
@@ -129,6 +131,8 @@ export class AuthService {
     return {
       ok: true,
       user: data.user,
+      accessToken,
+      refreshToken: undefined,
     };
   }
 
