@@ -27,7 +27,7 @@ export class EventsService {
     @Inject(forwardRef(() => EmailService))
     private readonly emailService: EmailService,
     private readonly userService: UsersService,
-  ) {}
+  ) { }
 
   async createEvent(
     producerId: string,
@@ -130,6 +130,11 @@ export class EventsService {
     const event = await this.eventsRepository.getEventById(id);
 
     event.status = status;
+
+    // 🛠️ NUEVO CAMBIO: Si el admin cancela el evento, se desactivan tickets y órdenes
+    if (status === EventStatus.CANCELLED) {
+      await this.eventsRepository.desactivateEvent(id); // Sin producerId para omitir el filtro de owner
+    }
 
     return await this.eventsRepository.saveEvent(event);
   }
