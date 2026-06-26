@@ -238,24 +238,4 @@ export class OrdersService {
 
     return { message: 'Orden cancelada exitosamente.' };
   }
-
-  async getOrdersByEventId(id: string) {
-    return await this.orderRepo.find({
-      where: {
-        tickets: {
-          ticketType: {
-            event: {
-              id,
-            },
-          },
-        },
-      },
-      relations: {
-        user: true,
-        tickets: {
-          ticketType: true,
-        },
-      },
-    });
-  }
 }
