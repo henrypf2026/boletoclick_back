@@ -16,7 +16,7 @@ export class VenuesRepository {
   constructor(
     @InjectRepository(Venue)
     private readonly ormVenueRepository: Repository<Venue>,
-  ) {}
+  ) { }
 
   async findAllVenues(): Promise<Venue[]> {
     return await this.ormVenueRepository
@@ -27,7 +27,7 @@ export class VenuesRepository {
         'event',
         'event.status = :status AND event.eventDate > :now',
         {
-          status: EventStatus.ACTIVE,
+          status: EventStatus.APPROVED,
           now: new Date().toISOString(),
         },
       )

@@ -3,6 +3,8 @@ import {
   InternalServerErrorException,
   ForbiddenException,
   BadRequestException,
+  forwardRef,
+  Inject,
 } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { EventsRepository } from './events.repository';
@@ -11,6 +13,9 @@ import { Event } from './entities/event.entity';
 import { TicketTypesService } from '../ticket-types/ticket-types.service';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { VenuesService } from '../venues/venues.service';
+import { EmailService } from '../email/email.service';
+import { UsersService } from '../users/users.service';
+import { EventStatus } from '../common/enums/event-status.enum';
 
 @Injectable()
 export class EventsService {
@@ -19,7 +24,10 @@ export class EventsService {
     private readonly eventsRepository: EventsRepository,
     private readonly ticketTypesService: TicketTypesService,
     private readonly venuesService: VenuesService,
-  ) {}
+    @Inject(forwardRef(() => EmailService))
+    private readonly emailService: EmailService,
+    private readonly userService: UsersService,
+  ) { }
 
   async createEvent(
     producerId: string,
@@ -30,11 +38,11 @@ export class EventsService {
 
     await queryRunner.connect();
     await queryRunner.startTransaction();
-
+    let newEvent: Event | null = null;
+    let totalStock = 0;
     try {
-      const { ticketTypes, poster, ...eventDetails } = eventData;
-      console.log({ eventDetails });
-      const totalStock = (ticketTypes || []).reduce(
+      const { ticketTypes, poster, status, ...eventDetails } = eventData;
+      totalStock = (ticketTypes || []).reduce(
         (sum, t) => sum + Number((t as any).stock || 0),
         0,
       );
@@ -52,6 +60,11 @@ export class EventsService {
           ...eventDetails,
           producerId,
           posterUrl,
+          // 🛠️ CAMBIO DE REGLA DE NEGOCIO: los eventos ya no pasan por
+          // moderación previa. Se publican automáticamente como APPROVED,
+          // y el admin solo puede bajarlos (REJECTED) después si algo no
+          // le convence. (Antes: EventStatus.PENDING)
+          status: EventStatus.APPROVED,
         },
         queryRunner.manager,
       );
@@ -69,18 +82,31 @@ export class EventsService {
           );
 
         savedEvent.ticketTypes = savedTickets;
+        newEvent = savedEvent;
       }
 
       await queryRunner.commitTransaction();
       return savedEvent;
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      newEvent = null;
       const message = error instanceof Error ? error.message : String(error);
       throw new InternalServerErrorException(
         `Falla al crear el evento y las localidades a través de una transacción: ${message}`,
       );
     } finally {
       await queryRunner.release();
+      if (newEvent != null) {
+        const producer = await this.userService.findUserById(producerId);
+        const eventUpdated = await this.eventsRepository.getEventById(
+          newEvent.id,
+        );
+        await this.emailService.sendNewEventEmail(
+          producer,
+          eventUpdated,
+          totalStock,
+        );
+      }
     }
   }
 
@@ -100,9 +126,37 @@ export class EventsService {
     return await this.eventsRepository.updateEvent(id, updateEventDto, userId);
   }
 
+  async updateEventStatus(id: string, status: EventStatus): Promise<Event> {
+    const event = await this.eventsRepository.getEventById(id);
+
+    event.status = status;
+
+    // 🛠️ NUEVO CAMBIO: Si el admin cancela el evento, se desactivan tickets y órdenes
+    if (status === EventStatus.CANCELLED) {
+      await this.eventsRepository.desactivateEvent(id); // Sin producerId para omitir el filtro de owner
+    }
+
+    return await this.eventsRepository.saveEvent(event);
+  }
+
+  // 🛠️ FIX: este método estaba duplicado dos veces en el archivo (idéntico),
+  // lo cual no compila en TypeScript. Dejamos una sola definición.
   async getAllEvents(): Promise<(Event & { isSoldOut: boolean })[]> {
     const events = await this.eventsRepository.getAllEvents();
     return events.map((e) => this.enrichWithSoldOut(e));
+  }
+
+  // Para el panel de Admin (catálogo unificado). Trae TODOS los eventos sin
+  // filtrar por status, para que el admin pueda ver tanto activos como
+  // rechazados (el filtrado entre esos dos lo hace el front).
+  async getAllEventsForAdmin(): Promise<(Event & { isSoldOut: boolean })[]> {
+    const events = await this.eventsRepository.getAllEventsForAdmin();
+    return events.map((e) => this.enrichWithSoldOut(e));
+  }
+
+  async getPendingEvents(): Promise<(Event & { isSoldOut: boolean })[]> {
+    const pendingEvents = await this.eventsRepository.getPendingEvents();
+    return pendingEvents.map((e) => this.enrichWithSoldOut(e));
   }
 
   async getEventsByProducerId(

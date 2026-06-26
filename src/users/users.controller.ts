@@ -34,6 +34,12 @@ export class UsersController {
 
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard)
+  @ApiBearerAuth()
+  @Get()
+  @ApiOperation({ summary: 'Obtener todos los usuarios registrados' })
+  async findAll(): Promise<User[]> {
+    return this.usersService.findAllUsers();
+  }
   @Get('me')
   @ApiOperation({
     summary: 'Obtener el perfil del usuario autenticado actualmente',
@@ -138,5 +144,4 @@ export class UsersController {
 
     return this.usersService.deleteUser(id);
   }
-
 }

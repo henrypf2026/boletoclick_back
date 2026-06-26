@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Param,
   Delete,
@@ -12,7 +13,6 @@ import {
   ParseFilePipe,
   MaxFileSizeValidator,
   FileTypeValidator,
-  Patch,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -22,6 +22,7 @@ import {
   ApiConsumes,
   ApiParam,
   ApiBearerAuth,
+  ApiBody,
 } from '@nestjs/swagger';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -31,18 +32,21 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { OwnerGuard } from '../common/guards/owner.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
+import { EventStatus } from '../common/enums/event-status.enum'; // Asegúrate de que apunte a tu enum
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UserPayload } from '../common/interfaces/user-payload.interface';
 import { FileUploadService } from '../file-upload/file-upload.service';
 import { UpdateEventDto } from './dto/update-event.dto';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @ApiTags('events')
 @Controller('events')
+ @SkipThrottle()
 export class EventsController {
   constructor(
     private readonly eventsService: EventsService,
     private readonly fileUploadService: FileUploadService,
-  ) {}
+  ) { }
 
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard, RolesGuard)
@@ -60,6 +64,7 @@ export class EventsController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden. Producers only.' })
   @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: CreateEventDto })
   @UseInterceptors(FileInterceptor('poster'))
   async createEvent(
     @CurrentUser() user: UserPayload,
@@ -86,7 +91,7 @@ export class EventsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all active events' })
+  @ApiOperation({ summary: 'Get all active and approved events' })
   @ApiResponse({
     status: 200,
     description: 'List of events retrieved successfully.',
@@ -94,6 +99,61 @@ export class EventsController {
   })
   async getAllEvents(): Promise<Event[]> {
     return await this.eventsService.getAllEvents();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get('admin/pending')
+  @ApiOperation({
+    summary: 'Get all pending events for moderation (Admin only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of pending events.',
+    type: [Event],
+  })
+  async getPendingEvents(): Promise<Event[]> {
+    return await this.eventsService.getPendingEvents();
+  }
+
+  // 🆕 NUEVO: Endpoint para el panel de Admin -> pestaña "Catálogo Activo".
+  // A diferencia de GET / (solo APPROVED) y GET /admin/pending (solo PENDING),
+  // este devuelve TODOS los eventos sin filtrar por status, para que el admin
+  // pueda ver aprobados y rechazados conviviendo en la misma pantalla.
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get('admin/all')
+  @ApiOperation({
+    summary:
+      'Get all events regardless of status, for the admin catalog view (Admin only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of all events, any status.',
+    type: [Event],
+  })
+  async getAllEventsForAdmin(): Promise<Event[]> {
+    return await this.eventsService.getAllEventsForAdmin();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Patch(':id/status')
+  @ApiOperation({ summary: 'Approve or reject an event (Admin only)' })
+  @ApiParam({ name: 'id', description: 'The UUID of the event' })
+  @ApiResponse({
+    status: 200,
+    description: 'Event status updated successfully.',
+    type: Event,
+  })
+  async updateEventStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('status') status: EventStatus,
+  ): Promise<Event> {
+    return await this.eventsService.updateEventStatus(id, status);
   }
 
   @ApiBearerAuth()

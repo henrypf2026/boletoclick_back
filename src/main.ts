@@ -3,13 +3,14 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3002';
 
-  app.use(cookieParser(process.env.COOKIE_SECRET));
+  // 👈 CORREGIDO: Respaldo por si el .env tarda en leerse o no encuentra la variable
+  const cookieSecret = process.env.COOKIE_SECRET || 'secret';
+  app.use(cookieParser(cookieSecret));
 
   app.enableCors({
     origin: frontendUrl,

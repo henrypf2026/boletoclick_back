@@ -56,14 +56,16 @@ export class TicketsService {
 
     for (let i = 1; i <= quantityNumber; i++) {
       // ✅ QR firmado con JWT — no puede ser falsificado sin el JWT_SECRET
-      const qrCode = this.jwtService.sign({
-        orderId: createTicketsDto.orderId,
-        ticketTypeId: createTicketsDto.ticketTypeId,
-        index: i,
-      },
-    {
-      secret: "boletoclick-secret-dev-2024"
-    });
+      const qrCode = this.jwtService.sign(
+        {
+          orderId: createTicketsDto.orderId,
+          ticketTypeId: createTicketsDto.ticketTypeId,
+          index: i,
+        },
+        {
+          secret: 'boletoclick-secret-dev-2024',
+        },
+      );
 
       ticketsToCreate.push({
         qrCode,

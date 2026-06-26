@@ -15,6 +15,10 @@ import { OrderStatus } from '../common/enums/order-status.enum';
 import { User } from '../users/entities/user.entity';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 import { TicketLocksService } from '../ticket-locks/ticket-locks.service';
+import { TicketsService } from '../tickets/tickets.service';
+import { EmailService } from '../email/email.service';
+import { Ticket } from '../tickets/entities/ticket.entity';
+import { CouponsService } from '../coupons/coupons.service';
 
 type StripeClient = InstanceType<typeof Stripe>;
 
@@ -29,6 +33,9 @@ export class StripeService {
     @InjectRepository(TicketType)
     private readonly ticketTypeRepo: Repository<TicketType>,
     private readonly ticketLocksService: TicketLocksService,
+    private readonly ticketService: TicketsService,
+    private readonly emailService: EmailService,
+    private readonly couponsService: CouponsService
   ) { }
 
   async createPaymentIntent(amount: number, currency = 'usd'): Promise<any> {
@@ -56,11 +63,14 @@ export class StripeService {
     const oneDayAfter = new Date(eventStart.getTime() + 24 * 60 * 60 * 1000);
 
     if (now > oneDayAfter) {
-      throw new BadRequestException(
-        `Este evento ya finalizó`,
-      );
+      throw new BadRequestException(`Este evento ya finalizó`);
     }
 
+    if (now >= twoHoursBefore) {
+      throw new BadRequestException(
+        `La compra de entradas cierra 2 horas antes del evento`,
+      );
+    }
     if (now >= twoHoursBefore) {
       throw new BadRequestException(
         `La compra de entradas cierra 2 horas antes del evento`,
@@ -69,9 +79,21 @@ export class StripeService {
 
     // ✅ Total calculado desde la DB — el frontend no puede manipular el precio
     const unitPrice = Number(ticketType.price);
-    const total = Math.round(unitPrice * dto.quantity * 100) / 100;
-    const platformFee = Math.round(total * 0.05 * 100) / 100;
-    const producerSubtotal = Math.round((total - platformFee) * 100) / 100;
+    const originalTotal = Math.round(unitPrice * dto.quantity * 100) / 100;
+    let finalTotal = originalTotal;
+
+    if (dto.couponId) {
+      const coupon = await this.couponsService.getCouponById(dto.couponId);
+      // Nota: Asegúrate de importar DiscountType o usar el string correspondiente de tu enums
+      if (coupon.discountType === 'PERCENTAGE') {
+        finalTotal = originalTotal * (1 - coupon.discountValue / 100);
+      } else {
+        finalTotal = Math.max(0, originalTotal - coupon.discountValue);
+      }
+      finalTotal = Math.round(finalTotal * 100) / 100;
+    }
+    const platformFee = Math.round(finalTotal * 0.05 * 100) / 100;
+    const producerSubtotal = Math.round((finalTotal - platformFee) * 100) / 100;
 
     const event = ticketType.event;
     const eventDate = new Date(event.eventDate);
@@ -100,12 +122,12 @@ export class StripeService {
         mode: 'payment',
         line_items: [
           {
-            quantity: dto.quantity,
+            quantity: 1,
             price_data: {
               currency: 'usd',
-              unit_amount: Math.round(unitPrice * 100),
+              unit_amount: Math.round(finalTotal * 100),
               product_data: {
-                name: event.title,
+                name: `${event.title} (x${dto.quantity})`,
                 description: `${date} ${time}`,
               },
             },
@@ -124,12 +146,13 @@ export class StripeService {
       await this.ticketLocksService.linkStripeSession(lock.id, session.id);
 
       const order = this.orderRepo.create({
-        total,
+        total: finalTotal,
         producerSubtotal,
         platformFee,
         status: OrderStatus.PENDING,
         transactionId: session.id,
         user: { id: dto.userId } as User,
+        ...(dto.couponId && { coupon: { id: dto.couponId } }),
       });
       await this.orderRepo.save(order);
     } catch (error) {
@@ -175,6 +198,7 @@ export class StripeService {
           sessionId: session.id,
           metadata: session.metadata,
         });
+
         console.log('📤 Evento order.confirmed emitido');
         break;
       case 'checkout.session.expired':
@@ -207,7 +231,6 @@ export class StripeService {
     console.log({ status });
 
     if (session.payment_status !== 'paid') {
-
       return { valid: false };
     }
 
@@ -216,7 +239,23 @@ export class StripeService {
     });
 
     if (!order) throw new BadRequestException('Orden no encontrada');
+    if (order.status === OrderStatus.PAID)
+      throw new BadRequestException('Orden ya pagada');
 
+    order.status = OrderStatus.PAID;
+    await this.orderRepo.save(order);
+
+    if (!session.metadata) {
+      throw new BadRequestException('Missing session metadata');
+    }
+
+    const myTickets: Ticket[] = await this.ticketService.createBulkTickets({
+      orderId: order.id,
+      ticketTypeId: session.metadata.ticketTypeId,
+      quantity: session.metadata.quantity,
+    });
+
+    await this.emailService.sendPurchaseEmail(session.metadata, myTickets);
 
     return { valid: order.status === OrderStatus.PAID };
   }
