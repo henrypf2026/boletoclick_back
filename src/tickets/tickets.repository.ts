@@ -107,6 +107,18 @@ export class TicketsRepository {
     });
   }
 
+  async findByIdForScan(ticketId: string): Promise<Ticket | null> {
+    return await this.ormTicketRepository.findOne({
+      where: { id: ticketId },
+      relations: {
+        ticketType: {
+          event: true,
+        },
+        order: true,
+      },
+    });
+  }
+
   // Guardar cambios sobre un ticket existente (usado en escaneo)
   async save(ticket: Ticket): Promise<Ticket> {
     return await this.ormTicketRepository.save(ticket);

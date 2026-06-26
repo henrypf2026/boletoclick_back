@@ -8,7 +8,14 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { TicketsRepository } from './tickets.repository';
 import { Ticket } from './entities/ticket.entity';
+import { ScanTicketDto } from './dto/scan-ticket.dto';
 import { Role } from '../common/enums/role.enum';
+
+const TICKET_URL_UUID_PATTERN =
+  /\/entradas\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+
+const JWT_PATTERN =
+  /^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/;
 
 @Injectable()
 export class TicketsService {
@@ -58,16 +65,11 @@ export class TicketsService {
 
     for (let i = 1; i <= quantityNumber; i++) {
       // ✅ QR firmado con JWT — no puede ser falsificado sin el JWT_SECRET
-      const qrCode = this.jwtService.sign(
-        {
-          orderId: createTicketsDto.orderId,
-          ticketTypeId: createTicketsDto.ticketTypeId,
-          index: i,
-        },
-        {
-          secret: 'boletoclick-secret-dev-2024',
-        },
-      );
+      const qrCode = this.jwtService.sign({
+        orderId: createTicketsDto.orderId,
+        ticketTypeId: createTicketsDto.ticketTypeId,
+        index: i,
+      });
 
       ticketsToCreate.push({
         qrCode,
@@ -87,28 +89,18 @@ export class TicketsService {
   }
 
   async scanTicket(
-    qrCode: string,
+    dto: ScanTicketDto,
     user?: { id: string; role: Role },
-    eventId?: string,
   ): Promise<{ message: string; ticket: Ticket }> {
-    // ✅ Verificar firma JWT antes de tocar la BD
-    try {
-      this.jwtService.verify(qrCode);
-    } catch {
-      throw new UnauthorizedException(
-        `QR inválido — firma no verificable, posible falsificación`,
-      );
-    }
-
-    const ticket = await this.ticketsRepository.findByQrCode(qrCode);
+    const ticket = await this.resolveTicketFromScan(dto);
 
     if (!ticket) {
-      throw new NotFoundException(`QR no reconocido — ticket no encontrado`);
+      throw new NotFoundException('QR no reconocido — ticket no encontrado');
     }
 
     const ticketEventId = ticket.ticketType?.eventId;
 
-    if (eventId && ticketEventId && ticketEventId !== eventId) {
+    if (dto.eventId && ticketEventId && ticketEventId !== dto.eventId) {
       throw new BadRequestException(
         'Este ticket no pertenece al evento seleccionado.',
       );
@@ -141,6 +133,39 @@ export class TicketsService {
       message: 'Acceso permitido — ticket validado correctamente',
       ticket: updated,
     };
+  }
+
+  private async resolveTicketFromScan(
+    dto: ScanTicketDto,
+  ): Promise<Ticket | null> {
+    if (dto.ticketId) {
+      return this.ticketsRepository.findByIdForScan(dto.ticketId);
+    }
+
+    const raw = dto.qrCode?.trim();
+    if (!raw) {
+      throw new BadRequestException(
+        'Debés enviar qrCode o ticketId para escanear.',
+      );
+    }
+
+    const ticketIdFromUrl = raw.match(TICKET_URL_UUID_PATTERN)?.[1];
+    if (ticketIdFromUrl) {
+      return this.ticketsRepository.findByIdForScan(ticketIdFromUrl);
+    }
+
+    const jwtMatch = raw.match(JWT_PATTERN);
+    const jwt = jwtMatch?.[0] ?? raw;
+
+    try {
+      this.jwtService.verify(jwt);
+    } catch {
+      throw new UnauthorizedException(
+        'QR inválido — firma no verificable, posible falsificación',
+      );
+    }
+
+    return this.ticketsRepository.findByQrCode(jwt);
   }
 
   async getEventStats(eventId: string): Promise<{

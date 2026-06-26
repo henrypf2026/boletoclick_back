@@ -102,7 +102,7 @@ export class TicketsController {
     @Body() dto: ScanTicketDto,
     @CurrentUser() user: { id: string; role: Role },
   ): Promise<{ message: string; ticket: Ticket }> {
-    return this.ticketsService.scanTicket(dto.qrCode, user, dto.eventId);
+    return this.ticketsService.scanTicket(dto, user);
   }
 
   @Post()

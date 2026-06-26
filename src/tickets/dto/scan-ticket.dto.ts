@@ -1,14 +1,20 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
+import { IsString, IsOptional, IsUUID, ValidateIf } from 'class-validator';
 
 export class ScanTicketDto {
-  @ApiProperty({
-    description: 'Código QR del ticket a escanear',
-    example: 'CLICK-TICKET-abc123-1-4521',
+  @ApiPropertyOptional({
+    description: 'JWT del ticket o contenido crudo del QR',
   })
+  @ValidateIf((dto: ScanTicketDto) => !dto.ticketId)
   @IsString()
-  @IsNotEmpty()
-  qrCode!: string;
+  qrCode?: string;
+
+  @ApiPropertyOptional({
+    description: 'UUID del ticket — usado cuando el QR es una URL /entradas/:id',
+  })
+  @ValidateIf((dto: ScanTicketDto) => !dto.qrCode)
+  @IsUUID()
+  ticketId?: string;
 
   @ApiPropertyOptional({
     description: 'UUID del evento — valida que el ticket pertenezca a ese show',
