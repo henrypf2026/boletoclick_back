@@ -13,6 +13,7 @@ import { CreateBankAccountDto } from './dto/create-bank-account.dto';
 import { BankAccount } from './entities/bank-account.entity';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOperation,
   ApiParam,
   ApiResponse,
@@ -40,6 +41,7 @@ export class BankAccountsController {
     description: 'The bank account has been successfully created or updated.',
     type: BankAccount,
   })
+  @ApiBody({ type: CreateBankAccountDto })
   @ApiResponse({ status: 400, description: 'Bad Request. Validation failed.' })
   async upsert(
     @Req() req: any,

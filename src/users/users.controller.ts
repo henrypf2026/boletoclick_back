@@ -15,6 +15,7 @@ import {
 import { UsersService } from './users.service';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOperation,
   ApiParam,
   ApiResponse,
@@ -89,6 +90,7 @@ export class UsersController {
     status: 404,
     description: 'Usuario no encontrado.',
   })
+  @ApiBody({ type: UpdateUserDto })
   @UseInterceptors(UsersInterceptor)
   @UseGuards(SupabaseAuthGuard)
   @Patch(':id')

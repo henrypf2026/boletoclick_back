@@ -11,7 +11,7 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { SupabaseService } from '../supabase/supabase.service';
 import { Role } from '../common/enums/role.enum';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 interface SuspensionBody {
   motivo: string;
@@ -35,6 +35,29 @@ export class AdminActionsController {
 
   // 1. Endpoint para Suspender Cuenta (PATCH /users/:id/suspender)
   @ApiOperation({ summary: 'Suspender una cuenta de usuario desde el panel' })
+  @ApiBody({
+    description: 'Información necesaria para suspender una cuenta de usuario.',
+    schema: {
+      type: 'object',
+      properties: {
+        motivo: {
+          type: 'string',
+          example: 'Incumplimiento de políticas de la plataforma',
+        },
+        tipoSuspension: {
+          type: 'string',
+          example: 'TEMPORAL',
+        },
+        suspendidoHasta: {
+          type: 'string',
+          format: 'date-time',
+          example: '2026-12-31T23:59:59.000Z',
+          nullable: true,
+        },
+      },
+      required: ['motivo', 'tipoSuspension'],
+    },
+  })
   @Patch(':id/suspender')
   async suspenderUsuario(
     @Param('id') id: string,
@@ -73,6 +96,24 @@ export class AdminActionsController {
   // 3. Endpoint para Crear Administrador (POST /users/admin)
   @ApiOperation({
     summary: 'Dar de alta un nuevo administrador en Supabase y BD local',
+  })
+  @ApiBody({
+    description: 'Credenciales necesarias para crear un administrador.',
+    schema: {
+      type: 'object',
+      properties: {
+        email: {
+          type: 'string',
+          format: 'email',
+          example: 'admin@boletoclick.com',
+        },
+        password: {
+          type: 'string',
+          example: 'Aa12345*',
+        },
+      },
+      required: ['email', 'password'],
+    },
   })
   @Post('admin')
   async crearAdmin(@Body() body: CrearAdminBody) {
