@@ -11,7 +11,7 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { SupabaseService } from '../supabase/supabase.service';
 import { Role } from '../common/enums/role.enum';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 interface SuspensionBody {
   motivo: string;
