@@ -41,12 +41,12 @@ import { SkipThrottle } from '@nestjs/throttler';
 
 @ApiTags('events')
 @Controller('events')
- @SkipThrottle()
+@SkipThrottle()
 export class EventsController {
   constructor(
     private readonly eventsService: EventsService,
     private readonly fileUploadService: FileUploadService,
-  ) { }
+  ) {}
 
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard, RolesGuard)
@@ -144,6 +144,21 @@ export class EventsController {
   @Patch(':id/status')
   @ApiOperation({ summary: 'Approve or reject an event (Admin only)' })
   @ApiParam({ name: 'id', description: 'The UUID of the event' })
+  @ApiBody({
+    description: 'Nuevo estado del evento.',
+    schema: {
+      type: 'object',
+      properties: {
+        status: {
+          type: 'string',
+          enum: Object.values(EventStatus),
+          example: EventStatus.APPROVED,
+          description: 'Estado que se asignará al evento.',
+        },
+      },
+      required: ['status'],
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Event status updated successfully.',
@@ -204,6 +219,7 @@ export class EventsController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @ApiResponse({ status: 404, description: 'Event not found.' })
+  @ApiBody({ type: UpdateEventDto })
   async updateEvent(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateEventDto: UpdateEventDto,

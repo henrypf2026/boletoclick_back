@@ -16,6 +16,7 @@ import { SetSessionDto } from './dto/set-session.dto';
 
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -38,6 +39,7 @@ export class AuthController {
     description:
       'Solicitud incorrecta (Bad Request). Error de validación o el correo electrónico ya existe.',
   })
+  @ApiBody({ type: RegisterDto })
   register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
@@ -55,11 +57,13 @@ export class AuthController {
     description:
       'No autorizado (Unauthorized). Correo electrónico o contraseña inválidos.',
   })
+  @ApiBody({ type: LoginDto })
   login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
     return this.authService.login(loginDto, res);
   }
 
   @Post('set-session')
+  @ApiBody({ type: SetSessionDto })
   @ApiOperation({
     summary: 'Crear cookie de sesión a partir de un access token de OAuth',
   })
@@ -116,6 +120,7 @@ export class AuthController {
     status: 400,
     description: 'Dirección de correo electrónico inválida.',
   })
+  @ApiBody({ type: ForgotPasswordDto })
   forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     return this.authService.forgotPassword(forgotPasswordDto.email);
   }
