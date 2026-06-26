@@ -3,10 +3,12 @@ import {
   NotFoundException,
   BadRequestException,
   UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { TicketsRepository } from './tickets.repository';
 import { Ticket } from './entities/ticket.entity';
+import { Role } from '../common/enums/role.enum';
 
 @Injectable()
 export class TicketsService {
@@ -86,6 +88,8 @@ export class TicketsService {
 
   async scanTicket(
     qrCode: string,
+    user?: { id: string; role: Role },
+    eventId?: string,
   ): Promise<{ message: string; ticket: Ticket }> {
     // ✅ Verificar firma JWT antes de tocar la BD
     try {
@@ -102,9 +106,29 @@ export class TicketsService {
       throw new NotFoundException(`QR no reconocido — ticket no encontrado`);
     }
 
-    if (!ticket.allowEntrance) {
+    const ticketEventId = ticket.ticketType?.eventId;
+
+    if (eventId && ticketEventId && ticketEventId !== eventId) {
       throw new BadRequestException(
-        `Ticket ya utilizado el ${ticket.usedAt?.toLocaleString('es-AR')} — posible uso duplicado`,
+        'Este ticket no pertenece al evento seleccionado.',
+      );
+    }
+
+    if (user?.role === Role.PRODUCER) {
+      const producerId = ticket.ticketType?.event?.producerId;
+      if (!producerId || producerId !== user.id) {
+        throw new ForbiddenException(
+          'No tenés permiso para escanear boletos de este evento.',
+        );
+      }
+    }
+
+    if (!ticket.allowEntrance) {
+      const usedAt = ticket.usedAt?.toLocaleString('es-AR');
+      throw new BadRequestException(
+        usedAt
+          ? `Este boleto ya fue escaneado el ${usedAt}. No se puede repetir la lectura.`
+          : 'Este boleto ya fue escaneado. No se puede repetir la lectura.',
       );
     }
 

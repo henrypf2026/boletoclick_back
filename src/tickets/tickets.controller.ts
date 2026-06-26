@@ -88,10 +88,11 @@ export class TicketsController {
 
   @Post('scan')
   @UseGuards(SupabaseAuthGuard, RolesGuard)
-  @Roles(Role.SCANNER, Role.ADMIN)
+  @Roles(Role.SCANNER, Role.ADMIN, Role.PRODUCER)
   @ApiOperation({ summary: 'Escanear un ticket para validar acceso al evento' })
   @ApiResponse({ status: 200, description: 'Ticket válido — acceso permitido' })
   @ApiResponse({ status: 400, description: 'Ticket ya usado o inválido' })
+  @ApiResponse({ status: 403, description: 'Sin permiso para escanear este evento' })
   @ApiResponse({ status: 404, description: 'Ticket no encontrado' })
   @ApiBody({
     description: 'Código QR del ticket a escanear',
@@ -99,8 +100,9 @@ export class TicketsController {
   })
   scanTicket(
     @Body() dto: ScanTicketDto,
+    @CurrentUser() user: { id: string; role: Role },
   ): Promise<{ message: string; ticket: Ticket }> {
-    return this.ticketsService.scanTicket(dto.qrCode);
+    return this.ticketsService.scanTicket(dto.qrCode, user, dto.eventId);
   }
 
   @Post()
