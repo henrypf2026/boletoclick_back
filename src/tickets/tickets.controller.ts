@@ -12,6 +12,7 @@ import { TicketsService } from './tickets.service';
 import { Ticket } from './entities/ticket.entity';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOperation,
   ApiParam,
   ApiResponse,
@@ -92,6 +93,10 @@ export class TicketsController {
   @ApiResponse({ status: 200, description: 'Ticket válido — acceso permitido' })
   @ApiResponse({ status: 400, description: 'Ticket ya usado o inválido' })
   @ApiResponse({ status: 404, description: 'Ticket no encontrado' })
+  @ApiBody({
+    description: 'Código QR del ticket a escanear',
+    type: ScanTicketDto,
+  })
   scanTicket(
     @Body() dto: ScanTicketDto,
   ): Promise<{ message: string; ticket: Ticket }> {
@@ -102,6 +107,10 @@ export class TicketsController {
   @UseGuards(SupabaseAuthGuard, RolesGuard)
   @Roles(Role.PRODUCER, Role.PRODUCER)
   @ApiOperation({ summary: 'Generacíon de tickets' })
+  @ApiBody({
+    description: 'Datos para la creación de tickets en lote',
+    type: createTicketsDto,
+  })
   @ApiResponse({
     status: 201,
     description: 'Ticket generados',

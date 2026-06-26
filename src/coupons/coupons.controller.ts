@@ -14,6 +14,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiBody,
 } from '@nestjs/swagger';
 import { CouponsService } from './coupons.service';
 import { CreateCouponDto } from './dto/create-coupon.dto';
@@ -43,6 +44,7 @@ export class CouponsController {
     status: 403,
     description: 'No tienes permisos para realizar esta acción.',
   })
+  @ApiBody({ type: CreateCouponDto })
   createCoupon(@Body() createCouponDto: CreateCouponDto) {
     return this.couponsService.createCoupon(createCouponDto);
   }
@@ -91,6 +93,7 @@ export class CouponsController {
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Actualizar parcialmente un cupón (Solo Admin)' })
   @ApiResponse({ status: 200, type: Coupon })
+  @ApiBody({ type: UpdateCouponDto })
   updateCoupon(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateCouponDto: UpdateCouponDto,

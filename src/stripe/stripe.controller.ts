@@ -16,12 +16,14 @@ import { StripeService } from './stripe.service';
 import { CreatePaymentIntentDto } from './dto/create-payment-intent.dto';
 import { CreateCheckoutSessionDto } from './dto/create-checkout-session.dto';
 import { SupabaseAuthGuard } from '../common/guards/supabase-auth.guard';
+import { ApiBody } from '@nestjs/swagger';
 
 @Controller('payments')
 export class StripeController {
-  constructor(private readonly stripeService: StripeService) { }
+  constructor(private readonly stripeService: StripeService) {}
 
   @Post('create-payment-intent')
+  @ApiBody({ type: CreatePaymentIntentDto })
   async createPaymentIntent(
     @Body() dto: CreatePaymentIntentDto,
   ): Promise<{ clientSecret: string | null }> {
@@ -34,6 +36,7 @@ export class StripeController {
 
   @UseGuards(SupabaseAuthGuard)
   @Post('create-session')
+  @ApiBody({ type: CreateCheckoutSessionDto })
   async createCheckoutSession(
     @Req() req: any,
     @Body() dto: CreateCheckoutSessionDto,
@@ -62,7 +65,6 @@ export class StripeController {
     @Param('sessionId')
     sessionId: string,
   ): Promise<{ valid: boolean }> {
-
     return await this.stripeService.verifySession(sessionId);
   }
 

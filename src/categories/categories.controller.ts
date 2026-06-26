@@ -19,6 +19,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -50,6 +51,7 @@ export class CategoriesController {
     status: 409,
     description: 'Conflict. Name or slug already exists.',
   })
+  @ApiBody({ type: CreateCategoryDto })
   async createCategory(@Body() newCategoryData: CreateCategoryDto) {
     return await this.categoriesService.createCategory(newCategoryData);
   }
@@ -88,6 +90,7 @@ export class CategoriesController {
     status: 409,
     description: 'Conflict. New name or slug already in use.',
   })
+  @ApiBody({ type: UpdateCategoryDto })
   async updateCategory(
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
