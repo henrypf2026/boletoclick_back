@@ -6,7 +6,7 @@ import {
   forwardRef,
   Inject,
 } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { EventsRepository } from './events.repository';
 import { CreateEventDto } from './dto/create-event.dto';
 import { Event } from './entities/event.entity';
@@ -16,6 +16,9 @@ import { VenuesService } from '../venues/venues.service';
 import { EmailService } from '../email/email.service';
 import { UsersService } from '../users/users.service';
 import { EventStatus } from '../common/enums/event-status.enum';
+import { OrdersService } from '../orders/orders.service';
+import { Order } from '../orders/entities/order.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class EventsService {
@@ -27,7 +30,9 @@ export class EventsService {
     @Inject(forwardRef(() => EmailService))
     private readonly emailService: EmailService,
     private readonly userService: UsersService,
-  ) { }
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
+  ) {}
 
   async createEvent(
     producerId: string,
@@ -182,6 +187,32 @@ export class EventsService {
     }
 
     await this.eventsRepository.desactivateEvent(id, userId);
+
+    const cancelledEvent = await this.eventsRepository.getEventById(id);
+
+    const orders = await this.orderRepository.find({
+      where: {
+        tickets: {
+          ticketType: {
+            event: {
+              id,
+            },
+          },
+        },
+      },
+      relations: {
+        user: true,
+      },
+    });
+    for (const order of orders) {
+      await this.emailService.sendEventCancelledEmail(
+        order.user.name,
+        order.user.email,
+        cancelledEvent.title,
+        cancelledEvent.eventDate.toString(),
+        cancelledEvent.venue.name,
+      );
+    }
   }
 
   async findUpcomingEvents(fromDate: Date, toDate: Date, limit: number) {

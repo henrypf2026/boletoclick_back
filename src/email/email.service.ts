@@ -1,5 +1,5 @@
 import { BrevoClient } from '@getbrevo/brevo';
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { environment } from '../config/environment';
 import {
   buildEventCard,
@@ -10,6 +10,7 @@ import {
   buildQRImage,
   formatEventNameForQRName,
   formatNewEventTemplate,
+  formatEventCancelledTemplate,
 } from '../utils/formatTemplates';
 import { UsersService } from '../users/users.service';
 import { EventsService } from '../events/events.service';
@@ -25,6 +26,7 @@ export class EmailService {
 
   constructor(
     private readonly userService: UsersService,
+    @Inject(forwardRef(() => EventsService))
     private readonly eventsService: EventsService,
     private readonly venuesService: VenuesService,
   ) {
@@ -149,5 +151,22 @@ export class EmailService {
     const html = formatNewEventTemplate(producer.name, eventInfo, totalStock);
     const subject = `Nuevo evento creado: ${eventInfo.title} - BoletoClick`;
     return this.sendEmail(producer.email, subject, html);
+  }
+
+  async sendEventCancelledEmail(
+    username: string,
+    email: string,
+    eventName: string,
+    eventDate: string,
+    venue: string,
+  ) {
+    const html = formatEventCancelledTemplate(
+      username,
+      eventName,
+      eventDate,
+      venue,
+    );
+    const subject = `Evento Cancelado =( : ${eventName} - BoletoClick`;
+    return this.sendEmail(email, subject, html);
   }
 }

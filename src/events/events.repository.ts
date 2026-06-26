@@ -1,19 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, EntityManager, Between, Not } from 'typeorm';
+import { Repository, EntityManager, Between } from 'typeorm';
 import { Event } from './entities/event.entity';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 import { EventStatus } from '../common/enums/event-status.enum';
 import { Ticket } from '../tickets/entities/ticket.entity';
-import { TicketStatus } from '../common/enums/ticket-status.enum';
 
 @Injectable()
 export class EventsRepository {
   constructor(
     @InjectRepository(Event)
     private readonly ormEventsRepository: Repository<Event>,
-  ) { }
+  ) {}
 
   async createEvent(
     eventData: Partial<Event>,

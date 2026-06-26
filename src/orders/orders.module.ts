@@ -3,12 +3,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Order } from './entities/order.entity';
 import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
-import { Ticket } from '../tickets/entities/ticket.entity';
-import { TicketType } from '../ticket-types/entities/ticket-type.entity';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { UsersModule } from '../users/users.module';
 import { EmailModule } from '../email/email.module';
 import { TicketsModule } from '../tickets/tickets.module';
+import { OrdersRepository } from './orders.repository';
 
 @Module({
   imports: [
@@ -19,7 +18,7 @@ import { TicketsModule } from '../tickets/tickets.module';
     TicketsModule,
   ],
   controllers: [OrdersController],
-  providers: [OrdersService],
+  providers: [OrdersService, OrdersRepository],
   exports: [OrdersService],
 })
-export class OrdersModule { }
+export class OrdersModule {}

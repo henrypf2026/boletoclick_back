@@ -9,9 +9,7 @@ import { Repository, DataSource } from 'typeorm';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Order } from './entities/order.entity';
 import { OrderStatus } from '../common/enums/order-status.enum';
-import { Ticket } from '../tickets/entities/ticket.entity';
 import { TicketType } from '../ticket-types/entities/ticket-type.entity';
-import { randomBytes } from 'crypto';
 import { EmailService } from '../email/email.service';
 import { TicketsService } from '../tickets/tickets.service';
 
@@ -23,7 +21,7 @@ export class OrdersService {
     private readonly dataSource: DataSource,
     private readonly emailService: EmailService,
     private readonly ticketsService: TicketsService,
-  ) { }
+  ) {}
 
   @OnEvent('order.confirmed')
   async confirmOrder(payload: {
@@ -42,7 +40,9 @@ export class OrdersService {
     }
 
     if (order.status === OrderStatus.PAID) {
-      console.log(`ℹ️ Orden ${order.id} ya estaba PAID — se omite creación de tickets`);
+      console.log(
+        `ℹ️ Orden ${order.id} ya estaba PAID — se omite creación de tickets`,
+      );
       return;
     }
 
@@ -50,13 +50,16 @@ export class OrdersService {
     // PostgreSQL resuelve esto de forma segura en un único paso atómico.
     const updateResult = await this.orderRepo.update(
       { id: order.id, status: OrderStatus.PENDING }, // Condición estricta
-      { status: OrderStatus.PAID }                    // Cambio deseado
+      { status: OrderStatus.PAID }, // Cambio deseado
     );
 
     // Si affected es 0, significa que otro proceso paralelo ganó la carrera y cambió el estado primero
     if (updateResult.affected === 0) {
-      console.log(`ℹ️ Concurrencia evitada: La orden ${order.id} ya fue procesada por otro hilo.`);
-      return; ``
+      console.log(
+        `ℹ️ Concurrencia evitada: La orden ${order.id} ya fue procesada por otro hilo.`,
+      );
+      return;
+      ``;
     }
 
     // 4. Al haber ganado la actualización, este hilo es el único autorizado para crear las boletas
@@ -71,7 +74,9 @@ export class OrdersService {
         quantity,
       });
 
-      console.log(`✅ Orden ${order.id} confirmada — tickets JWT generados exitosamente`);
+      console.log(
+        `✅ Orden ${order.id} confirmada — tickets JWT generados exitosamente`,
+      );
 
       // 📧 Espacio ideal para activar el envío de email de éxito en el futuro
       // await this.emailService.sendOrderConfirmation(order.id);
@@ -232,5 +237,25 @@ export class OrdersService {
     }
 
     return { message: 'Orden cancelada exitosamente.' };
+  }
+
+  async getOrdersByEventId(id: string) {
+    return await this.orderRepo.find({
+      where: {
+        tickets: {
+          ticketType: {
+            event: {
+              id,
+            },
+          },
+        },
+      },
+      relations: {
+        user: true,
+        tickets: {
+          ticketType: true,
+        },
+      },
+    });
   }
 }

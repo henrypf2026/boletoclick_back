@@ -29,6 +29,11 @@ const newEventTemplate = fs.readFileSync(
   'utf-8',
 );
 
+const eventCancelledTemplate = fs.readFileSync(
+  path.join(process.cwd(), 'src/email/templates/eventCancelled_template.html'),
+  'utf-8',
+);
+
 const welcomeTextUser =
   'Gracias por registrarte en Boletoclick. Ya puedes descubrir eventos, comprar boletos y administrar tus compras desde tu cuenta.';
 
@@ -126,6 +131,19 @@ function formatNewEventTemplate(
     .replace('{totalTickets}', String(totalStock));
 }
 
+function formatEventCancelledTemplate(
+  username: string,
+  eventName: string,
+  eventDate: string,
+  venueName: string,
+) {
+  return eventCancelledTemplate
+    .replace('{userName}', username)
+    .replace('{eventName}', eventName)
+    .replace('{eventDate}', eventDate)
+    .replace('{venue}', venueName);
+}
+
 export {
   formatWelcomeTemplate,
   formatNewsletterTemplate,
@@ -135,4 +153,5 @@ export {
   buildQRImage,
   formatEventNameForQRName,
   formatNewEventTemplate,
+  formatEventCancelledTemplate,
 };
