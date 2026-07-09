@@ -1,98 +1,106 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# BoletoClick API 🎫🚀
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+BoletoClick API es el motor de backend desarrollado para la gestión integral, reserva y venta de boletos (tickets) para eventos. La plataforma permite a los organizadores publicar sus eventos especificando locaciones, categorías y tipos de boletos con stocks dinámicos, mientras que facilita a los compradores una adquisición de entradas segura, validada mediante códigos QR únicos y con procesamiento de pagos integrado en tiempo real.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 🏗️ Enfoques de Arquitectura y Optimización
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+* **Modular y Altamente Escalable:** Desarrollada bajo el patrón arquitectónico modular nativo de **NestJS**, lo que garantiza un código desacoplado, altamente mantenible y con una clara separación de dominios.
+* **Concurrencia y Consistencia (Ticket Locking):** Implementa un sistema de bloqueo temporal de boletos para asegurar el stock seleccionado por el usuario durante el flujo de pago, evitando la sobreventa en eventos de alta demanda antes de que se complete la transacción.
+* **Seguridad y Control de Carga:** Incorpora un limitador de tasa de peticiones (*rate-limiting/throttler*) configurado por niveles dinámicos (picos rápidos/*burst* y límites por minuto) para proteger la API de ataques de denegación de servicio (DoS) y picos masivos de tráfico concurrente.
+* **Procesamiento Asíncrono de Eventos y Tareas:** Uso de eventos internos asíncronos y tareas programadas de fondo (*cron jobs*) para la automatización del envío de boletines informativos (*newsletters*) y notificaciones por correo electrónico sin bloquear el hilo principal de ejecución.
 
-## Project setup
+---
 
-```bash
-$ npm install
-```
+## 🛠️ Stack Tecnológico y Requisitos
 
-## Compile and run the project
+### Entorno de Ejecución y Lenguajes
+* **Runtime:** Node.js (v18+ recomendado)
+* **Lenguaje:** TypeScript
+* **Framework Principal:** NestJS
 
-```bash
-# development
-$ npm run start
+### Persistencia y Almacenamiento
+* **Base de Datos:** PostgreSQL (Alojada y gestionada a través de **Supabase**).
+* **ORM:** **TypeORM** para el mapeo objeto-relacional y el control estructurado de entidades.
+* **Storage de Archivos:** **Cloudinary** SDK (para almacenamiento en la nube de imágenes de eventos y perfiles) y **Supabase Storage**.
 
-# watch mode
-$ npm run start:dev
+### Librerías y Herramientas Clave
+* **Autenticación y Seguridad:** JSON Web Tokens (`@nestjs/jwt`), cookies firmadas mediante `cookie-parser` y `@nestjs/throttler` para rate-limiting.
+* **Validación de Datos:** `class-validator` y `class-transformer` para validación estricta a nivel global de DTOs (*Data Transfer Objects*).
+* **Pasarela de Pagos:** **Stripe** SDK con integración robusta de Webhooks para la escucha y confirmación asíncrona del estado de las órdenes.
+* **Servicio de Emails:** **Brevo** (`@getbrevo/brevo`) para el envío automatizado de correos transaccionales (confirmaciones de compra, tickets con QR) y campañas de newsletter.
+* **Inteligencia Artificial:** **OpenAI** SDK para el procesamiento de lenguaje natural en el chatbot interactivo de asistencia al cliente.
+* **Generación de QRs:** `qrcode` para la creación y anexado de códigos de validación únicos para cada boleto adquirido.
+* **Documentación:** **Swagger** (`@nestjs/swagger` y `swagger-ui-express`) para la generación automática de la interfaz interactiva de la API.
 
-# production mode
-$ npm run start:prod
-```
+---
 
-## Run tests
+## 🎯 Casos de Uso y Módulos de la API
 
-```bash
-# unit tests
-$ npm run test
+La API expone sus funcionalidades agrupadas de forma modular en los siguientes endpoints principales:
 
-# e2e tests
-$ npm run test:e2e
+* **Autenticación y Usuarios (`/auth`, `/users`):** Registro de usuarios, inicio de sesión seguro, asignación/validación de roles y gestión de perfiles.
+* **Eventos y Ubicaciones (`/events`, `/categories`, `/province`, `/municipalities`):** Publicación de eventos con categorización detallada y filtros geográficos adaptados específicamente a provincias y municipios dominicanos.
+* **Gestión de Boletos (`/tickets`, `/ticket-types`, `/ticket-locks`):** Configuración paramétrica de tipos de boletos (precios, stock disponible), control del ciclo de vida de la entrada y reservas temporales de stock (*locks*).
+* **Órdenes y Pagos (`/orders`, `/payments/webhook`):** Orquestación del flujo de compras, integración directa con el checkout de Stripe y conciliación automática del inventario tras la recepción del Webhook exitoso.
+* **Favoritos y Descuentos (`/favorites`, `/coupons`):** Registro de eventos de interés para el usuario y motor de aplicación de cupones de descuento sobre el precio de las órdenes.
+* **Chatbot con IA (`/chatbot`):** Ventana de asistencia interactiva que consume modelos de OpenAI para responder preguntas en tiempo real sobre la plataforma y eventos activos.
+* **Monitoreo de Ubicaciones (`/venues`, `/maps`):** Coordinación física e identificación de los establecimientos y recintos donde se ejecutan los eventos.
 
-# test coverage
-$ npm run test:cov
-```
+---
 
-## Deployment
+## 🚀 Instalación y Ejecución en Local
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Requisitos Previos
+* Node.js (Versión 18 o superior)
+* Cuenta activa en Supabase (Instancia de PostgreSQL)
+* Credenciales de desarrollo para Stripe, Brevo, Cloudinary y OpenAI.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Pasos para la Puesta en Marcha
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+1. **Clonar el repositorio y navegar al directorio del backend:**
+   ```bash
+   git clone <URL_DEL_REPOSITORIO>
+   cd PF/api
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+2. **Instalar las dependencias del proyecto:**
+   ```bash
+   npm install
 
-## Resources
+3. **Configurar las variables de entorno:**
+Copia el archivo de plantilla para entorno de desarrollo:
+   ```bash
+   cp .env.example .env.development
 
-Check out a few resources that may come in handy when working with NestJS:
+Abre el archivo `.env.development` recién creado y rellena las variables obligatorias con tus credenciales:
+* Configuración de Servidor (`PORT`, `JWT_SECRET`, etc.)
+* Base de datos de Supabase/PostgreSQL (`DATABASE_URL` u opciones por separado)
+* API Keys de Stripe, Brevo, Cloudinary y OpenAI.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
 
-## Support
+4. **Levantar el servidor en modo desarrollo (Watch Mode):**
+   ```bash
+   npm run start:dev
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+El servidor se iniciará por defecto en el puerto `3001` (o el especificado en tu `.env`).
 
-## Stay in touch
+5. **Base de Datos y Sincronización:**
+* **En desarrollo:** El proyecto tiene habilitada la propiedad `synchronize: true` de TypeORM para reflejar automáticamente cualquier cambio de las entidades en el esquema de la base de datos al guardar.
+* **En producción:** Se recomienda desactivar la sincronización automática y utilizar el CLI de TypeORM para generar y correr migraciones controladas:
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+---
 
-## License
+## 📊 Demostraciones y Producción
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Documentación Interactiva (Swagger)
+
+Puedes visualizar, interactuar y probar cada uno de los endpoints de la API utilizando la interfaz integrada de Swagger de manera local o en producción:
+
+* **Local:** [http://localhost:3001/api](https://www.google.com/search?q=http://localhost:3001/api) *(Ajustar puerto si es diferente)*
+
+### Enlace de Despliegue (Deploy)
+
+La API se encuentra desplegada y completamente operativa en el siguiente entorno de producción:
+
+* **Live API (Swagger):** [https://boletoclickback-production.up.railway.app/api](https://boletoclickback-production.up.railway.app/api)
