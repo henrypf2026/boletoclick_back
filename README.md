@@ -1,6 +1,11 @@
 # BoletoClick API 🎫🚀
 
+[![Status](https://img.shields.io/uptimerobot/status/m803636481-e952e06d3817c5417e51b31a?label=API%20status)](https://stats.uptimerobot.com/6R490KfYju)
+[![Uptime](https://img.shields.io/uptimerobot/ratio/m803636481-e952e06d3817c5417e51b31a?label=uptime%20(7d))](https://stats.uptimerobot.com/6R490KfYju)
+
 BoletoClick API es el motor de backend desarrollado para la gestión integral, reserva y venta de boletos (tickets) para eventos. La plataforma permite a los organizadores publicar sus eventos especificando locaciones, categorías y tipos de boletos con stocks dinámicos, mientras que facilita a los compradores una adquisición de entradas segura, validada mediante códigos QR únicos y con procesamiento de pagos integrado en tiempo real.
+
+🔗 **API en vivo:** [boletoclick-back.onrender.com](https://boletoclick-back.onrender.com) · **Docs (Swagger):** [/api](https://boletoclick-back.onrender.com/api) · **Status page:** [stats.uptimerobot.com/6R490KfYju](https://stats.uptimerobot.com/6R490KfYju)
 
 ---
 
